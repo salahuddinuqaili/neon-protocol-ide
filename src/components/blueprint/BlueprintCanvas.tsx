@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo, useCallback } from 'react';
 import ReactFlow, { 
   Background, 
@@ -153,8 +155,8 @@ const BlueprintCanvas: React.FC = () => {
   return (
     <div className="absolute inset-0 w-full h-full canvas-grid bg-background overflow-hidden">
       <ReactFlow
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        nodes={initialNodes}
+        edges={initialEdges}
         nodeTypes={nodeTypes}
         onNodeClick={onNodeClick}
         fitView

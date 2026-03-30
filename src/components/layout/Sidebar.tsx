@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 
@@ -37,7 +39,7 @@ const Sidebar: React.FC = () => {
                 'ts': 'typescript', 'tsx': 'typescript',
                 'js': 'javascript', 'jsx': 'javascript',
                 'py': 'python', 'rb': 'ruby', 'rs': 'rust',
-                'rs': 'rust', 'c': 'c', 'cpp': 'cpp',
+                'c': 'c', 'cpp': 'cpp',
                 'java': 'java', 'json': 'json', 'md': 'markdown',
                 'css': 'css', 'html': 'html'
               };

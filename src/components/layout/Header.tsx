@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 
