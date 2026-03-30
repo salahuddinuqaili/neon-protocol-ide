@@ -1,6 +1,12 @@
 import React from 'react';
 
 const OrchestrationHub: React.FC = () => {
+  const providers = [
+    { id: '1', name: 'OpenAI', model: 'gpt-4-turbo', role: 'Primary', color: 'primary', status: 'Active' },
+    { id: '2', name: 'Anthropic', model: 'claude-3-sonnet', role: 'Fallback', color: 'accent-ai', status: 'Active' },
+    { id: '3', name: 'Ollama', model: 'llama3:8b', role: 'Offline', color: 'muted', status: 'Offline' },
+  ];
+
   return (
     <div className="flex-1 h-full flex flex-col bg-background overflow-hidden">
       <div className="flex h-full">
@@ -13,47 +19,29 @@ const OrchestrationHub: React.FC = () => {
             </h1>
             <p className="text-muted text-[10px] mt-1 font-mono uppercase tracking-wider">Redundancy Configuration</p>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-            {/* Primary Provider */}
-            <div className="w-full bg-surface border border-muted flex items-center h-12 shadow-neon relative cursor-grab">
-              <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-primary"></div>
-              <div className="px-3 text-muted"><span className="material-symbols-outlined text-sm">drag_indicator</span></div>
-              <div className="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
-                <span className="text-text-main">OpenAI</span>
-                <span className="text-muted">gpt-4-turbo</span>
-              </div>
-              <div className="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                <span className="text-[9px] text-primary font-bold uppercase tracking-widest">Primary</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center -my-2 relative"><div className="h-6 w-px bg-muted"></div></div>
-            
-            {/* Fallback Provider */}
-            <div className="w-full bg-surface border border-muted flex items-center h-12 cursor-grab">
-              <div className="px-3 text-muted"><span className="material-symbols-outlined text-sm">drag_indicator</span></div>
-              <div className="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
-                <span className="text-text-main">Anthropic</span>
-                <span className="text-muted">claude-3-sonnet</span>
-              </div>
-              <div className="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                <span className="text-[9px] text-accent-ai font-bold uppercase tracking-widest">Fallback</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center -my-2 relative"><div className="h-6 w-px bg-muted"></div></div>
-            
-            {/* Local Provider */}
-            <div className="w-full bg-surface border border-muted flex items-center h-12 cursor-grab opacity-50">
-              <div className="px-3 text-muted"><span className="material-symbols-outlined text-sm">drag_indicator</span></div>
-              <div className="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
-                <span className="text-text-main">Ollama</span>
-                <span className="text-muted">llama3:8b</span>
-              </div>
-              <div className="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                <span className="text-[9px] text-muted font-bold uppercase tracking-widest">Offline</span>
-              </div>
-            </div>
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-0">
+            {providers.map((provider, index) => (
+              <React.Fragment key={provider.id}>
+                <div className={`w-full bg-surface border border-muted flex items-center h-12 relative cursor-grab transition-all hover:bg-surface-hover
+                  ${provider.status === 'Offline' ? 'opacity-50' : 'shadow-neon'}
+                `}>
+                  {provider.role === 'Primary' && <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-primary"></div>}
+                  <div className="px-3 text-muted"><span className="material-symbols-outlined text-sm">drag_indicator</span></div>
+                  <div className="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
+                    <span className="text-text-main font-bold">{provider.name}</span>
+                    <span className="text-muted">{provider.model}</span>
+                  </div>
+                  <div className="px-4 flex items-center gap-2 border-l border-muted/30 h-full min-w-[100px] justify-center">
+                    <span className={`text-[9px] font-bold uppercase tracking-widest text-${provider.color}`}>
+                      {provider.role}
+                    </span>
+                  </div>
+                </div>
+                {index < providers.length - 1 && (
+                  <div className="flex justify-center my-1 relative"><div className="h-4 w-px bg-muted/30"></div></div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </section>
 

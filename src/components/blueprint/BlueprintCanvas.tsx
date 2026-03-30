@@ -4,6 +4,13 @@ import { useIDEStore } from '../../store/useIDEStore';
 const BlueprintCanvas: React.FC = () => {
   const { selectModule } = useIDEStore();
 
+  const nodes = [
+    { id: '1', name: 'React Client', type: 'frontend', top: 300, left: 120, icon: 'desktop_windows' },
+    { id: '2', name: 'LLM Gateway', type: 'router', top: 300, left: 550, icon: 'route', active: true },
+    { id: '3', name: 'Vector Store', type: 'storage', top: 150, left: 900, icon: 'database', color: 'accent-error' },
+    { id: '4', name: 'OpenAI API', type: 'service', top: 450, left: 900, icon: 'cloud', color: 'accent-ai' },
+  ];
+
   return (
     <div className="absolute inset-0 w-full h-full view-active relative canvas-grid bg-background overflow-hidden">
       <svg id="blueprint-canvas" className="absolute inset-0 w-full h-full pointer-events-none z-10">
@@ -23,47 +30,37 @@ const BlueprintCanvas: React.FC = () => {
       </svg>
 
       <div className="absolute inset-0 w-full h-full z-20">
-        {/* Node 1 */}
-        <div onClick={() => selectModule('React Client')} className="node-card absolute top-[300px] left-[120px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-primary hover:shadow-neon transition-all">
-          <div className="flex items-center justify-between w-full mb-1">
-            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Frontend</span>
-            <div className="w-2 h-2 bg-primary rounded-full shadow-neon"></div>
+        {nodes.map((node) => (
+          <div 
+            key={node.id}
+            onClick={() => selectModule(node.name)} 
+            className={`node-card absolute w-[180px] h-[80px] bg-surface border flex flex-col justify-center px-4 cursor-pointer group transition-all
+              ${node.active ? 'border-primary shadow-neon-active z-30' : 'border-muted hover:border-primary hover:shadow-neon'}
+              ${node.color === 'accent-error' ? 'hover:border-accent-error' : ''}
+              ${node.color === 'accent-ai' ? 'hover:border-accent-ai' : ''}
+            `}
+            style={{ top: node.top, left: node.left }}
+          >
+            {node.active && <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>}
+            {!node.active && <div className={`absolute ${node.left > 500 ? 'left-[-5px]' : 'right-[-5px]'} top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors`}></div>}
+            
+            <div className="flex items-center justify-between w-full mb-1">
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${node.active ? 'text-primary' : 'text-muted'}`}>
+                {node.type}
+              </span>
+              {node.icon && <span className={`material-symbols-outlined text-[14px] ${node.active ? 'text-primary' : node.color ? `text-${node.color}` : 'text-muted'}`}>{node.icon}</span>}
+              {!node.icon && <div className="w-2 h-2 bg-primary rounded-full shadow-neon"></div>}
+            </div>
+            <h3 className="text-text-main font-bold text-sm truncate">{node.name}</h3>
+            
+            {node.active && (
+              <>
+                <div className="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+                <div className="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+              </>
+            )}
           </div>
-          <h3 className="text-text-main font-bold text-sm truncate">React Client</h3>
-          <div className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
-        </div>
-
-        {/* Node 2 */}
-        <div onClick={() => selectModule('LLM Gateway')} className="node-card absolute top-[300px] left-[550px] w-[180px] h-[80px] bg-surface border-primary shadow-neon-active flex flex-col justify-center px-4 cursor-pointer group z-30">
-          <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>
-          <div className="flex items-center justify-between w-full mb-1">
-            <span className="text-[10px] font-mono text-primary uppercase tracking-wider">Router</span>
-            <span className="material-symbols-outlined text-[14px] text-primary">route</span>
-          </div>
-          <h3 className="text-text-main font-bold text-sm truncate">LLM Gateway</h3>
-          <div className="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
-          <div className="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
-        </div>
-
-        {/* Node 3 */}
-        <div onClick={() => selectModule('Vector Store')} className="node-card absolute top-[150px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-error hover:shadow-neon transition-all">
-          <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-error transition-colors"></div>
-          <div className="flex items-center justify-between w-full mb-1">
-            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Storage</span>
-            <span className="material-symbols-outlined text-[14px] text-accent-error">database</span>
-          </div>
-          <h3 className="text-text-main font-bold text-sm truncate">Vector Store</h3>
-        </div>
-
-        {/* Node 4 */}
-        <div onClick={() => selectModule('OpenAI API')} className="node-card absolute top-[450px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-ai hover:shadow-neon transition-all">
-          <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-ai transition-colors"></div>
-          <div className="flex items-center justify-between w-full mb-1">
-            <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Service</span>
-            <span className="material-symbols-outlined text-[14px] text-accent-ai">cloud</span>
-          </div>
-          <h3 className="text-text-main font-bold text-sm truncate">OpenAI API</h3>
-        </div>
+        ))}
       </div>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 h-10 bg-surface border border-muted flex items-center shadow-lg">
