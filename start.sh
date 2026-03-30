@@ -39,9 +39,8 @@ fi
 # --- INSTALL DEPENDENCIES ---
 echo -e "${GREEN}Node.js found! Installing the project dependencies...${NC}"
 echo -e "${CYAN}This is like gathering all the tools needed to build the IDE.${NC}"
-
 # Use npm.cmd on Windows via WSL, but for native Mac it's just npm
-npm install --no-audit --no-fund
+npm install --legacy-peer-deps --no-audit --no-fund
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}An error occurred while installing tools. Try running 'npm install' manually.${NC}"

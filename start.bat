@@ -28,12 +28,12 @@ if %errorlevel% neq 0 (
 
 echo Node.js found. Installing dependencies...
 echo (If you see a PowerShell security error, try running this script as Administrator.)
-call npm.cmd install
+call npm.cmd install --legacy-peer-deps
 
 if %errorlevel% neq 0 (
     echo An error occurred during npm install. 
     echo Trying fallback to bypass PowerShell script execution policy...
-    call npm.cmd install --scripts-prepend-node-path=true
+    call npm.cmd install --legacy-peer-deps --scripts-prepend-node-path=true
     if %errorlevel% neq 0 (
         echo Still failing. Please check your npm installation.
         pause
