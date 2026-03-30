@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 
 const ModuleExplorer: React.FC = () => {
-  const { selectedModule, isExplorerOpen, toggleExplorer, setView } = useIDEStore();
+  const { selectedModule, isExplorerOpen, toggleExplorer, setView, activeFile } = useIDEStore();
+  const [chatInput, setChatInput] = useState('');
+  const [messages, setMessages] = useState<{role: 'ai' | 'user', text: string}[]>([]);
 
   const handleInspectCode = () => {
     setView('code');
     toggleExplorer(false);
+  };
+
+  const sendMessage = () => {
+    if (!chatInput) return;
+    const newMessages = [...messages, { role: 'user' as const, text: chatInput }];
+    setMessages(newMessages);
+    setChatInput('');
+
+    // Simulate AI response
+    setTimeout(() => {
+      setMessages([...newMessages, { 
+        role: 'ai' as const, 
+        text: `I've analyzed ${selectedModule}. The current implementation in ${activeFile || 'the codebase'} uses a complexity-based router. Would you like me to optimize the fallback logic?` 
+      }]);
+    }, 1000);
   };
 
   return (
@@ -35,7 +52,7 @@ const ModuleExplorer: React.FC = () => {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50 custom-scrollbar">
         <div className="flex gap-3 w-full">
           <div className="w-6 h-6 rounded bg-surface border border-accent-ai flex items-center justify-center text-accent-ai shrink-0 mt-1">
             <span className="material-symbols-outlined text-[14px]">smart_toy</span>
@@ -49,7 +66,29 @@ const ModuleExplorer: React.FC = () => {
         </div>
         
         <div id="chat-history" className="space-y-4">
-          {/* Messages would go here */}
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex gap-3 w-full ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-6 h-6 rounded border flex items-center justify-center shrink-0 mt-1 ${
+                msg.role === 'ai' ? 'bg-surface border-accent-ai text-accent-ai' : 'bg-primary border-primary text-background'
+              }`}>
+                <span className="material-symbols-outlined text-[14px]">
+                  {msg.role === 'ai' ? 'smart_toy' : 'person'}
+                </span>
+              </div>
+              <div className={`flex flex-col gap-1 max-w-[80%] ${msg.role === 'user' ? 'items-end' : ''}`}>
+                <span className="text-[9px] text-muted font-mono uppercase">
+                  {msg.role === 'ai' ? 'Architect Copilot' : 'User'}
+                </span>
+                <div className={`p-3 text-xs font-mono leading-relaxed ${
+                  msg.role === 'ai' 
+                    ? 'bg-surface-hover border-l-2 border-accent-ai text-text-main' 
+                    : 'bg-primary/10 border-r-2 border-primary text-text-main text-right'
+                }`}>
+                  {msg.text}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -57,11 +96,17 @@ const ModuleExplorer: React.FC = () => {
       <div className="p-3 bg-background border-t border-muted">
         <div className="relative flex items-center">
           <input 
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             className="w-full bg-surface border border-muted text-xs font-mono p-2.5 pr-10 focus:outline-none focus:border-primary placeholder-muted" 
             placeholder="Ask about this module..." 
             type="text" 
           />
-          <button className="absolute right-2 text-muted hover:text-primary transition-colors">
+          <button 
+            onClick={sendMessage}
+            className="absolute right-2 text-muted hover:text-primary transition-colors"
+          >
             <span className="material-symbols-outlined text-sm">send</span>
           </button>
         </div>

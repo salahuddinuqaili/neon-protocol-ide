@@ -1,77 +1,126 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
+import ReactFlow, { 
+  Background, 
+  Controls, 
+  Panel,
+  Node,
+  Edge,
+  MarkerType,
+  ConnectionLineType,
+  Position,
+  Handle
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 import { useIDEStore } from '../../store/useIDEStore';
+
+const nodeStyles = {
+  frontend: 'border-muted',
+  router: 'border-primary shadow-neon-active',
+  storage: 'border-accent-error',
+  service: 'border-accent-ai',
+};
+
+const CustomNode = ({ data, selected }: any) => {
+  return (
+    <div className={`node-card w-[180px] h-[80px] bg-surface border flex flex-col justify-center px-4 cursor-pointer group transition-all relative
+      ${selected ? 'border-primary shadow-neon-active z-30' : 'border-muted hover:border-primary hover:shadow-neon'}
+      ${data.color === 'accent-error' ? 'hover:border-accent-error' : ''}
+      ${data.color === 'accent-ai' ? 'hover:border-accent-ai' : ''}
+    `}>
+      <Handle type="target" position={Position.Left} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
+      <div className="flex items-center justify-between w-full mb-1">
+        <span className={`text-[10px] font-mono uppercase tracking-wider ${selected ? 'text-primary' : 'text-muted'}`}>
+          {data.type}
+        </span>
+        {data.icon && <span className={`material-symbols-outlined text-[14px] ${selected ? 'text-primary' : data.color ? `text-${data.color}` : 'text-muted'}`}>{data.icon}</span>}
+      </div>
+      <h3 className="text-text-main font-bold text-sm truncate">{data.label}</h3>
+      <Handle type="source" position={Position.Right} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
+    </div>
+  );
+};
+
+const nodeTypes = {
+  custom: CustomNode,
+};
 
 const BlueprintCanvas: React.FC = () => {
   const { selectModule } = useIDEStore();
 
-  const nodes = [
-    { id: '1', name: 'React Client', type: 'frontend', top: 300, left: 120, icon: 'desktop_windows' },
-    { id: '2', name: 'LLM Gateway', type: 'router', top: 300, left: 550, icon: 'route', active: true },
-    { id: '3', name: 'Vector Store', type: 'storage', top: 150, left: 900, icon: 'database', color: 'accent-error' },
-    { id: '4', name: 'OpenAI API', type: 'service', top: 450, left: 900, icon: 'cloud', color: 'accent-ai' },
+  const initialNodes: Node[] = [
+    { 
+      id: '1', 
+      type: 'custom',
+      position: { x: 120, y: 300 }, 
+      data: { label: 'React Client', type: 'frontend', icon: 'desktop_windows' } 
+    },
+    { 
+      id: '2', 
+      type: 'custom',
+      position: { x: 550, y: 300 }, 
+      data: { label: 'LLM Gateway', type: 'router', icon: 'route' } 
+    },
+    { 
+      id: '3', 
+      type: 'custom',
+      position: { x: 900, y: 150 }, 
+      data: { label: 'Vector Store', type: 'storage', icon: 'database', color: 'accent-error' } 
+    },
+    { 
+      id: '4', 
+      type: 'custom',
+      position: { x: 900, y: 450 }, 
+      data: { label: 'OpenAI API', type: 'service', icon: 'cloud', color: 'accent-ai' } 
+    },
   ];
 
+  const initialEdges: Edge[] = [
+    { 
+      id: 'e1-2', 
+      source: '1', 
+      target: '2', 
+      animated: true, 
+      style: { stroke: '#00FFD1', strokeWidth: 2 },
+      type: ConnectionLineType.SmoothStep 
+    },
+    { 
+      id: 'e2-3', 
+      source: '2', 
+      target: '3', 
+      style: { stroke: '#4E5666', strokeWidth: 1.5 },
+      type: ConnectionLineType.SmoothStep 
+    },
+    { 
+      id: 'e2-4', 
+      source: '2', 
+      target: '4', 
+      style: { stroke: '#4E5666', strokeWidth: 1.5 },
+      type: ConnectionLineType.SmoothStep 
+    },
+  ];
+
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    selectModule(node.data.label);
+  }, [selectModule]);
+
   return (
-    <div className="absolute inset-0 w-full h-full view-active relative canvas-grid bg-background overflow-hidden">
-      <svg id="blueprint-canvas" className="absolute inset-0 w-full h-full pointer-events-none z-10">
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur result="coloredBlur" stdDeviation="2.5"></feGaussianBlur>
-            <feMerge>
-              <feMergeNode in="coloredBlur"></feMergeNode>
-              <feMergeNode in="SourceGraphic"></feMergeNode>
-            </feMerge>
-          </filter>
-        </defs>
-        <path d="M 300 340 C 425 340, 425 340, 550 340" fill="none" stroke="#4E5666" strokeWidth="2"></path>
-        <path className="flow-line" d="M 300 340 C 425 340, 425 340, 550 340" fill="none" filter="url(#glow)" stroke="#00FFD1" strokeWidth="2" style={{ strokeDasharray: '8 4', animation: 'flow 1s linear infinite' }}></path>
-        <path d="M 730 320 C 815 320, 815 190, 900 190" fill="none" stroke="#4E5666" strokeWidth="1.5"></path>
-        <path d="M 730 360 C 815 360, 815 490, 900 490" fill="none" stroke="#4E5666" strokeWidth="1.5"></path>
-      </svg>
-
-      <div className="absolute inset-0 w-full h-full z-20">
-        {nodes.map((node) => (
-          <div 
-            key={node.id}
-            onClick={() => selectModule(node.name)} 
-            className={`node-card absolute w-[180px] h-[80px] bg-surface border flex flex-col justify-center px-4 cursor-pointer group transition-all
-              ${node.active ? 'border-primary shadow-neon-active z-30' : 'border-muted hover:border-primary hover:shadow-neon'}
-              ${node.color === 'accent-error' ? 'hover:border-accent-error' : ''}
-              ${node.color === 'accent-ai' ? 'hover:border-accent-ai' : ''}
-            `}
-            style={{ top: node.top, left: node.left }}
-          >
-            {node.active && <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>}
-            {!node.active && <div className={`absolute ${node.left > 500 ? 'left-[-5px]' : 'right-[-5px]'} top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors`}></div>}
-            
-            <div className="flex items-center justify-between w-full mb-1">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${node.active ? 'text-primary' : 'text-muted'}`}>
-                {node.type}
-              </span>
-              {node.icon && <span className={`material-symbols-outlined text-[14px] ${node.active ? 'text-primary' : node.color ? `text-${node.color}` : 'text-muted'}`}>{node.icon}</span>}
-              {!node.icon && <div className="w-2 h-2 bg-primary rounded-full shadow-neon"></div>}
-            </div>
-            <h3 className="text-text-main font-bold text-sm truncate">{node.name}</h3>
-            
-            {node.active && (
-              <>
-                <div className="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
-                <div className="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
-              </>
-            )}
+    <div className="absolute inset-0 w-full h-full canvas-grid bg-background overflow-hidden">
+      <ReactFlow
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
+        nodeTypes={nodeTypes}
+        onNodeClick={onNodeClick}
+        fitView
+        className="z-20"
+      >
+        <Background color="#1E222B" gap={20} />
+        <Controls showInteractive={false} className="!bg-surface !border-muted !fill-muted" />
+        <Panel position="bottom-center">
+          <div className="mb-6 h-10 bg-surface border border-muted flex items-center shadow-lg px-4 text-[10px] font-mono text-text-main">
+            NEON PROTOCOL CANVAS V1.0
           </div>
-        ))}
-      </div>
-
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 h-10 bg-surface border border-muted flex items-center shadow-lg">
-        <button className="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-r border-muted transition-colors">
-          <span className="material-symbols-outlined text-[20px]">remove</span>
-        </button>
-        <div className="px-4 text-[10px] font-mono text-text-main select-none">100%</div>
-        <button className="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-l border-muted transition-colors">
-          <span className="material-symbols-outlined text-[20px]">add</span>
-        </button>
-      </div>
+        </Panel>
+      </ReactFlow>
     </div>
   );
 };

@@ -9,7 +9,7 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-primary">
           <span className="material-symbols-outlined text-xl">architecture</span>
-          <span className="font-display font-bold tracking-wide">Architectural Blueprint IDE</span>
+          <span className="font-display font-bold tracking-wide uppercase">Neon Protocol IDE</span>
         </div>
         <div id="breadcrumb" className="hidden md:flex items-center gap-2 text-sm font-mono text-muted ml-4 border-l border-muted/30 pl-4">
           <span className="text-text-main">nexus_core</span>

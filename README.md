@@ -1,4 +1,4 @@
-# Architectural Blueprint IDE
+# Neon Protocol IDE
 
 A visionary, agentic integrated development environment (IDE) that bridges the gap between high-level architectural design and low-level code implementation.
 
@@ -6,7 +6,7 @@ A visionary, agentic integrated development environment (IDE) that bridges the g
 
 ## Core Philosophy: "Blueprint-First Development"
 
-The Architectural Blueprint IDE is built on the premise that complex software should be understood visually and architecturally before diving into syntax. It provides three primary lenses:
+The Neon Protocol IDE is built on the premise that complex software should be understood visually and architecturally before diving into syntax. It provides three primary lenses:
 
 1.  **Global Architecture Map:** A dynamic ReactFlow canvas to visualize system-wide nodes, services, and data flows.
 2.  **Pro Code Editor:** A Monaco-powered editor for professional-grade development, linked directly to the visual map.

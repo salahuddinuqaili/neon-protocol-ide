@@ -1,50 +1,85 @@
 import React from 'react';
+import Editor from '@monaco-editor/react';
+import { useIDEStore } from '../../store/useIDEStore';
 
 const ProCodeEditor: React.FC = () => {
+  const { files, activeFile, setActiveFile } = useIDEStore();
+
+  const currentFile = files.find(f => f.path === activeFile) || {
+    language: 'typescript',
+    content: '// Select a file to edit',
+    path: ''
+  };
+
   return (
     <div className="flex-1 h-full flex flex-col bg-background relative overflow-hidden">
       {/* Editor Tabs */}
       <div className="h-9 flex bg-surface border-b border-muted/30 shrink-0 overflow-x-auto z-20">
-        <div className="flex items-center gap-2 px-4 bg-background border-t-2 border-primary min-w-fit cursor-pointer">
-          <span className="material-symbols-outlined text-[14px] text-blue-400">code</span>
-          <span className="font-mono text-xs text-text-main">router.ts</span>
-        </div>
-        <div className="flex items-center gap-2 px-4 bg-surface border-r border-muted/10 min-w-fit cursor-pointer hover:bg-surface-hover transition-all">
-          <span className="material-symbols-outlined text-[14px] text-blue-400">code</span>
-          <span className="font-mono text-xs text-muted">types.ts</span>
-        </div>
+        {files.map(file => (
+          <div 
+            key={file.path}
+            onClick={() => setActiveFile(file.path)}
+            className={`flex items-center gap-2 px-4 min-w-fit cursor-pointer transition-all ${
+              activeFile === file.path 
+                ? 'bg-background border-t-2 border-primary' 
+                : 'bg-surface border-r border-muted/10 hover:bg-surface-hover'
+            }`}
+          >
+            <span className={`material-symbols-outlined text-[14px] ${activeFile === file.path ? 'text-primary' : 'text-blue-400'}`}>code</span>
+            <span className={`font-mono text-xs ${activeFile === file.path ? 'text-text-main' : 'text-muted'}`}>{file.name}</span>
+          </div>
+        ))}
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Line Numbers */}
-        <div className="w-10 bg-background border-r border-muted/10 flex flex-col pt-4 pb-4 font-mono text-[10px] text-muted text-right pr-2 select-none shrink-0">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className={i === 6 ? "text-text-main bg-surface-hover" : ""}>{i + 1}</div>
-          ))}
-        </div>
-
-        {/* Code Content */}
-        <div className="flex-1 overflow-auto p-4 font-mono text-xs leading-relaxed whitespace-pre font-medium text-text-main">
-          <span className="text-accent-error">import</span> {'{'} <span className="text-text-main">OllamaClient</span>, <span className="text-text-main">OpenAIClient</span> {'}'} <span className="text-accent-error">from</span> <span className="text-accent-ai">'@nexus/providers'</span>;{'\n'}
-          <span className="text-accent-error">import</span> {'{'} <span className="text-text-main">RouteConfig</span> {'}'} <span className="text-accent-error">from</span> <span className="text-accent-ai">'./types'</span>;{'\n\n'}
-          <span className="text-muted">// Primary routing logic for incoming LLM requests</span>{'\n'}
-          <span className="text-accent-error">export async function</span> <span className="text-primary cursor-pointer">routeRequest</span>(<span className="text-text-main">prompt</span>: <span className="text-accent-error">string</span>, <span className="text-text-main">config</span>: <span className="text-text-main">RouteConfig</span>) {'{'}{'\n'}
-          {'  '}<span className="text-accent-error">const</span> <span className="text-text-main">complexityScore</span> = <span className="text-accent-error">await</span> <span className="text-primary">analyzePrompt</span>(<span className="text-text-main">prompt</span>);{'\n\n'}
-          <div className="bg-surface-hover -mx-4 px-4 border-l-2 border-primary w-full inline-block">
-          {'  '}<span className="text-accent-error">if</span> (<span className="text-text-main">complexityScore</span> {'<'} <span className="text-text-main">config</span>.<span className="text-text-main">threshold</span>) {'{'}{'\n'}
-          {'    '}<span className="text-muted">// Fast, local execution for simple tasks</span>{'\n'}
-          {'    '}<span className="text-accent-error">return</span> <span className="text-text-main">OllamaClient</span>.<span className="text-primary">generate</span>({'{\n'}
-          {'      '}<span className="text-text-main">model</span>: <span className="text-accent-ai">'llama3:8b'</span>,{'\n'}
-          {'      '}<span className="text-text-main">prompt</span>: <span className="text-text-main">prompt</span>{'\n'}
-          {'    '}{'});\n'}
-          {'  '}{'}'}
-          </div>{'\n'}
-          {'  '}<span className="text-muted">// Complex tasks routed to cloud provider</span>{'\n'}
-          {'  '}<span className="text-accent-error">return</span> <span className="text-text-main">OpenAIClient</span>.<span className="text-primary">generate</span>({'{\n'}
-          {'    '}<span className="text-text-main">model</span>: <span className="text-accent-ai">'gpt-4-turbo'</span>,{'\n'}
-          {'    '}<span className="text-text-main">prompt</span>: <span className="text-text-main">prompt</span>{'\n'}
-          {'  '}{'});\n'}
-          {'}'}
+        {/* Monaco Editor Container */}
+        <div className="flex-1 relative overflow-hidden">
+          <Editor
+            height="100%"
+            language={currentFile.language}
+            value={currentFile.content}
+            path={currentFile.path}
+            theme="vs-dark"
+            options={{
+              fontSize: 12,
+              fontFamily: 'JetBrains Mono, monospace',
+              minimap: { enabled: false },
+              scrollbar: {
+                vertical: 'hidden',
+                horizontal: 'hidden'
+              },
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              overviewRulerBorder: false,
+              renderLineHighlight: 'all',
+              lineNumbersMinChars: 3,
+              glyphMargin: false,
+              folding: true,
+              lineDecorationsWidth: 10,
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+            }}
+            onMount={(editor, monaco) => {
+              monaco.editor.defineTheme('neon-blueprint', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                  { token: 'keyword', foreground: 'FF5C5C' }, // accent-error
+                  { token: 'string', foreground: 'A8FF00' }, // accent-ai
+                  { token: 'comment', foreground: '4E5666' }, // muted
+                  { token: 'type', foreground: '00FFD1' }, // primary
+                ],
+                colors: {
+                  'editor.background': '#181A20',
+                  'editor.foreground': '#FFFFFF',
+                  'editor.lineHighlightBackground': '#1E222B',
+                  'editorCursor.foreground': '#00FFD1',
+                  'editorIndentGuide.background': '#1E222B',
+                }
+              });
+              monaco.editor.setTheme('neon-blueprint');
+            }}
+          />
         </div>
 
         {/* Right Panel: Copilot Sidebar */}
@@ -92,11 +127,11 @@ const ProCodeEditor: React.FC = () => {
           </div>
         </div>
         <div className="flex-1 overflow-auto p-3 font-mono text-[11px] text-muted">
-          <div className="mb-1"><span className="text-primary">nexus@dev</span><span className="text-text-main">:</span><span className="text-blue-400">~/projects/blueprint</span>$ npm run dev</div>
-          <div className="mb-1 text-text-main">&gt; nexus-core@1.0.0 dev</div>
+          <div className="mb-1"><span className="text-primary">neon@ide</span><span className="text-text-main">:</span><span className="text-blue-400">~/neon-protocol</span>$ npm run dev</div>
+          <div className="mb-1 text-text-main">&gt; neon-protocol-ide@1.0.0 dev</div>
           <div className="mb-1 text-accent-ai">[Watcher] Starting in watch mode...</div>
           <div className="flex items-center mt-2">
-            <span className="text-primary">nexus@dev</span><span className="text-text-main">:</span><span className="text-blue-400">~/projects/blueprint</span>$ <span className="w-1.5 h-3 bg-primary animate-pulse ml-2 inline-block"></span>
+            <span className="text-primary">neon@ide</span><span className="text-text-main">:</span><span className="text-blue-400">~/neon-protocol</span>$ <span className="w-1.5 h-3 bg-primary animate-pulse ml-2 inline-block"></span>
           </div>
         </div>
       </div>
