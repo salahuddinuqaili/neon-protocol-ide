@@ -19,6 +19,7 @@ export interface IDEState {
   setView: (view: IDEView) => void;
   selectModule: (name: string | null) => void;
   toggleExplorer: (open?: boolean) => void;
-  setProject: (path: string, files: FileEntry[]) => void;
-  setActiveFile: (path: string) => void;
+  setProject: (path: string | null, files: FileEntry[]) => void;
+  setActiveFile: (path: string | null) => void;
+  updateFileContent: (path: string, content: string) => void;
 }

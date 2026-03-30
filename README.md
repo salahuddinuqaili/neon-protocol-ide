@@ -11,6 +11,8 @@ The Neon Protocol IDE is built on the premise that complex software should be un
 1.  **Global Architecture Map:** A dynamic ReactFlow canvas to visualize system-wide nodes, services, and data flows.
 2.  **Pro Code Editor:** A Monaco-powered editor for professional-grade development, linked directly to the visual map.
 3.  **LLM Orchestration Hub:** A central hub for managing AI routing between local (Ollama) and cloud (OpenAI/Anthropic) models.
+4.  **Local Project Explorer:** Direct local file system integration via the **File System Access API**, allowing you to open, edit, and save files on your disk.
+5.  **Dynamic Architecture Discovery:** Automatically scan and categorize your codebase into high-level architectural nodes on the visual map.
 
 ## Tech Stack
 
@@ -20,7 +22,24 @@ The Neon Protocol IDE is built on the premise that complex software should be un
 - **AI Layer:** Ollama (Local), Vercel AI SDK
 - **Desktop:** Electron.js
 
-## Getting Started (Local Development)
+## Getting Started (One-Click Setup)
+
+The Neon Protocol IDE includes a automated setup script that will check for Node.js, install it if missing, and set up all dependencies for you.
+
+### Windows
+1. Download or clone this repository.
+2. Double-click the **`start.bat`** file in the root directory.
+3. Follow any on-screen prompts.
+
+### macOS
+1. Download or clone this repository.
+2. Open a terminal in the folder and run:
+   ```bash
+   chmod +x start.sh
+   ./start.sh
+   ```
+
+## Development Setup (Manual)
 
 ### Prerequisites
 - Node.js (v18+)

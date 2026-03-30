@@ -6,6 +6,13 @@ const Sidebar: React.FC = () => {
 
   const handleOpenFolder = async () => {
     try {
+      // Check if running in a secure context
+      if (typeof window === 'undefined') return;
+
+      if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+        alert("File System Access API requires a secure context (HTTPS or localhost).");
+        return;
+      }
       // @ts-ignore
       const dirHandle = await window.showDirectoryPicker();
       const loadedFiles: any[] = [];
@@ -13,16 +20,36 @@ const Sidebar: React.FC = () => {
       async function scan(handle: any, path: string) {
         for await (const entry of handle.values()) {
           const currentPath = `${path}/${entry.name}`;
+          
+          // Skip sensitive and hidden files
+          if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') {
+            continue;
+          }
+
           if (entry.kind === 'file') {
-            const file = await entry.getFile();
-            const content = await file.text();
-            loadedFiles.push({
-              name: entry.name,
-              path: currentPath,
-              content: content,
-              language: entry.name.endsWith('.ts') ? 'typescript' : 'javascript',
-              handle: entry
-            });
+            // Only load text-based and common code files for now
+            const isCodeFile = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java)$/i.test(entry.name);
+            if (isCodeFile) {
+              const file = await entry.getFile();
+              const content = await file.text();
+              const extension = entry.name.split('.').pop() || 'javascript';
+              const languageMap: Record<string, string> = {
+                'ts': 'typescript', 'tsx': 'typescript',
+                'js': 'javascript', 'jsx': 'javascript',
+                'py': 'python', 'rb': 'ruby', 'rs': 'rust',
+                'rs': 'rust', 'c': 'c', 'cpp': 'cpp',
+                'java': 'java', 'json': 'json', 'md': 'markdown',
+                'css': 'css', 'html': 'html'
+              };
+
+              loadedFiles.push({
+                name: entry.name,
+                path: currentPath,
+                content: content,
+                language: languageMap[extension] || 'text',
+                handle: entry
+              });
+            }
           } else if (entry.kind === 'directory') {
             await scan(entry, currentPath);
           }
@@ -31,6 +58,7 @@ const Sidebar: React.FC = () => {
       
       await scan(dirHandle, dirHandle.name);
       setProject(dirHandle.name, loadedFiles);
+      setView('blueprint');
     } catch (err) {
       console.error('Directory picker failed:', err);
       // Fallback for demo if picker is cancelled or unsupported
@@ -73,10 +101,16 @@ const Sidebar: React.FC = () => {
               <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
               <span className="text-xs font-bold tracking-tight uppercase">{projectPath}</span>
             </div>
-            <div className="pl-3 flex flex-col gap-0.5 mt-1">
-              {files.map((file) => (
+            <div className="pl-3 flex flex-col gap-0.5 mt-1 overflow-x-hidden">
+              {files.length > 20 && (
+                <div className="text-[9px] text-muted italic px-3 py-1">
+                  ...and {files.length - 20} more files
+                </div>
+              )}
+              {files.slice(0, 20).map((file) => (
                 <div 
                   key={file.path}
+                  title={file.path}
                   onClick={() => {
                     setActiveFile(file.path);
                     setView('code');
@@ -85,7 +119,12 @@ const Sidebar: React.FC = () => {
                     ${activeFile === file.path ? 'text-primary bg-background/50 border-l-2 border-primary shadow-neon-active' : 'text-muted hover:text-text-main hover:bg-surface-hover/30'}
                   `}
                 >
-                  <span className={`material-symbols-outlined text-[14px] ${activeFile === file.path ? 'text-primary' : 'text-blue-400'}`}>code</span>
+                  <span className={`material-symbols-outlined text-[14px] ${activeFile === file.path ? 'text-primary' : 'text-blue-400'}`}>
+                    {file.name.endsWith('.json') ? 'settings_ethernet' : 
+                     file.name.endsWith('.md') ? 'description' : 
+                     file.name.endsWith('.css') ? 'css' : 
+                     file.name.endsWith('.html') ? 'html' : 'code'}
+                  </span>
                   <span className="truncate">{file.name}</span>
                 </div>
               ))}

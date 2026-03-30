@@ -3,16 +3,44 @@ import Editor from '@monaco-editor/react';
 import { useIDEStore } from '../../store/useIDEStore';
 
 const ProCodeEditor: React.FC = () => {
-  const { files, activeFile, setActiveFile } = useIDEStore();
-
+  const { files, activeFile, setActiveFile, updateFileContent } = useIDEStore();
+  
   const currentFile = files.find(f => f.path === activeFile) || {
     language: 'typescript',
     content: '// Select a file to edit',
-    path: ''
+    path: '',
+    handle: null
+  };
+
+  const handleEditorChange = (value: string | undefined) => {
+    if (activeFile && value !== undefined) {
+      updateFileContent(activeFile, value);
+    }
+  };
+
+  const handleSave = async () => {
+    if (currentFile && currentFile.handle) {
+      try {
+        const writable = await currentFile.handle.createWritable();
+        await writable.write(currentFile.content);
+        await writable.close();
+        console.log('File saved successfully');
+      } catch (err) {
+        console.error('Failed to save file:', err);
+      }
+    }
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-background relative overflow-hidden">
+    <div 
+      className="flex-1 h-full flex flex-col bg-background relative overflow-hidden"
+      onKeyDown={(e) => {
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          handleSave();
+        }
+      }}
+    >
       {/* Editor Tabs */}
       <div className="h-9 flex bg-surface border-b border-muted/30 shrink-0 overflow-x-auto z-20">
         {files.map(file => (
@@ -40,6 +68,7 @@ const ProCodeEditor: React.FC = () => {
             value={currentFile.content}
             path={currentFile.path}
             theme="vs-dark"
+            onChange={handleEditorChange}
             options={{
               fontSize: 12,
               fontFamily: 'JetBrains Mono, monospace',
@@ -58,8 +87,13 @@ const ProCodeEditor: React.FC = () => {
               lineDecorationsWidth: 10,
               scrollBeyondLastLine: false,
               automaticLayout: true,
+              wordWrap: 'on',
+              lineHeight: 1.6,
             }}
             onMount={(editor, monaco) => {
+              editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+                handleSave();
+              });
               monaco.editor.defineTheme('neon-blueprint', {
                 base: 'vs-dark',
                 inherit: true,
