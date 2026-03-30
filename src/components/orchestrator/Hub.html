@@ -1,0 +1,34 @@
+<!-- LLM Orchestration Hub Module -->
+<div id="orchestrator-container" class="flex-1 h-full flex bg-background">
+    <!-- Left Pane: Configuration Matrix -->
+    <section class="w-1/2 flex flex-col border-r border-muted/30 bg-background relative">
+        <div class="p-6 border-b border-muted/30 bg-surface/50">
+            <h1 class="text-xl font-bold text-text-main flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">route</span>
+                LLM Routing & Fallback Chain
+            </h1>
+            <p class="text-muted text-[10px] mt-1 font-mono uppercase tracking-wider">Redundancy Configuration</p>
+        </div>
+        <div id="fallback-chain" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+            <!-- Providers will be dynamically listed -->
+        </div>
+    </section>
+    
+    <!-- Right Pane: Test Playground -->
+    <section class="w-1/2 flex flex-col bg-background">
+        <div class="p-6 border-b border-muted/30 bg-surface/30">
+            <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-accent-ai">science</span>
+                Test Playground
+            </h2>
+        </div>
+        <div class="flex-1 p-6 flex flex-col gap-4">
+            <textarea id="test-prompt" class="w-full h-32 bg-surface border border-muted text-text-main font-mono text-xs p-4 outline-none focus:border-primary placeholder-muted" placeholder="Type test prompt here..."></textarea>
+            <button class="bg-primary text-background px-6 py-2 font-bold text-xs shadow-neon self-start uppercase tracking-widest hover:bg-[#0cf1f1] transition-all">Run Test</button>
+            <div id="test-output" class="flex-1 bg-surface/20 border border-muted p-4 font-mono text-[11px] text-muted overflow-y-auto">
+                <span class="text-primary">> System ready.</span><br>
+                Click "Run Test" to analyze routing.
+            </div>
+        </div>
+    </section>
+</div>

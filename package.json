@@ -1,0 +1,49 @@
+{
+  "name": "neon-protocol-ide",
+  "version": "1.0.0",
+  "description": "Agentic Architectural Blueprint IDE",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-build": "next build && electron-builder"
+  },
+  "keywords": [
+    "IDE",
+    "Agentic",
+    "Architecture",
+    "Blueprint",
+    "ReactFlow",
+    "Monaco"
+  ],
+  "author": "Neon Protocol Team",
+  "license": "MIT",
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "reactflow": "^11.10.0",
+    "@monaco-editor/react": "^4.6.0",
+    "zustand": "^4.5.0",
+    "lucide-react": "latest",
+    "framer-motion": "latest",
+    "clsx": "latest",
+    "tailwind-merge": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "concurrently": "latest",
+    "wait-on": "latest"
+  }
+}
