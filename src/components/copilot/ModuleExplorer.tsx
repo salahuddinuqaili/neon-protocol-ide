@@ -53,6 +53,19 @@ const ModuleExplorer: React.FC = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50 custom-scrollbar">
+        {/* 🎓 LEARNER TIP: Beginner Insight Card */}
+        {!selectedModule && (
+          <div className="bg-surface-hover border border-primary p-4 rounded-sm mb-4 animate-pulse">
+            <div className="flex items-center gap-2 mb-2 text-primary">
+              <span className="material-symbols-outlined text-sm">school</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">Learning Tip</span>
+            </div>
+            <p className="text-[11px] text-text-main font-mono leading-relaxed">
+              Select any component on the <span className="text-primary font-bold">Global Map</span> to see its technical details and chat with the Architect AI.
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-3 w-full">
           <div className="w-6 h-6 rounded bg-surface border border-accent-ai flex items-center justify-center text-accent-ai shrink-0 mt-1">
             <span className="material-symbols-outlined text-[14px]">smart_toy</span>

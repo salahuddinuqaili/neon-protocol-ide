@@ -20,6 +20,11 @@ const nodeStyles = {
   service: 'border-accent-ai',
 };
 
+/**
+ * 🎓 LEARNER TIP: Custom Components
+ * This "CustomNode" is a React component that defines how each box on the map looks.
+ * We use Tailwind CSS classes to style it (like bg-surface, border, font-mono).
+ */
 const CustomNode = ({ data, selected }: any) => {
   return (
     <div className={`node-card w-[180px] h-[80px] bg-surface border flex flex-col justify-center px-4 cursor-pointer group transition-all relative
@@ -27,15 +32,23 @@ const CustomNode = ({ data, selected }: any) => {
       ${data.color === 'accent-error' ? 'hover:border-accent-error' : ''}
       ${data.color === 'accent-ai' ? 'hover:border-accent-ai' : ''}
     `}>
+      {/* Target Handle: Where lines enter the node */}
       <Handle type="target" position={Position.Left} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
+      
       <div className="flex items-center justify-between w-full mb-1">
         <span className={`text-[10px] font-mono uppercase tracking-wider ${selected ? 'text-primary' : 'text-muted'}`}>
           {data.type}
         </span>
         {data.icon && <span className={`material-symbols-outlined text-[14px] ${selected ? 'text-primary' : data.color ? `text-${data.color}` : 'text-muted'}`}>{data.icon}</span>}
       </div>
+      
       <h3 className="text-text-main font-bold text-sm truncate">{data.label}</h3>
+      
+      {/* 🎓 LEARNER TIP: Conditional Rendering
+          We only show this line if "data.count" exists. */}
       {data.count && <div className="text-[9px] text-muted mt-0.5">{data.count} modules detected</div>}
+      
+      {/* Source Handle: Where lines exit the node */}
       <Handle type="source" position={Position.Right} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
     </div>
   );
