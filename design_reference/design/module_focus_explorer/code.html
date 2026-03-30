@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Module Focus Explorer - Architectural Blueprint IDE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0df2f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#102222",
+                        "ide-bg": "#0B0C10",
+                        "ide-surface": "#181A20",
+                        "ide-surface-hover": "#242730",
+                        "ide-text": "#E0E6ED",
+                        "ide-muted": "#4E5666",
+                        "ide-accent-error": "#FF007F",
+                        "ide-accent-ai": "#B026FF",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0px", "sm": "0px", "md": "0px", "lg": "0px", "xl": "0px", "2xl": "0px", "3xl": "0px", "full": "0px"},
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(0, 255, 209, 0.3)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #0B0C10;
+            color: #E0E6ED;
+        }
+        .bg-grid {
+            background-size: 20px 20px;
+            background-image: 
+                linear-gradient(to right, #181A20 1px, transparent 1px),
+                linear-gradient(to bottom, #181A20 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="h-screen w-full overflow-hidden flex relative bg-ide-bg bg-grid">
+<!-- Background Map Mockup (Context) -->
+<div class="absolute inset-0 p-8 flex items-center justify-center opacity-30 pointer-events-none">
+<div class="w-48 h-20 bg-ide-surface border border-ide-muted flex items-center justify-center text-ide-text shadow-neon relative">
+            Frontend
+            <div class="absolute -right-2 top-1/2 w-4 h-4 rounded-full bg-ide-surface border border-primary"></div>
+</div>
+<div class="w-32 h-0.5 bg-ide-muted mx-4 relative"></div>
+<div class="w-48 h-20 bg-ide-surface border border-primary flex items-center justify-center text-primary shadow-neon shadow-[0_0_15px_rgba(13,242,242,0.5)]">
+            LLM Router
+        </div>
+<div class="w-32 h-0.5 bg-ide-muted mx-4 relative"></div>
+<div class="w-48 h-20 bg-ide-surface border border-ide-muted flex items-center justify-center text-ide-text relative">
+            Cloud Provider
+            <div class="absolute -left-2 top-1/2 w-4 h-4 rounded-full bg-ide-surface border border-ide-accent-ai"></div>
+</div>
+</div>
+<!-- Right Side Drawer -->
+<div class="absolute right-0 top-0 h-full w-[500px] bg-ide-surface border-l border-ide-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-10 transition-transform duration-300 transform translate-x-0">
+<!-- Header -->
+<header class="flex items-center justify-between p-6 border-b border-ide-muted bg-ide-bg">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-ide-surface-hover border border-primary flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div>
+<h2 class="text-xl font-bold text-ide-text tracking-tight">LLM Router</h2>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-2 h-2 rounded-full bg-primary shadow-neon animate-pulse"></div>
+<span class="text-xs text-primary font-mono uppercase tracking-wider">Active / Local</span>
+</div>
+</div>
+</div>
+<button aria-label="Close" class="text-ide-muted hover:text-white transition-colors p-2">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<!-- Component Description (Static) -->
+<div class="p-6 border-b border-ide-muted/50 bg-ide-surface-hover/30">
+<h3 class="text-sm font-bold text-ide-text mb-2 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-ide-muted">info</span>
+                Module Overview
+            </h3>
+<p class="text-sm text-ide-muted leading-relaxed font-mono">
+                Intercepts incoming prompts from the frontend gateway, evaluates token density and complexity, and routes the request to either the local Ollama instance or cloud fallback chain based on configuration rules.
+            </p>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col bg-ide-bg custom-scrollbar">
+<!-- AI Welcome Message -->
+<div class="flex gap-4 w-full">
+<div class="w-8 h-8 rounded bg-ide-surface-hover border border-ide-accent-ai flex items-center justify-center text-ide-accent-ai shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<span class="text-xs text-ide-muted font-mono">Architect Copilot</span>
+<div class="bg-ide-surface-hover border-l-2 border-ide-accent-ai p-4 text-sm text-ide-text font-mono leading-relaxed">
+                        I'm analyzing the <code>LLM Router</code> node. I can explain its configuration, dependencies, or help you modify its routing logic. What would you like to know?
+                    </div>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-4 w-full flex-row-reverse">
+<div class="w-8 h-8 rounded bg-ide-surface border border-ide-muted flex items-center justify-center text-ide-text shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<div class="flex flex-col gap-1 w-full items-end">
+<span class="text-xs text-ide-muted font-mono">User</span>
+<div class="border border-ide-muted p-4 text-sm text-ide-text font-mono leading-relaxed max-w-[90%] bg-transparent">
+                        How does this router handle token limits?
+                    </div>
+</div>
+</div>
+<!-- AI Response -->
+<div class="flex gap-4 w-full">
+<div class="w-8 h-8 rounded bg-ide-surface-hover border border-ide-accent-ai flex items-center justify-center text-ide-accent-ai shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<span class="text-xs text-ide-muted font-mono">Architect Copilot</span>
+<div class="bg-ide-surface-hover border-l-2 border-ide-accent-ai p-4 text-sm text-ide-text font-mono leading-relaxed space-y-3">
+<p>This node intercepts requests and calculates token volume before routing.</p>
+<p>Currently, the logic is set as follows:</p>
+<ul class="list-disc pl-5 space-y-1 text-ide-muted">
+<li>If tokens <span class="text-primary">&lt; 2048</span>: Route to local model (Ollama).</li>
+<li>If tokens <span class="text-ide-accent-error">&gt;= 2048</span>: Redirect to cloud fallback chain (OpenAI -&gt; Anthropic).</li>
+</ul>
+<p class="text-xs mt-2 text-ide-muted italic">You can modify these thresholds in the source code.</p>
+</div>
+</div>
+</div>
+<!-- Loading State (Skeleton) -->
+<div class="flex gap-4 w-full opacity-50">
+<div class="w-8 h-8 rounded bg-ide-surface-hover border border-ide-accent-ai flex items-center justify-center text-ide-accent-ai shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<span class="text-xs text-ide-muted font-mono">Generating...</span>
+<div class="bg-ide-surface-hover border-l-2 border-ide-accent-ai p-4 space-y-2">
+<div class="h-3 bg-ide-muted/20 w-3/4 rounded-none animate-pulse"></div>
+<div class="h-3 bg-ide-muted/20 w-1/2 rounded-none animate-pulse"></div>
+</div>
+</div>
+</div>
+<!-- Spacer to push content up if needed -->
+<div class="flex-1"></div>
+</div>
+<!-- Input Area -->
+<div class="p-4 bg-ide-bg border-t border-ide-muted">
+<div class="relative flex items-center">
+<input class="w-full bg-ide-surface border border-ide-muted text-ide-text text-sm font-mono p-4 pr-12 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-ide-muted transition-colors" placeholder="Ask the architect copilot..." type="text"/>
+<button class="absolute right-3 p-1 text-ide-muted hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+<!-- Footer CTA -->
+<div class="p-0 border-t border-ide-muted bg-ide-bg">
+<button class="w-full bg-primary hover:bg-[#0cf1f1] text-[#0B0C10] font-bold py-5 px-6 flex items-center justify-center gap-3 transition-all duration-200 group hover:shadow-[0_-5px_20px_rgba(13,242,242,0.2)]">
+<span class="material-symbols-outlined text-[20px] group-hover:-translate-y-0.5 transition-transform">code_blocks</span>
+<span class="tracking-wide text-base">INSPECT CODE</span>
+</button>
+</div>
+</div>
+<style>
+        /* Custom Scrollbar for IDE feel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0B0C10;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #242730;
+            border: 1px solid #0B0C10;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4E5666;
+        }
+    </style>
+</body></html>

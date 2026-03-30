@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LLM Orchestration Hub - Architectural Blueprint IDE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0df2f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#102222",
+                        "app-bg": "#0B0C10",
+                        "surface": "#181A20",
+                        "surface-hover": "#242730",
+                        "text-primary": "#E0E6ED",
+                        "muted": "#4E5666",
+                        "accent-error": "#FF007F",
+                        "accent-ai": "#B026FF",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0px", "sm": "0px", "md": "0px", "lg": "0px", "xl": "0px", "2xl": "0px", "3xl": "0px", "full": "0px" },
+                    boxShadow: {
+                        "neon": "0 0 10px rgba(13, 242, 242, 0.3)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0B0C10;
+            color: #E0E6ED;
+            background-image: linear-gradient(#181A20 1px, transparent 1px), linear-gradient(90deg, #181A20 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0C10; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4E5666; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0df2f2; 
+        }
+    </style>
+</head>
+<body class="font-display h-screen flex flex-col overflow-hidden">
+<!-- TopNavBar (Shared Component) -->
+<div class="relative flex w-full flex-col bg-app-bg group/design-root z-50 border-b border-muted/30">
+<header class="flex items-center justify-between whitespace-nowrap px-6 py-3">
+<div class="flex items-center gap-4 text-white">
+<div class="size-5 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-text-primary text-lg font-bold leading-tight tracking-[-0.015em]">Architectural Blueprint IDE</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9">
+<a class="text-text-primary hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Architecture Map</a>
+<a class="text-text-primary hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Module Explorer</a>
+<a class="text-primary text-sm font-bold leading-normal border-b-2 border-primary pb-1" href="#">LLM Orchestration Hub</a>
+<a class="text-text-primary hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Code Editor</a>
+</div>
+</div>
+</header>
+</div>
+<!-- Main Content Area -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Pane: Configuration Matrix -->
+<section class="w-1/2 flex flex-col border-r border-muted/50 bg-app-bg/80 backdrop-blur-sm relative z-10">
+<div class="p-6 border-b border-muted/30 bg-surface/50">
+<h1 class="text-2xl font-bold text-text-primary flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">route</span>
+                    LLM Routing &amp; Fallback Chain
+                </h1>
+<p class="text-muted text-sm mt-2 font-mono">Configure multi-model redundancy and routing logic.</p>
+</div>
+<div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+<!-- Primary Provider (Active) -->
+<div class="w-full bg-surface border border-muted hover:border-primary/50 transition-colors flex items-center h-[60px] group shadow-neon relative">
+<div class="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-primary"></div>
+<div class="px-3 cursor-grab text-muted hover:text-text-primary">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 flex items-center gap-4 px-2">
+<div class="w-1/3">
+<select class="w-full bg-surface-hover border border-muted/50 text-text-primary text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono py-1.5 px-3 appearance-none cursor-pointer">
+<option selected="">OpenAI</option>
+<option>Anthropic</option>
+<option>Ollama (Local)</option>
+</select>
+</div>
+<div class="w-1/3">
+<select class="w-full bg-surface-hover border border-muted/50 text-text-primary text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono py-1.5 px-3 appearance-none cursor-pointer">
+<option selected="">gpt-4-turbo</option>
+<option>gpt-4</option>
+<option>gpt-3.5-turbo</option>
+</select>
+</div>
+</div>
+<div class="px-4 flex items-center gap-4 border-l border-muted/30 h-full">
+<span class="flex items-center gap-1.5 text-xs font-mono text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Primary
+                        </span>
+<button class="text-muted hover:text-accent-error transition-colors">
+<span class="material-symbols-outlined text-xl">delete</span>
+</button>
+</div>
+</div>
+<!-- Fallback Connection Indicator -->
+<div class="flex justify-center -my-2 z-0 relative">
+<div class="h-8 w-px bg-muted"></div>
+<div class="absolute top-1/2 -translate-y-1/2 bg-app-bg px-2 text-xs text-muted font-mono">FALLBACK</div>
+</div>
+<!-- Secondary Provider (Fallback) -->
+<div class="w-full bg-surface border border-muted hover:border-primary/50 transition-colors flex items-center h-[60px] group">
+<div class="px-3 cursor-grab text-muted hover:text-text-primary">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 flex items-center gap-4 px-2">
+<div class="w-1/3">
+<select class="w-full bg-surface-hover border border-muted/50 text-text-primary text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono py-1.5 px-3 appearance-none cursor-pointer">
+<option>OpenAI</option>
+<option selected="">Anthropic</option>
+<option>Ollama (Local)</option>
+</select>
+</div>
+<div class="w-1/3">
+<select class="w-full bg-surface-hover border border-muted/50 text-text-primary text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono py-1.5 px-3 appearance-none cursor-pointer">
+<option selected="">claude-3-sonnet</option>
+<option>claude-3-opus</option>
+<option>claude-3-haiku</option>
+</select>
+</div>
+</div>
+<div class="px-4 flex items-center gap-4 border-l border-muted/30 h-full">
+<span class="flex items-center gap-1.5 text-xs font-mono text-accent-ai">
+<span class="w-2 h-2 rounded-full bg-accent-ai"></span> Fallback 1
+                        </span>
+<button class="text-muted hover:text-accent-error transition-colors">
+<span class="material-symbols-outlined text-xl">delete</span>
+</button>
+</div>
+</div>
+<!-- Fallback Connection Indicator -->
+<div class="flex justify-center -my-2 z-0 relative">
+<div class="h-8 w-px bg-muted"></div>
+<div class="absolute top-1/2 -translate-y-1/2 bg-app-bg px-2 text-xs text-muted font-mono">FALLBACK</div>
+</div>
+<!-- Local Fallback (Drop Target Example) -->
+<div class="w-full border-2 border-dashed border-primary bg-primary/5 flex flex-col items-center justify-center h-[80px] group transition-all relative">
+<div class="absolute inset-0 bg-primary/10 animate-pulse"></div>
+<span class="material-symbols-outlined text-primary mb-1 relative z-10">add_circle</span>
+<span class="text-sm font-mono text-primary relative z-10">Drop model here to extend chain</span>
+</div>
+<!-- Available Providers Toolbox -->
+<div class="mt-8 pt-6 border-t border-muted/30">
+<h3 class="text-sm text-muted font-mono mb-4 uppercase tracking-wider">Available Providers</h3>
+<div class="flex flex-wrap gap-3">
+<div class="px-4 py-2 bg-surface border border-muted flex items-center gap-2 cursor-grab hover:border-text-primary">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+<span class="text-sm font-bold">OpenAI</span>
+</div>
+<div class="px-4 py-2 bg-surface border border-muted flex items-center gap-2 cursor-grab hover:border-text-primary">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+<span class="text-sm font-bold">Anthropic</span>
+</div>
+<div class="px-4 py-2 bg-surface border border-accent-error/50 flex items-center gap-2 cursor-grab hover:border-accent-error">
+<span class="material-symbols-outlined text-sm text-accent-error">drag_indicator</span>
+<span class="text-sm font-bold text-accent-error">Ollama (Local)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Pane: Test Playground -->
+<section class="w-1/2 flex flex-col bg-app-bg relative z-10">
+<div class="p-6 border-b border-muted/30 flex justify-between items-center bg-surface/30">
+<h2 class="text-xl font-bold text-text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-ai" style="font-variation-settings: 'FILL' 1;">science</span>
+                    Test Playground
+                </h2>
+<button class="bg-primary text-app-bg px-6 py-2 font-bold text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-neon">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    Run Test
+                </button>
+</div>
+<div class="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
+<!-- System Prompt Input -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-mono text-muted uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">settings</span> System Instructions
+                    </label>
+<textarea class="w-full h-24 bg-surface border border-muted focus:border-primary focus:ring-1 focus:ring-primary text-text-primary font-mono text-sm p-4 outline-none resize-none" placeholder="Enter system prompt here... e.g. 'You are a senior systems architect...'"></textarea>
+</div>
+<!-- User Message Input -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-mono text-muted uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person</span> User Message
+                    </label>
+<textarea class="w-full h-32 bg-surface border border-muted focus:border-primary focus:ring-1 focus:ring-primary text-text-primary font-mono text-sm p-4 outline-none resize-none" placeholder="Type your test prompt here..."></textarea>
+</div>
+<!-- Response Area -->
+<div class="flex flex-col gap-2 flex-1">
+<label class="text-xs font-mono text-muted uppercase tracking-wider flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">terminal</span> Output Stream
+                        </div>
+<span class="text-primary text-xs normal-case animate-pulse">Streaming...</span>
+</label>
+<div class="w-full flex-1 min-h-[200px] bg-[#0B0C10] border border-muted relative group font-mono text-sm p-4 text-text-primary overflow-y-auto">
+<p class="mb-4">Here is an analysis of the proposed architecture:</p>
+<p class="mb-4 text-primary">The routing layer correctly abstracts the underlying LLM providers. By implementing a fallback chain, you ensure high availability even if the primary cloud provider experiences rate limiting or downtime.</p>
+<span class="inline-block w-2 h-4 bg-primary animate-pulse ml-1"></span>
+</div>
+</div>
+</div>
+<!-- Metrics Bar (Footer) -->
+<div class="h-12 bg-surface border-t border-muted/50 flex items-center justify-between px-6 font-mono text-xs">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-sm">memory</span>
+<span>Tokens: 256</span>
+</div>
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-sm">timer</span>
+<span>Latency: 840ms</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-muted">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>Routed via: gpt-4-turbo</span>
+</div>
+</div>
+</section>
+</main>
+</body></html>

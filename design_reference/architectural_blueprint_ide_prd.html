@@ -1,0 +1,197 @@
+# Architectural Blueprint IDE
+
+## Product Overview
+
+**The Pitch:** A dual-interface development environment bridging the gap between high-level software architecture and raw code. It empowers non-coders to understand and orchestrate LLM-powered applications through interactive visual blueprints, while seamlessly scaling into a full-featured code editor for seasoned engineers.
+
+**For:** Aspiring builders learning system design and LLM integration, and senior developers who want a unified visual-to-code architecture tool.
+
+**Device:** desktop
+
+**Design Direction:** Structural, dark-mode cybernetic blueprint. Sharp edges, high-contrast neon accents, technical geometric typography, and a subtle grid-lined canvas.
+
+**Inspired by:** Unreal Engine Blueprints, Linear, VScode (with synthwave/cyberpunk themes).
+
+---
+
+## Screens
+
+- **Global Architecture Map:** Interactive nodes representing application components (Frontend, Backend, LLM Gateway).
+- **Module Focus Explorer:** Split-view detailing a single component with plain-english explanations and agentic chat.
+- **LLM Orchestration Hub:** Visual configuration matrix for routing requests between local and cloud models.
+- **Pro Code Editor:** Uncompromised, dark-themed coding environment with integrated terminal and file tree.
+
+---
+
+## Key Flows
+
+**Novice to Pro Translation Flow:** User transitions from high-level understanding to code execution.
+
+1. User is on **Global Architecture Map** -> sees interactive graph of system.
+2. User clicks **LLM Gateway Node** -> slides open the **Module Focus Explorer**.
+3. User toggles **`View Source`** -> seamlessly transitions to the **Pro Code Editor** focused on the exact routing script.
+
+---
+
+<details>
+<summary>Design System</summary>
+
+## Color Palette
+
+- **Primary:** `#00FFD1` - Cyber-teal for interactive elements, active nodes, primary CTAs
+- **Background:** `#0B0C10` - Deep structural void
+- **Surface:** `#181A20` - Panels, cards, floating menus
+- **Surface Highlight:** `#242730` - Hover states, active tabs
+- **Text:** `#E0E6ED` - Primary readability
+- **Muted:** `#4E5666` - Grid lines, disabled states, secondary text
+- **Accent 1:** `#FF007F` - Errors, destructive actions, local model indicators
+- **Accent 2:** `#B026FF` - AI/Agentic suggestions, cloud model indicators
+
+## Typography
+
+- **Headings:** `Space Grotesk`, 700, 24-32px
+- **Body:** `JetBrains Mono`, 400, 14px
+- **Small text:** `JetBrains Mono`, 400, 12px
+- **Buttons:** `Space Grotesk`, 600, 14px
+
+**Style notes:** 0px border radius everywhere. Sharp, aggressive geometric shapes. Blueprint aesthetic achieved via repeating `#181A20` grid backgrounds. Neon glow effects (0px 0px 8px) on active primary elements.
+
+## Design Tokens
+
+```css
+:root {
+  --color-primary: #00FFD1;
+  --color-background: #0B0C10;
+  --color-surface: #181A20;
+  --color-surface-hover: #242730;
+  --color-text: #E0E6ED;
+  --color-muted: #4E5666;
+  --color-accent-error: #FF007F;
+  --color-accent-ai: #B026FF;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 0px;
+  --border-thin: 1px solid var(--color-muted);
+  --shadow-neon: 0 0 10px rgba(0, 255, 209, 0.3);
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary>Screen Specifications</summary>
+
+### Global Architecture Map
+
+**Purpose:** Spatial visualization of the entire software system.
+
+**Layout:** Edge-to-edge canvas with a faint 20px grid. Collapsible vertical left sidebar (240px) for project assets. Floating action bar bottom-center.
+
+**Key Elements:**
+- **System Nodes:** 180x80px rectangles, `#181A20` fill, 1px `#4E5666` border. Contains node title (`Frontend`, `Database`, `LLM Router`).
+- **Connection Splines:** 2px solid `#4E5666` bezier curves connecting nodes. Animate with glowing dots flowing in the direction of data.
+- **Mode Toggle:** Top-right pill, switches between `Blueprint` and `Code` modes. 
+
+**States:**
+- **Empty:** "Initialize Architecture" centered prompt with dashed `#4E5666` drop zone.
+- **Loading:** Nodes pulse slowly between `#181A20` and `#242730`.
+- **Error:** Broken splines flash `#FF007F`.
+
+**Components:**
+- **Toolbar:** 40px height, `#181A20`, bottom-center absolute position, contains zoom/pan controls.
+
+**Interactions:**
+- **Click Node:** Opens Module Focus Explorer, applies `--shadow-neon` to node.
+- **Hover Spline:** Thicken to 4px, turns `#00FFD1`.
+
+**Responsive:**
+- **Desktop:** Full canvas, all panels visible.
+- **Tablet:** Sidebar auto-collapses, touch-pan enabled.
+- **Mobile:** Not supported. 
+
+### Module Focus Explorer
+
+**Purpose:** Detailed plain-english and agentic breakdown of a specific architectural component.
+
+**Layout:** Right-side drawer (500px width), overlaying the Architecture Map.
+
+**Key Elements:**
+- **Header:** Node title, active status indicator, `Close` button.
+- **Agentic Chat:** Scrollable dialogue box for asking architecture questions ("How does this router handle token limits?").
+- **Inspect Code CTA:** Full-width `#00FFD1` button at the bottom, black text.
+
+**States:**
+- **Loading:** Skeleton lines for text blocks.
+- **Error:** "Agent disconnected" message in `#FF007F`.
+
+**Components:**
+- **Chat Bubble (AI):** `#242730` background, 1px `#B026FF` left-border, `JetBrains Mono` text.
+- **Chat Bubble (User):** Transparent background, 1px `#4E5666` border.
+
+**Interactions:**
+- **Click `Inspect Code`:** Closes drawer, triggers crossfade to Pro Code Editor screen.
+
+### Pro Code Editor
+
+**Purpose:** Uncompromised raw code authoring and execution.
+
+**Layout:** Three-pane classic IDE: 250px left file tree, central editor, 250px right agentic copilot panel. 200px bottom terminal.
+
+**Key Elements:**
+- **File Explorer:** Indented tree, `#181A20` background.
+- **Editor Canvas:** `#0B0C10` background, syntax highlighting using primary/accent colors.
+- **Terminal:** Standard output, `#181A20` top border.
+
+**States:**
+- **Empty:** Watermark logo centered in editor canvas.
+- **Error:** Syntax errors underlined in `#FF007F`.
+
+**Components:**
+- **Tab Bar:** Active tab has 2px `#00FFD1` top border, others inactive.
+- **Minimap:** 50px wide scroll overview on the right edge of the editor.
+
+**Interactions:**
+- **Hover Function:** Agentic tooltip appears explaining function context.
+- **Click `Blueprint` toggle:** Returns to Architecture Map, highlighting the node corresponding to the active file.
+
+### LLM Orchestration Hub
+
+**Purpose:** Visual routing and configuration of LLMs (Local vs Cloud).
+
+**Layout:** Split 50/50 vertical. Left: Configuration matrix. Right: Testing playground.
+
+**Key Elements:**
+- **Provider Dropdowns:** Select boxes for `OpenAI`, `Anthropic`, `Ollama (Local)`.
+- **Fallback Chain:** Draggable list of models. Top-to-bottom priority.
+- **Playground Input:** Text area for testing prompts against the configured chain.
+
+**States:**
+- **Empty Fallback:** "Drag models here to create redundancy chain."
+- **Loading:** Spinning loader next to provider status.
+
+**Components:**
+- **Provider Card:** 100% width, 60px height, `#181A20` background, dragging handler on left.
+- **Metrics Bar:** Token count and latency metrics displayed in `#00FFD1`.
+
+**Interactions:**
+- **Drag Provider:** Highlights drop targets with dashed `#00FFD1` outline.
+- **Click `Run Test`:** Initiates streaming response in Playground pane.
+
+</details>
+
+---
+
+<details>
+<summary>Build Guide</summary>
+
+**Stack:** HTML + Tailwind CSS v3 + ReactFlow (for canvas) + Monaco Editor (for pro code)
+
+**Build Order:**
+1. **Global Architecture Map:** Establishes the core visual identity (canvas, grid, nodes, dark/neon theme).
+2. **Pro Code Editor:** Implements the core functional environment for the secondary persona.
+3. **Module Focus Explorer:** Bridges the gap between visual and code, implementing the agentic UI layer.
+4. **LLM Orchestration Hub:** Adds the domain-specific LLM routing features.
+
+</details>

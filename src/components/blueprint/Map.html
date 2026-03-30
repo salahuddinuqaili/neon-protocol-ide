@@ -1,0 +1,61 @@
+<!-- Global Architecture Map Module -->
+<div class="absolute inset-0 w-full h-full">
+    <!-- SVG Canvas for Splines (Connections) -->
+    <svg id="blueprint-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 100%; min-height: 100%;">
+        <defs>
+            <filter id="glow">
+                <feGaussianBlur result="coloredBlur" stdDeviation="2.5"></feGaussianBlur>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"></feMergeNode>
+                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+            </filter>
+        </defs>
+        <!-- Connection 1: Client -> Gateway -->
+        <path d="M 300 340 C 450 340, 450 340, 550 340" fill="none" stroke="#4E5666" stroke-width="2"></path>
+        <path class="flow-line" d="M 300 340 C 450 340, 450 340, 550 340" fill="none" filter="url(#glow)" stroke="#00FFD1" stroke-width="2" style="stroke-dasharray: 8 4; animation: flow 1s linear infinite;"></path>
+    </svg>
+
+    <!-- Nodes Container -->
+    <div class="absolute inset-0 w-full h-full z-20">
+        <!-- Node 1: Client Application -->
+        <div class="node-card absolute top-[300px] left-[120px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-primary hover:shadow-neon transition-all">
+            <div class="flex items-center justify-between w-full mb-1">
+                <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Frontend</span>
+                <div class="w-2 h-2 bg-primary rounded-full shadow-neon"></div>
+            </div>
+            <h3 class="text-text-main font-bold text-sm truncate">React Client</h3>
+            <div class="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+        </div>
+
+        <!-- Node 2: LLM Gateway (Active) -->
+        <div onclick="openModuleExplorer('LLM Gateway')" class="node-card absolute top-[300px] left-[550px] w-[180px] h-[80px] bg-surface border-primary shadow-neon-active flex flex-col justify-center px-4 cursor-pointer group z-30">
+            <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>
+            <div class="flex items-center justify-between w-full mb-1">
+                <span class="text-[10px] font-mono text-primary uppercase tracking-wider">Router</span>
+                <span class="material-symbols-outlined text-[14px] text-primary">route</span>
+            </div>
+            <h3 class="text-text-main font-bold text-sm truncate">LLM Gateway</h3>
+            <div class="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+            <div class="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+        </div>
+    </div>
+
+    <!-- Floating Toolbar -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 h-10 bg-surface border border-muted flex items-center shadow-lg">
+        <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-r border-muted transition-colors">
+            <span class="material-symbols-outlined text-[20px]">remove</span>
+        </button>
+        <div class="px-4 text-[10px] font-mono text-text-main select-none">100%</div>
+        <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-l border-muted transition-colors">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes flow {
+        from { stroke-dashoffset: 12; }
+        to { stroke-dashoffset: 0; }
+    }
+</style>

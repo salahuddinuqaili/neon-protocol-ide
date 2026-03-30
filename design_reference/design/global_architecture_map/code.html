@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-width=1.0" name="viewport"/>
+<title>Architectural Blueprint IDE - Global Architecture Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#00FFD1", // Updated to match PRD primary
+          "background-light": "#f5f8f8",
+          "background-dark": "#0B0C10", // Updated to match PRD background
+          "surface": "#181A20",
+          "surface-hover": "#242730",
+          "text-primary": "#E0E6ED",
+          "muted": "#4E5666",
+          "accent-error": "#FF007F",
+          "accent-ai": "#B026FF",
+        },
+        fontFamily: {
+          "display": ["Space Grotesk", "sans-serif"],
+          "mono": ["JetBrains Mono", "monospace"]
+        },
+        borderRadius: {"DEFAULT": "0px", "sm": "0px", "md": "0px", "lg": "0px", "xl": "0px", "full": "0px"}, // Enforcing 0px radius from PRD
+        backgroundImage: {
+          'blueprint-grid': 'linear-gradient(to right, #4E5666 1px, transparent 1px), linear-gradient(to bottom, #4E5666 1px, transparent 1px)',
+        },
+        boxShadow: {
+          'neon': '0 0 10px rgba(0, 255, 209, 0.3)',
+          'neon-active': '0 0 15px rgba(0, 255, 209, 0.6)',
+        }
+      },
+    },
+  }
+</script>
+<style>
+  /* Base styles to enforce PRD requirements */
+  body {
+    background-color: theme('colors.background-dark');
+    color: theme('colors.text-primary');
+    font-family: theme('fontFamily.display');
+    margin: 0;
+    overflow: hidden;
+  }
+
+  /* Blueprint Grid Pattern */
+  .canvas-grid {
+    background-size: 20px 20px;
+    background-image: 
+      linear-gradient(to right, rgba(78, 86, 102, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(78, 86, 102, 0.1) 1px, transparent 1px);
+    background-position: center center;
+  }
+
+  /* SVG Spline Animation */
+  .flow-line {
+    stroke-dasharray: 8 4;
+    animation: flow 1s linear infinite;
+  }
+
+  @keyframes flow {
+    from { stroke-dashoffset: 12; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Node Hover & Active States */
+  .node-card {
+    transition: all 0.2s ease;
+  }
+  .node-card:hover {
+    border-color: theme('colors.primary');
+    box-shadow: theme('boxShadow.neon');
+  }
+  .node-card.active {
+    border-color: theme('colors.primary');
+    box-shadow: theme('boxShadow.neon-active');
+  }
+
+  /* Hide scrollbar for sidebar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+</style>
+</head>
+<body class="h-screen w-screen flex overflow-hidden bg-background-dark text-text-primary selection:bg-primary selection:text-background-dark">
+<!-- Application Layout -->
+<div class="flex h-full w-full relative">
+<!-- Left Sidebar: Project Explorer (Shared Component integrated) -->
+<!-- Applying PRD specifics: 240px width, #181A20 background, sharp edges -->
+<aside class="w-[240px] flex-shrink-0 h-full bg-surface border-r border-muted flex flex-col z-20 shadow-lg relative">
+<!-- Header Area from Shared Component (Adapted slightly for fit) -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-muted px-4 py-4 bg-surface-hover">
+<div class="flex items-center gap-3 text-text-primary">
+<div class="size-5 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-text-primary text-sm font-bold tracking-tight font-display">ArchIDE</h2>
+</div>
+</header>
+<!-- Sidebar Content -->
+<div class="flex h-full flex-col justify-between p-3 overflow-y-auto no-scrollbar">
+<div class="flex flex-col gap-6">
+<!-- Project Info -->
+<div class="flex flex-col px-1">
+<h1 class="text-text-primary text-sm font-bold leading-normal uppercase tracking-wider">System Explorer</h1>
+<p class="text-muted text-xs font-mono mt-1">v2.4.0-alpha</p>
+</div>
+<!-- Navigation Links (from shared component, strict adherence to logic) -->
+<nav class="flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-2 bg-surface-hover border-l-2 border-primary cursor-pointer transition-colors hover:bg-surface-hover">
+<div class="text-primary" data-icon="share" data-size="20px">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</div>
+<p class="text-text-primary text-sm font-medium">Architecture Map</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors hover:bg-surface-hover text-muted hover:text-text-primary">
+<div data-icon="terminal" data-size="20px">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<p class="text-sm font-medium">Code Editor</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors hover:bg-surface-hover text-muted hover:text-text-primary">
+<div data-icon="route" data-size="20px">
+<span class="material-symbols-outlined text-[20px]">route</span>
+</div>
+<p class="text-sm font-medium">LLM Hub</p>
+</div>
+</nav>
+<!-- Component Library (Draggable items for canvas) -->
+<div class="flex flex-col mt-4">
+<h3 class="text-muted text-xs font-bold uppercase tracking-widest px-1 mb-3">Node Library</h3>
+<div class="flex flex-col gap-2">
+<!-- Draggable Item -->
+<div class="flex items-center gap-3 px-3 py-2 bg-background-dark border border-muted cursor-grab hover:border-primary hover:text-primary transition-colors group">
+<span class="material-symbols-outlined text-[18px] text-muted group-hover:text-primary">api</span>
+<span class="text-xs font-mono">Gateway Router</span>
+</div>
+<!-- Draggable Item -->
+<div class="flex items-center gap-3 px-3 py-2 bg-background-dark border border-muted cursor-grab hover:border-primary hover:text-primary transition-colors group">
+<span class="material-symbols-outlined text-[18px] text-muted group-hover:text-primary">database</span>
+<span class="text-xs font-mono">Vector Store</span>
+</div>
+<!-- Draggable Item -->
+<div class="flex items-center gap-3 px-3 py-2 bg-background-dark border border-muted cursor-grab hover:border-accent-ai hover:text-accent-ai transition-colors group">
+<span class="material-symbols-outlined text-[18px] text-muted group-hover:text-accent-ai">smart_toy</span>
+<span class="text-xs font-mono">Cloud LLM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action -->
+<button class="w-full flex items-center justify-center gap-2 h-10 bg-surface-hover border border-muted text-text-primary text-sm font-bold hover:bg-primary hover:text-background-dark transition-colors mt-6">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+<span>Deploy</span>
+</button>
+</div>
+</aside>
+<!-- Main Canvas Area -->
+<main class="flex-1 h-full relative overflow-hidden bg-background-dark canvas-grid z-10">
+<!-- Top Right Mode Toggle -->
+<div class="absolute top-6 right-6 z-30 flex bg-surface border border-muted p-1">
+<button class="px-4 py-1.5 bg-primary text-background-dark text-sm font-bold tracking-wide transition-colors">
+          BLUEPRINT
+        </button>
+<button class="px-4 py-1.5 text-muted hover:text-text-primary text-sm font-bold tracking-wide transition-colors">
+          CODE
+        </button>
+</div>
+<!-- SVG Canvas for Splines (Connections) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 100%; min-height: 100%;">
+<defs>
+<lineargradient id="glowGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#4E5666"></stop>
+<stop offset="50%" stop-color="#00FFD1"></stop>
+<stop offset="100%" stop-color="#4E5666"></stop>
+</lineargradient>
+<filter id="glow">
+<fegaussianblur result="coloredBlur" stddeviation="2.5"></fegaussianblur>
+<femerge>
+<femergenode in="coloredBlur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+</defs>
+<!-- Connection 1: Client -> Gateway -->
+<path d="M 300 340 C 450 340, 450 340, 550 340" fill="none" stroke="#4E5666" stroke-width="2"></path>
+<path class="flow-line" d="M 300 340 C 450 340, 450 340, 550 340" fill="none" filter="url(#glow)" stroke="#00FFD1" stroke-width="2"></path>
+<!-- Connection 2: Gateway -> DB -->
+<path d="M 730 300 C 850 300, 800 180, 950 180" fill="none" stroke="#4E5666" stroke-width="2"></path>
+<!-- Connection 3: Gateway -> Local LLM -->
+<path d="M 730 380 C 850 380, 800 500, 950 500" fill="none" stroke="#4E5666" stroke-width="2"></path>
+<path class="flow-line" d="M 730 380 C 850 380, 800 500, 950 500" fill="none" stroke="#FF007F" stroke-width="2"></path>
+</svg>
+<!-- Nodes Container (Absolute positioning to simulate canvas) -->
+<div class="absolute inset-0 w-full h-full z-20">
+<!-- Node 1: Client Application -->
+<!-- 180x80px, #181A20 fill, 1px #4E5666 border -->
+<div class="node-card absolute top-[300px] left-[120px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="text-xs font-mono text-muted uppercase tracking-wider">Frontend</span>
+<div class="w-2 h-2 bg-primary rounded-full shadow-[0_0_5px_#00FFD1]"></div>
+</div>
+<h3 class="text-text-primary font-bold text-base truncate">React Client</h3>
+<!-- Right Port -->
+<div class="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+</div>
+<!-- Node 2: LLM Gateway (Active State) -->
+<div class="node-card active absolute top-[300px] left-[550px] w-[180px] h-[80px] bg-surface border-primary flex flex-col justify-center px-4 cursor-pointer group z-30">
+<!-- Port Left -->
+<div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>
+<div class="flex items-center justify-between w-full mb-1">
+<span class="text-xs font-mono text-primary uppercase tracking-wider">Router</span>
+<span class="material-symbols-outlined text-[14px] text-primary">route</span>
+</div>
+<h3 class="text-text-primary font-bold text-base truncate">LLM Gateway</h3>
+<!-- Ports Right -->
+<div class="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+<div class="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+</div>
+<!-- Node 3: Vector Database -->
+<div class="node-card absolute top-[140px] left-[950px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group">
+<!-- Port Left -->
+<div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+<div class="flex items-center justify-between w-full mb-1">
+<span class="text-xs font-mono text-muted uppercase tracking-wider">Storage</span>
+<span class="material-symbols-outlined text-[14px] text-muted">database</span>
+</div>
+<h3 class="text-text-primary font-bold text-base truncate">PgVector DB</h3>
+</div>
+<!-- Node 4: Local Model -->
+<div class="node-card absolute top-[460px] left-[950px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group">
+<!-- Port Left -->
+<div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-error transition-colors"></div>
+<div class="flex items-center justify-between w-full mb-1">
+<span class="text-xs font-mono text-accent-error uppercase tracking-wider">Local AI</span>
+<div class="w-2 h-2 bg-accent-error rounded-full shadow-[0_0_5px_#FF007F]"></div>
+</div>
+<h3 class="text-text-primary font-bold text-base truncate">Ollama Llama3</h3>
+</div>
+</div>
+<!-- Floating Action Bar (Bottom Center) -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 h-10 bg-surface border border-muted flex items-center shadow-lg">
+<button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover transition-colors flex items-center justify-center border-r border-muted" title="Zoom Out">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<div class="px-4 text-xs font-mono text-text-primary select-none">
+          100%
+        </div>
+<button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover transition-colors flex items-center justify-center border-l border-r border-muted" title="Zoom In">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover transition-colors flex items-center justify-center border-r border-muted" title="Fit to Screen">
+<span class="material-symbols-outlined text-[20px]">fit_screen</span>
+</button>
+<button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover transition-colors flex items-center justify-center" title="Pan Tool">
+<span class="material-symbols-outlined text-[20px]">pan_tool</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Blueprint IDE - Pro Code Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0df2f2",
+              "background-light": "#f5f8f8",
+              "background-dark": "#102222",
+              "editor-bg": "#0B0C10",
+              "surface": "#181A20",
+              "surface-hover": "#242730",
+              "text-main": "#E0E6ED",
+              "text-muted": "#4E5666",
+              "accent-error": "#FF007F",
+              "accent-ai": "#B026FF",
+            },
+            fontFamily: {
+              "display": ["Space Grotesk", "sans-serif"],
+              "mono": ["JetBrains Mono", "monospace"],
+            },
+            borderRadius: {
+              "DEFAULT": "0px", 
+              "sm": "0px",
+              "md": "0px",
+              "lg": "0px", 
+              "xl": "0px", 
+              "full": "0px"
+            },
+            boxShadow: {
+              "neon": "0 0 10px rgba(13, 242, 242, 0.3)",
+              "neon-ai": "0 0 10px rgba(176, 38, 255, 0.3)",
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #0B0C10; color: #E0E6ED; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0C10; }
+        ::-webkit-scrollbar-thumb { background: #242730; border-radius: 0px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4E5666; }
+
+        .syntax-keyword { color: #FF007F; }
+        .syntax-function { color: #0df2f2; }
+        .syntax-string { color: #B026FF; }
+        .syntax-comment { color: #4E5666; }
+        .syntax-variable { color: #E0E6ED; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col overflow-hidden bg-editor-bg text-text-main selection:bg-primary/30">
+<!-- Top Navigation Bar -->
+<header class="h-12 flex items-center justify-between px-4 bg-surface border-b border-text-muted/30 shrink-0">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-xl">architecture</span>
+<span class="font-display font-bold tracking-wide">Blueprint IDE</span>
+</div>
+<div class="w-px h-5 bg-text-muted/50 mx-2"></div>
+<div class="flex items-center gap-2 text-sm font-mono text-text-muted">
+<span class="hover:text-text-main cursor-pointer transition-colors">src</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="hover:text-text-main cursor-pointer transition-colors">llm_gateway</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-text-main">router.ts</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex bg-editor-bg border border-text-muted/30 p-0.5">
+<button class="px-4 py-1 text-sm font-display font-medium text-text-muted hover:text-text-main transition-colors">
+                    Blueprint
+                </button>
+<button class="px-4 py-1 text-sm font-display font-bold bg-primary text-editor-bg shadow-neon">
+                    Code
+                </button>
+</div>
+<div class="flex items-center gap-3 border-l border-text-muted/30 pl-4">
+<button class="text-text-muted hover:text-text-main transition-colors">
+<span class="material-symbols-outlined text-xl">play_arrow</span>
+</button>
+<button class="text-text-muted hover:text-text-main transition-colors">
+<span class="material-symbols-outlined text-xl">settings</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex flex-1 overflow-hidden">
+<!-- Left Panel: File Explorer (250px) -->
+<aside class="w-[250px] bg-surface border-r border-text-muted/30 flex flex-col shrink-0">
+<div class="h-8 flex items-center px-3 border-b border-text-muted/30">
+<span class="text-xs font-display font-bold tracking-widest text-text-muted">EXPLORER</span>
+</div>
+<div class="flex-1 overflow-y-auto py-2 font-mono text-sm">
+<!-- Project Root -->
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-main font-medium">
+<span class="material-symbols-outlined text-base">folder_open</span>
+<span>NEXUS_CORE</span>
+</div>
+<!-- Folders & Files -->
+<div class="pl-4">
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-muted">
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="material-symbols-outlined text-base text-accent-ai">folder</span>
+<span>frontend</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-main">
+<span class="material-symbols-outlined text-base">expand_more</span>
+<span class="material-symbols-outlined text-base text-primary">folder_open</span>
+<span>llm_gateway</span>
+</div>
+<!-- Expanded Folder Contents -->
+<div class="pl-8">
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-muted">
+<span class="material-symbols-outlined text-base text-yellow-500">description</span>
+<span>config.yml</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-hover text-primary border-l-2 border-primary">
+<span class="material-symbols-outlined text-base text-blue-400">code</span>
+<span>router.ts</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-muted">
+<span class="material-symbols-outlined text-base text-blue-400">code</span>
+<span>types.ts</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 cursor-pointer hover:bg-surface-hover text-text-muted">
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="material-symbols-outlined text-base text-accent-error">folder</span>
+<span>database</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Panel: Code Editor & Terminal -->
+<section class="flex-1 flex flex-col min-w-0 bg-editor-bg relative">
+<!-- Editor Tabs -->
+<div class="h-10 flex bg-surface border-b border-text-muted/30 shrink-0 overflow-x-auto scrollbar-hide">
+<div class="flex items-center gap-2 px-4 bg-editor-bg border-t-2 border-primary min-w-fit cursor-pointer">
+<span class="material-symbols-outlined text-sm text-blue-400">code</span>
+<span class="font-mono text-sm text-text-main">router.ts</span>
+<span class="material-symbols-outlined text-sm text-text-muted hover:text-text-main ml-2">close</span>
+</div>
+<div class="flex items-center gap-2 px-4 border-t-2 border-transparent border-r border-text-muted/30 min-w-fit cursor-pointer hover:bg-surface-hover transition-colors">
+<span class="material-symbols-outlined text-sm text-yellow-500">description</span>
+<span class="font-mono text-sm text-text-muted">config.yml</span>
+<span class="material-symbols-outlined text-sm text-text-muted hover:text-text-main ml-2">close</span>
+</div>
+</div>
+<!-- Code Canvas Area -->
+<div class="flex-1 flex overflow-hidden relative group">
+<!-- Line Numbers -->
+<div class="w-12 bg-editor-bg border-r border-text-muted/10 flex flex-col py-4 font-mono text-xs text-text-muted text-right pr-2 select-none shrink-0">
+<div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div class="text-text-main bg-surface-hover">7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div>
+</div>
+<!-- Actual Code -->
+<div class="flex-1 overflow-auto p-4 font-mono text-sm leading-relaxed whitespace-pre font-medium relative">
+<span class="syntax-keyword">import</span> { <span class="syntax-variable">OllamaClient</span>, <span class="syntax-variable">OpenAIClient</span> } <span class="syntax-keyword">from</span> <span class="syntax-string">'@nexus/providers'</span>;
+<span class="syntax-keyword">import</span> { <span class="syntax-variable">RouteConfig</span> } <span class="syntax-keyword">from</span> <span class="syntax-string">'./types'</span>;
+
+<span class="syntax-comment">// Primary routing logic for incoming LLM requests</span>
+<span class="syntax-keyword">export async function</span> <span class="syntax-function relative inline-block cursor-pointer group/func">routeRequest<div class="absolute bottom-full mb-2 left-0 w-64 p-3 bg-surface border border-accent-ai shadow-neon-ai hidden group-hover/func:block z-50 pointer-events-none">
+<div class="flex items-center gap-2 mb-1 text-accent-ai font-display text-xs font-bold uppercase">
+<span class="material-symbols-outlined text-sm">psychology</span> Copilot Insight
+                            </div>
+<div class="text-xs text-text-main font-display leading-tight whitespace-normal">
+                                This function determines whether to use the local Ollama instance or fallback to OpenAI based on token complexity.
+                            </div>
+</div></span>(<span class="syntax-variable">prompt</span>: <span class="syntax-keyword">string</span>, <span class="syntax-variable">config</span>: <span class="syntax-variable">RouteConfig</span>) {
+    <span class="syntax-keyword">const</span> <span class="syntax-variable">complexityScore</span> = <span class="syntax-keyword">await</span> <span class="syntax-function">analyzePrompt</span>(<span class="syntax-variable">prompt</span>);
+    
+<div class="bg-surface-hover -mx-4 px-4 border-l-2 border-primary w-full"> <span class="syntax-keyword">if</span> (<span class="syntax-variable">complexityScore</span> &lt; <span class="syntax-variable">config</span>.<span class="syntax-variable">threshold</span>) {
+        <span class="syntax-comment">// Fast, local execution for simple tasks</span>
+<span class="syntax-keyword">return</span> <span class="syntax-variable">OllamaClient</span>.<span class="syntax-function">generate</span>({
+            <span class="syntax-variable">model</span>: <span class="syntax-string">'llama3:8b'</span>,
+            <span class="syntax-variable">prompt</span>: <span class="syntax-variable">prompt</span>
+        });
+    }</div>
+<span class="syntax-comment">// Complex tasks routed to cloud provider</span>
+<span class="syntax-keyword">return</span> <span class="syntax-variable">OpenAIClient</span>.<span class="syntax-function">generate</span>({
+        <span class="syntax-variable">model</span>: <span class="syntax-string">'gpt-4-turbo'</span>,
+        <span class="syntax-variable">prompt</span>: <span class="syntax-variable">prompt</span>
+    });
+}
+                </div>
+<!-- Minimap (50px) -->
+<div class="w-[50px] bg-surface/50 border-l border-text-muted/10 shrink-0 hidden md:block overflow-hidden relative">
+<!-- Fake minimap content -->
+<div class="w-full h-full p-1 opacity-50">
+<div class="w-full h-0.5 bg-accent-error mb-1"></div>
+<div class="w-3/4 h-0.5 bg-text-muted mb-1"></div>
+<div class="w-1/2 h-0.5 bg-text-muted mb-4"></div>
+<div class="w-full h-0.5 bg-primary mb-1"></div>
+<div class="w-full h-0.5 bg-text-main mb-1"></div>
+<div class="w-5/6 h-0.5 bg-text-main mb-1"></div>
+<div class="w-full h-4 bg-surface-hover border-l border-primary mb-1 opacity-70"></div>
+<div class="w-1/2 h-0.5 bg-text-muted mb-4"></div>
+<div class="w-full h-0.5 bg-accent-ai mb-1"></div>
+<div class="w-3/4 h-0.5 bg-text-main mb-1"></div>
+<div class="w-4/5 h-0.5 bg-text-main mb-1"></div>
+</div>
+<!-- Minimap slider -->
+<div class="absolute top-0 left-0 w-full h-16 bg-text-muted/20 border border-text-muted/40 cursor-ns-resize"></div>
+</div>
+</div>
+<!-- Terminal Area (200px) -->
+<div class="h-[200px] bg-editor-bg border-t border-text-muted/30 flex flex-col shrink-0">
+<!-- Terminal Tabs -->
+<div class="h-8 flex bg-surface border-b border-text-muted/30 px-2">
+<div class="flex items-center px-4 border-b-2 border-primary text-text-main text-xs font-display font-bold uppercase tracking-wider cursor-pointer">
+                        Terminal
+                    </div>
+<div class="flex items-center px-4 border-b-2 border-transparent text-text-muted hover:text-text-main text-xs font-display font-medium uppercase tracking-wider cursor-pointer">
+                        Output
+                    </div>
+<div class="flex items-center px-4 border-b-2 border-transparent text-text-muted hover:text-text-main text-xs font-display font-medium uppercase tracking-wider cursor-pointer">
+                        Problems <span class="ml-2 bg-accent-error/20 text-accent-error px-1.5 py-0.5 text-[10px]">0</span>
+</div>
+<div class="flex-1 flex justify-end items-center gap-2 text-text-muted">
+<span class="material-symbols-outlined text-sm cursor-pointer hover:text-text-main">add</span>
+<span class="material-symbols-outlined text-sm cursor-pointer hover:text-text-main">delete</span>
+<span class="material-symbols-outlined text-sm cursor-pointer hover:text-text-main">keyboard_arrow_up</span>
+</div>
+</div>
+<!-- Terminal Content -->
+<div class="flex-1 overflow-auto p-3 font-mono text-sm text-text-muted">
+<div class="mb-1"><span class="text-primary">nexus@dev</span><span class="text-text-main">:</span><span class="text-blue-400">~/projects/blueprint</span>$ npm run dev</div>
+<div class="mb-1 text-text-main">&gt; nexus-core@1.0.0 dev</div>
+<div class="mb-1 text-text-main">&gt; tsx watch src/index.ts</div>
+<div class="mb-1 text-accent-ai">[Watcher] Starting in watch mode...</div>
+<div class="mb-1 text-primary">[Server] LLM Gateway running on http://localhost:4000</div>
+<div class="mb-1 text-text-muted">[Ollama] Connected to local instance: llama3:8b active</div>
+<div class="flex items-center mt-2">
+<span class="text-primary">nexus@dev</span><span class="text-text-main">:</span><span class="text-blue-400">~/projects/blueprint</span>$ <span class="w-2 h-4 bg-primary animate-pulse ml-2 inline-block shadow-neon"></span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Agentic Copilot (250px) -->
+<aside class="w-[250px] bg-surface border-l border-text-muted/30 flex flex-col shrink-0">
+<div class="h-10 flex items-center justify-between px-3 border-b border-text-muted/30 bg-surface-hover">
+<div class="flex items-center gap-2 text-accent-ai">
+<span class="material-symbols-outlined text-lg">smart_toy</span>
+<span class="text-xs font-display font-bold tracking-widest text-text-main">COPILOT</span>
+</div>
+<span class="material-symbols-outlined text-sm text-text-muted cursor-pointer hover:text-text-main">more_horiz</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 text-sm font-display">
+<!-- AI Message -->
+<div class="border-l-2 border-accent-ai pl-3">
+<div class="text-xs text-accent-ai font-bold mb-1">Architect AI</div>
+<div class="text-text-main leading-snug">
+                        I noticed you're working on the routing logic in <span class="font-mono text-xs text-primary bg-editor-bg px-1">router.ts</span>. 
+                        Would you like to implement a retry mechanism for the cloud provider fallback?
+                    </div>
+<button class="mt-2 px-3 py-1 bg-editor-bg border border-accent-ai/50 text-accent-ai text-xs font-bold hover:bg-accent-ai hover:text-editor-bg transition-colors shadow-[0_0_5px_rgba(176,38,255,0.1)]">
+                        Generate Code
+                    </button>
+</div>
+<!-- User Message -->
+<div class="border-l-2 border-text-muted pl-3">
+<div class="text-xs text-text-muted font-bold mb-1">You</div>
+<div class="text-text-main leading-snug">
+                        Yes, add a 3-attempt retry block for OpenAI timeouts.
+                    </div>
+</div>
+<!-- AI Message (Generating) -->
+<div class="border-l-2 border-accent-ai pl-3">
+<div class="text-xs text-accent-ai font-bold mb-1 flex items-center gap-2">
+                        Architect AI <span class="material-symbols-outlined text-[10px] animate-spin">sync</span>
+</div>
+<div class="text-text-muted leading-snug italic">
+                        Drafting implementation...
+                    </div>
+</div>
+</div>
+<!-- Chat Input -->
+<div class="p-3 border-t border-text-muted/30 bg-editor-bg">
+<div class="relative flex items-center">
+<input class="w-full bg-surface border border-text-muted/50 text-text-main text-sm p-2 pl-3 pr-8 focus:outline-none focus:border-accent-ai focus:shadow-neon-ai placeholder-text-muted font-display" placeholder="Ask copilot..." type="text"/>
+<button class="absolute right-2 text-text-muted hover:text-accent-ai">
+<span class="material-symbols-outlined text-base">send</span>
+</button>
+</div>
+</div>
+</aside>
+</main>
+<!-- Status Bar -->
+<footer class="h-6 bg-primary flex items-center justify-between px-3 text-editor-bg text-xs font-mono font-bold shrink-0">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">account_tree</span>
+<span>main*</span>
+</div>
+<div class="flex items-center gap-1 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">error</span>
+<span>0</span>
+<span class="material-symbols-outlined text-[14px] ml-1">warning</span>
+<span>0</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="cursor-pointer">Ln 7, Col 23</span>
+<span class="cursor-pointer">UTF-8</span>
+<span class="cursor-pointer">TypeScript React</span>
+<div class="flex items-center gap-1 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">cloud_done</span>
+<span>Ollama: Active</span>
+</div>
+</div>
+</footer>
+</body></html>

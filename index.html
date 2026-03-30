@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architectural Blueprint IDE</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/styles/theme.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00FFD1",
+                        "background": "#0B0C10",
+                        "surface": "#181A20",
+                        "surface-hover": "#242730",
+                        "text-main": "#E0E6ED",
+                        "muted": "#4E5666",
+                        "accent-error": "#FF007F",
+                        "accent-ai": "#B026FF",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: { "DEFAULT": "0px" }
+                }
+            }
+        }
+    </script>
+    <style>
+        .view-active { display: flex !important; }
+        .view-hidden { display: none !important; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-background text-text-main overflow-hidden">
+
+    <!-- Top Navigation Bar (Shared) -->
+    <header class="h-12 flex items-center justify-between px-6 bg-surface border-b border-muted/30 shrink-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-primary">
+                <span class="material-symbols-outlined text-xl">architecture</span>
+                <span class="font-display font-bold tracking-wide">Architectural Blueprint IDE</span>
+            </div>
+            <div id="breadcrumb" class="hidden md:flex items-center gap-2 text-sm font-mono text-muted ml-4 border-l border-muted/30 pl-4">
+                <span class="text-text-main">nexus_core</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex bg-background border border-muted/30 p-0.5">
+                <button onclick="switchView('blueprint')" id="btn-blueprint" class="px-4 py-1 text-sm font-display font-bold bg-primary text-background shadow-neon transition-all">
+                    BLUEPRINT
+                </button>
+                <button onclick="switchView('code')" id="btn-code" class="px-4 py-1 text-sm font-display font-medium text-muted hover:text-text-main transition-all">
+                    CODE
+                </button>
+            </div>
+            <div class="flex items-center gap-3 border-l border-muted/30 pl-4">
+                <button onclick="switchView('orchestrator')" class="text-muted hover:text-primary transition-colors" title="LLM Orchestrator">
+                    <span class="material-symbols-outlined text-xl">route</span>
+                </button>
+                <button class="text-muted hover:text-text-main transition-colors">
+                    <span class="material-symbols-outlined text-xl">settings</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Sidebar (Shared for Blueprint/Code) -->
+        <aside id="main-sidebar" class="w-[240px] flex-shrink-0 h-full bg-surface border-r border-muted/30 flex flex-col z-40 transition-all overflow-hidden">
+            <div class="p-4 border-b border-muted/10 bg-surface-hover/30 flex items-center justify-between">
+                <h3 class="text-xs font-bold text-muted uppercase tracking-widest">System Explorer</h3>
+                <span class="material-symbols-outlined text-muted text-xs cursor-pointer hover:text-text-main">create_new_folder</span>
+            </div>
+            <nav class="flex-1 overflow-y-auto p-2 custom-scrollbar">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-surface-hover border-l-2 border-primary text-text-main cursor-pointer group">
+                        <span class="material-symbols-outlined text-sm text-primary">folder_open</span>
+                        <span class="text-xs font-bold tracking-tight uppercase">nexus_core</span>
+                    </div>
+                    <div class="pl-3 flex flex-col gap-0.5 mt-1">
+                        <!-- Frontend Folder -->
+                        <div class="flex items-center gap-3 px-3 py-1.5 text-muted hover:text-text-main hover:bg-surface-hover/50 cursor-pointer transition-colors text-xs">
+                            <span class="material-symbols-outlined text-base">chevron_right</span>
+                            <span class="material-symbols-outlined text-base text-accent-ai">folder</span>
+                            <span>frontend</span>
+                        </div>
+                        <!-- Gateway Folder (Active) -->
+                        <div class="flex items-center gap-3 px-3 py-1.5 text-text-main bg-surface-hover/50 border-l border-primary/50 cursor-pointer text-xs">
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+                            <span class="material-symbols-outlined text-base text-primary">folder_open</span>
+                            <span class="font-bold">llm_gateway</span>
+                        </div>
+                        <div class="pl-8 flex flex-col gap-0.5 mt-0.5">
+                             <div onclick="switchView('code')" class="flex items-center gap-2 px-3 py-1 text-primary bg-background/50 border-l-2 border-primary cursor-pointer text-[11px] font-mono">
+                                <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
+                                <span>router.ts</span>
+                             </div>
+                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-[11px] font-mono transition-colors">
+                                <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
+                                <span>types.ts</span>
+                             </div>
+                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-[11px] font-mono transition-colors">
+                                <span class="material-symbols-outlined text-[14px] text-yellow-500">description</span>
+                                <span>config.yml</span>
+                             </div>
+                        </div>
+                        <!-- Database Folder -->
+                        <div class="flex items-center gap-3 px-3 py-1.5 text-muted hover:text-text-main hover:bg-surface-hover/50 cursor-pointer transition-colors text-xs">
+                            <span class="material-symbols-outlined text-base">chevron_right</span>
+                            <span class="material-symbols-outlined text-base text-accent-error">folder</span>
+                            <span>database</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <!-- Bottom Action -->
+            <div class="p-3 border-t border-muted/10 bg-surface">
+                <button class="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-[10px] font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-sm">rocket_launch</span>
+                    <span>Deploy System</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- View Containers -->
+        <div id="view-blueprint" class="flex-1 h-full view-active relative canvas-grid">
+            <!-- Global Architecture Map Module -->
+            <div class="absolute inset-0 w-full h-full">
+                <!-- SVG Canvas for Splines (Connections) -->
+                <svg id="blueprint-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 100%; min-height: 100%;">
+                    <defs>
+                        <filter id="glow">
+                            <feGaussianBlur result="coloredBlur" stdDeviation="2.5"></feGaussianBlur>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"></feMergeNode>
+                                <feMergeNode in="SourceGraphic"></feMergeNode>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <!-- Connection 1: Client -> Gateway -->
+                    <path d="M 300 340 C 425 340, 425 340, 550 340" fill="none" stroke="#4E5666" stroke-width="2"></path>
+                    <path class="flow-line" d="M 300 340 C 425 340, 425 340, 550 340" fill="none" filter="url(#glow)" stroke="#00FFD1" stroke-width="2" style="stroke-dasharray: 8 4; animation: flow 1s linear infinite;"></path>
+
+                    <!-- Connection 2: Gateway -> Database -->
+                    <path d="M 730 320 C 815 320, 815 190, 900 190" fill="none" stroke="#4E5666" stroke-width="1.5"></path>
+                    
+                    <!-- Connection 3: Gateway -> OpenAI -->
+                    <path d="M 730 360 C 815 360, 815 490, 900 490" fill="none" stroke="#4E5666" stroke-width="1.5"></path>
+                </svg>
+
+                <!-- Nodes Container -->
+                <div class="absolute inset-0 w-full h-full z-20">
+                    <!-- Node 1: Client Application -->
+                    <div onclick="openModuleExplorer('React Client')" class="node-card absolute top-[300px] left-[120px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-primary hover:shadow-neon transition-all">
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Frontend</span>
+                            <div class="w-2 h-2 bg-primary rounded-full shadow-neon"></div>
+                        </div>
+                        <h3 class="text-text-main font-bold text-sm truncate">React Client</h3>
+                        <div class="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+                    </div>
+
+                    <!-- Node 2: LLM Gateway (Active) -->
+                    <div onclick="openModuleExplorer('LLM Gateway')" class="node-card absolute top-[300px] left-[550px] w-[180px] h-[80px] bg-surface border-primary shadow-neon-active flex flex-col justify-center px-4 cursor-pointer group z-30">
+                        <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-[10px] font-mono text-primary uppercase tracking-wider">Router</span>
+                            <span class="material-symbols-outlined text-[14px] text-primary">route</span>
+                        </div>
+                        <h3 class="text-text-main font-bold text-sm truncate">LLM Gateway</h3>
+                        <div class="absolute right-[-5px] top-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+                        <div class="absolute right-[-5px] bottom-[20px] w-2 h-4 bg-muted group-hover:bg-primary transition-colors"></div>
+                    </div>
+
+                    <!-- Node 3: Database -->
+                    <div onclick="openModuleExplorer('Vector Store')" class="node-card absolute top-[150px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-error hover:shadow-neon transition-all">
+                        <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-error transition-colors"></div>
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Storage</span>
+                            <span class="material-symbols-outlined text-[14px] text-accent-error">database</span>
+                        </div>
+                        <h3 class="text-text-main font-bold text-sm truncate">Vector Store</h3>
+                    </div>
+
+                    <!-- Node 4: External API -->
+                    <div onclick="openModuleExplorer('OpenAI API')" class="node-card absolute top-[450px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-ai hover:shadow-neon transition-all">
+                        <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-ai transition-colors"></div>
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Service</span>
+                            <span class="material-symbols-outlined text-[14px] text-accent-ai">cloud</span>
+                        </div>
+                        <h3 class="text-text-main font-bold text-sm truncate">OpenAI API</h3>
+                    </div>
+                </div>
+
+                <!-- Floating Toolbar -->
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 h-10 bg-surface border border-muted flex items-center shadow-lg">
+                    <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-r border-muted transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">remove</span>
+                    </button>
+                    <div class="px-4 text-[10px] font-mono text-text-main select-none">100%</div>
+                    <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-l border-muted transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Module Focus Explorer Module (Right Drawer) -->
+            <div id="module-explorer" class="absolute right-0 top-0 h-full w-[450px] bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+                <!-- Header -->
+                <header class="flex items-center justify-between p-4 border-b border-muted bg-background">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-surface-hover border border-primary flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-sm">router</span>
+                        </div>
+                        <div>
+                            <h2 id="explorer-title" class="text-sm font-bold text-text-main tracking-tight">LLM Gateway</h2>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+                                <span class="text-[9px] text-primary font-mono uppercase tracking-widest">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="closeModuleExplorer()" class="text-muted hover:text-text-main p-1 transition-colors">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                </header>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+                    <!-- AI Insight -->
+                    <div class="flex gap-3 w-full">
+                        <div class="w-6 h-6 rounded bg-surface border border-accent-ai flex items-center justify-center text-accent-ai shrink-0 mt-1">
+                            <span class="material-symbols-outlined text-[14px]">smart_toy</span>
+                        </div>
+                        <div class="flex flex-col gap-1 w-full">
+                            <span class="text-[9px] text-muted font-mono uppercase">Architect Copilot</span>
+                            <div class="bg-surface-hover border-l-2 border-accent-ai p-3 text-xs text-text-main font-mono leading-relaxed">
+                                I'm analyzing the <code id="explorer-node-name">LLM Gateway</code>. This component handles token-based routing between Ollama and Cloud providers.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat History (Placeholder) -->
+                    <div id="chat-history" class="space-y-4">
+                         <!-- Dynamically added messages -->
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 bg-background border-t border-muted">
+                    <form onsubmit="sendMessage(event)" class="relative flex items-center">
+                        <input id="chat-input" class="w-full bg-surface border border-muted text-xs font-mono p-2.5 pr-10 focus:outline-none focus:border-primary placeholder-muted" placeholder="Ask about this module..." type="text">
+                        <button type="submit" class="absolute right-2 text-muted hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-sm">send</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Footer CTA -->
+                <div class="border-t border-muted bg-background">
+                    <button onclick="inspectCode()" class="w-full bg-primary hover:bg-[#0cf1f1] text-background font-bold py-4 flex items-center justify-center gap-2 transition-all group">
+                        <span class="material-symbols-outlined text-sm">code_blocks</span>
+                        <span class="tracking-wide text-xs">INSPECT CODE</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-code" class="flex-1 h-full view-hidden flex-col bg-background relative">
+            <!-- Code Canvas Area -->
+            <div class="flex-1 flex overflow-hidden relative group">
+                <!-- Editor Tabs -->
+                    <div id="file-tabs" class="absolute top-0 left-0 right-0 h-9 flex bg-surface border-b border-muted/30 shrink-0 overflow-x-auto z-20">
+                        <div onclick="selectFile('router.ts')" id="tab-router.ts" class="flex items-center gap-2 px-4 bg-background border-t-2 border-primary min-w-fit cursor-pointer transition-all">
+                            <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
+                            <span class="font-mono text-xs text-text-main">router.ts</span>
+                        </div>
+                        <div onclick="selectFile('types.ts')" id="tab-types.ts" class="flex items-center gap-2 px-4 bg-surface border-r border-muted/10 min-w-fit cursor-pointer hover:bg-surface-hover transition-all">
+                            <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
+                            <span class="font-mono text-xs text-muted">types.ts</span>
+                        </div>
+                    </div>
+
+                <!-- Line Numbers -->
+                <div class="w-10 bg-background border-r border-muted/10 flex flex-col pt-12 pb-4 font-mono text-[10px] text-muted text-right pr-2 select-none shrink-0">
+                    <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div class="text-text-main bg-surface-hover">7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div>
+                </div>
+
+                <!-- Actual Code -->
+                <div id="code-content" class="flex-1 overflow-auto pt-12 p-4 font-mono text-xs leading-relaxed whitespace-pre font-medium relative text-text-main">
+<span class="text-accent-error">import</span> { <span class="text-text-main">OllamaClient</span>, <span class="text-text-main">OpenAIClient</span> } <span class="text-accent-error">from</span> <span class="text-accent-ai">'@nexus/providers'</span>;
+<span class="text-accent-error">import</span> { <span class="text-text-main">RouteConfig</span> } <span class="text-accent-error">from</span> <span class="text-accent-ai">'./types'</span>;
+
+<span class="text-muted">// Primary routing logic for incoming LLM requests</span>
+<span class="text-accent-error">export async function</span> <span class="text-primary relative inline-block cursor-pointer group/func">routeRequest<div class="absolute bottom-full mb-2 left-0 w-64 p-3 bg-surface border border-accent-ai shadow-neon-ai hidden group-hover/func:block z-50 pointer-events-none">
+    <div class="flex items-center gap-2 mb-1 text-accent-ai font-display text-[10px] font-bold uppercase">
+        <span class="material-symbols-outlined text-sm">psychology</span> Copilot Insight
+    </div>
+    <div class="text-[10px] text-text-main font-display leading-tight whitespace-normal">
+        This function determines whether to use the local Ollama instance or fallback to OpenAI based on token complexity.
+    </div>
+</div></span>(<span class="text-text-main">prompt</span>: <span class="text-accent-error">string</span>, <span class="text-text-main">config</span>: <span class="text-text-main">RouteConfig</span>) {
+    <span class="text-accent-error">const</span> <span class="text-text-main">complexityScore</span> = <span class="text-accent-error">await</span> <span class="text-primary">analyzePrompt</span>(<span class="text-text-main">prompt</span>);
+    
+<div class="bg-surface-hover -mx-4 px-4 border-l-2 border-primary w-full">    <span class="text-accent-error">if</span> (<span class="text-text-main">complexityScore</span> &lt; <span class="text-text-main">config</span>.<span class="text-text-main">threshold</span>) {
+        <span class="text-muted">// Fast, local execution for simple tasks</span>
+        <span class="text-accent-error">return</span> <span class="text-text-main">OllamaClient</span>.<span class="text-primary">generate</span>({
+            <span class="text-text-main">model</span>: <span class="text-accent-ai">'llama3:8b'</span>,
+            <span class="text-text-main">prompt</span>: <span class="text-text-main">prompt</span>
+        });
+    }</div>
+    <span class="text-muted">// Complex tasks routed to cloud provider</span>
+    <span class="text-accent-error">return</span> <span class="text-text-main">OpenAIClient</span>.<span class="text-primary">generate</span>({
+        <span class="text-text-main">model</span>: <span class="text-accent-ai">'gpt-4-turbo'</span>,
+        <span class="text-text-main">prompt</span>: <span class="text-text-main">prompt</span>
+    });
+}
+                </div>
+
+                <!-- Right Panel: Agentic Copilot -->
+                <aside class="w-[240px] bg-surface border-l border-muted/30 flex flex-col shrink-0">
+                    <div class="h-9 flex items-center justify-between px-3 border-b border-muted/30 bg-surface-hover">
+                        <div class="flex items-center gap-2 text-accent-ai">
+                            <span class="material-symbols-outlined text-base">smart_toy</span>
+                            <span class="text-[10px] font-display font-bold tracking-widest text-text-main uppercase">Copilot</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3 text-xs font-display">
+                        <div class="border-l-2 border-accent-ai pl-3">
+                            <div class="text-[10px] text-accent-ai font-bold mb-1">Architect AI</div>
+                            <div class="text-text-main leading-snug">
+                                I noticed you're working on the routing logic. Would you like to implement a retry mechanism?
+                            </div>
+                            <button class="mt-2 px-3 py-1 bg-background border border-accent-ai/50 text-accent-ai text-[10px] font-bold hover:bg-accent-ai hover:text-background transition-colors">
+                                Generate Code
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-muted/30 bg-background">
+                        <div class="relative flex items-center">
+                            <input class="w-full bg-surface border border-muted/50 text-text-main text-xs p-2 pl-3 pr-8 focus:outline-none focus:border-accent-ai placeholder-muted" placeholder="Ask copilot..." type="text">
+                            <button class="absolute right-2 text-muted hover:text-accent-ai">
+                                <span class="material-symbols-outlined text-base">send</span>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Terminal Area -->
+            <div class="h-40 bg-background border-t border-muted/30 flex flex-col shrink-0">
+                <div class="h-7 flex bg-surface border-b border-muted/30 px-2">
+                    <div class="flex items-center px-4 border-b-2 border-primary text-text-main text-[10px] font-display font-bold uppercase tracking-wider cursor-pointer">
+                        Terminal
+                    </div>
+                    <div class="flex items-center px-4 text-muted hover:text-text-main text-[10px] font-display font-medium uppercase tracking-wider cursor-pointer">
+                        Output
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto p-3 font-mono text-[11px] text-muted">
+                    <div class="mb-1"><span class="text-primary">nexus@dev</span><span class="text-text-main">:</span><span class="text-blue-400">~/projects/blueprint</span>$ npm run dev</div>
+                    <div class="mb-1 text-text-main">&gt; nexus-core@1.0.0 dev</div>
+                    <div class="mb-1 text-accent-ai">[Watcher] Starting in watch mode...</div>
+                    <div class="flex items-center mt-2">
+                        <span class="text-primary">nexus@dev</span><span class="text-text-main">:</span><span class="text-blue-400">~/projects/blueprint</span>$ <span class="w-1.5 h-3 bg-primary animate-pulse ml-2 inline-block"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-orchestrator" class="flex-1 h-full view-hidden flex-col bg-background">
+            <div class="flex h-full">
+                <!-- Left Pane: Configuration Matrix -->
+                <section class="w-1/2 flex flex-col border-r border-muted/30 bg-background relative">
+                    <div class="p-6 border-b border-muted/30 bg-surface/50">
+                        <h1 class="text-xl font-bold text-text-main flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">route</span>
+                            LLM Routing & Fallback Chain
+                        </h1>
+                        <p class="text-muted text-[10px] mt-1 font-mono uppercase tracking-wider">Redundancy Configuration</p>
+                    </div>
+                    <div id="fallback-chain" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+                        <!-- Primary Provider -->
+                        <div class="provider-item w-full bg-surface border border-muted flex items-center h-12 shadow-neon relative cursor-grab active:cursor-grabbing">
+                            <div class="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-primary"></div>
+                            <div class="px-3 text-muted"><span class="material-symbols-outlined text-sm">drag_indicator</span></div>
+                            <div class="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
+                                <span class="text-text-main">OpenAI</span>
+                                <span class="text-muted">gpt-4-turbo</span>
+                            </div>
+                            <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
+                                <span class="text-[9px] text-primary font-bold uppercase tracking-widest">Primary</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center -my-2 relative"><div class="h-6 w-px bg-muted"></div></div>
+                        <!-- Fallback Provider -->
+                        <div class="provider-item w-full bg-surface border border-muted flex items-center h-12 cursor-grab active:cursor-grabbing">
+                            <div class="px-3 text-muted"><span class="material-symbols-outlined text-sm">drag_indicator</span></div>
+                            <div class="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
+                                <span class="text-text-main">Anthropic</span>
+                                <span class="text-muted">claude-3-sonnet</span>
+                            </div>
+                            <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
+                                <span class="text-[9px] text-accent-ai font-bold uppercase tracking-widest">Fallback</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center -my-2 relative"><div class="h-6 w-px bg-muted"></div></div>
+                        <!-- Local Provider -->
+                        <div class="provider-item w-full bg-surface border border-muted flex items-center h-12 cursor-grab active:cursor-grabbing opacity-50">
+                            <div class="px-3 text-muted"><span class="material-symbols-outlined text-sm">drag_indicator</span></div>
+                            <div class="flex-1 flex items-center gap-4 px-2 text-xs font-mono">
+                                <span class="text-text-main">Ollama</span>
+                                <span class="text-muted">llama3:8b</span>
+                            </div>
+                            <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
+                                <span class="text-[9px] text-muted font-bold uppercase tracking-widest">Offline</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Right Pane: Test Playground -->
+                <section class="w-1/2 flex flex-col bg-background">
+                    <div class="p-6 border-b border-muted/30 bg-surface/30">
+                        <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent-ai">science</span>
+                            Test Playground
+                        </h2>
+                    </div>
+                    <div class="flex-1 p-6 flex flex-col gap-4">
+                        <textarea id="test-prompt" class="w-full h-32 bg-surface border border-muted text-text-main font-mono text-xs p-4 outline-none focus:border-primary placeholder-muted" placeholder="Type test prompt here..."></textarea>
+                        <button onclick="runTest()" class="bg-primary text-background px-6 py-2 font-bold text-xs shadow-neon self-start uppercase tracking-widest hover:bg-[#0cf1f1] transition-all">Run Test</button>
+                        <div id="test-output" class="flex-1 bg-surface/20 border border-muted p-4 font-mono text-[11px] text-muted overflow-y-auto">
+                            <span class="text-primary">> System ready.</span><br>
+                            Click "Run Test" to analyze routing.
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="h-6 bg-primary flex items-center justify-between px-3 text-background text-[10px] font-mono font-bold shrink-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px]">account_tree</span>
+                <span>main*</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px]">cloud_done</span>
+                <span>Ollama: Active</span>
+            </div>
+            <span>UTF-8</span>
+        </div>
+    </footer>
+
+    <script>
+        // Store current view to manage sidebar visibility
+        let currentView = 'blueprint';
+
+        function openModuleExplorer(nodeName) {
+            document.getElementById('explorer-title').innerText = nodeName;
+            document.getElementById('explorer-node-name').innerText = nodeName;
+            document.getElementById('module-explorer').classList.remove('translate-x-full');
+            
+            // Clear history for new module
+            document.getElementById('chat-history').innerHTML = '';
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // User Message
+            addChatMessage('user', message);
+            input.value = '';
+
+            // Mock AI Response
+            setTimeout(() => {
+                const nodeName = document.getElementById('explorer-title').innerText;
+                let response = "I'm analyzing the context for " + nodeName + ". ";
+                if (nodeName === 'LLM Gateway') {
+                    response += "The router logic is currently optimized for low latency with Ollama.";
+                } else if (nodeName === 'React Client') {
+                    response += "The frontend is built with Tailwind and ReactFlow for visual clarity.";
+                } else {
+                    response += "I can help you understand the architectural constraints of this module.";
+                }
+                addChatMessage('ai', response);
+            }, 600);
+        }
+
+        function addChatMessage(role, text) {
+            const history = document.getElementById('chat-history');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-3 w-full animate-in fade-in slide-in-from-bottom-2 duration-300';
+            
+            const icon = role === 'ai' ? 'smart_toy' : 'person';
+            const color = role === 'ai' ? 'accent-ai' : 'primary';
+            const label = role === 'ai' ? 'Architect Copilot' : 'Developer';
+
+            msgDiv.innerHTML = `
+                <div class="w-6 h-6 rounded bg-surface border border-${color} flex items-center justify-center text-${color} shrink-0 mt-1">
+                    <span class="material-symbols-outlined text-[14px]">${icon}</span>
+                </div>
+                <div class="flex flex-col gap-1 w-full">
+                    <span class="text-[9px] text-muted font-mono uppercase">${label}</span>
+                    <div class="bg-surface-hover border-l-2 border-${color} p-3 text-xs text-text-main font-mono leading-relaxed">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            history.appendChild(msgDiv);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function closeModuleExplorer() {
+            document.getElementById('module-explorer').classList.add('translate-x-full');
+        }
+
+        function inspectCode() {
+            closeModuleExplorer();
+            switchView('code');
+        }
+
+        function selectFile(fileName) {
+            const files = {
+                'router.ts': `<span class="text-accent-error">import</span> { <span class="text-text-main">OllamaClient</span>, <span class="text-text-main">OpenAIClient</span> } <span class="text-accent-error">from</span> <span class="text-accent-ai">'@nexus/providers'</span>;
+<span class="text-accent-error">import</span> { <span class="text-text-main">RouteConfig</span> } <span class="text-accent-error">from</span> <span class="text-accent-ai">'./types'</span>;
+
+<span class="text-muted">// Primary routing logic for incoming LLM requests</span>
+<span class="text-accent-error">export async function</span> <span class="text-primary">routeRequest</span>(<span class="text-text-main">prompt</span>: <span class="text-accent-error">string</span>, <span class="text-text-main">config</span>: <span class="text-text-main">RouteConfig</span>) {
+    <span class="text-accent-error">const</span> <span class="text-text-main">complexityScore</span> = <span class="text-accent-error">await</span> <span class="text-primary">analyzePrompt</span>(<span class="text-text-main">prompt</span>);
+    
+    <span class="text-accent-error">if</span> (<span class="text-text-main">complexityScore</span> &lt; <span class="text-text-main">config</span>.<span class="text-text-main">threshold</span>) {
+        <span class="text-accent-error">return</span> <span class="text-text-main">OllamaClient</span>.<span class="text-primary">generate</span>({
+            <span class="text-text-main">model</span>: <span class="text-accent-ai">'llama3:8b'</span>,
+            <span class="text-text-main">prompt</span>: <span class="text-text-main">prompt</span>
+        });
+    }
+    <span class="text-accent-error">return</span> <span class="text-text-main">OpenAIClient</span>.<span class="text-primary">generate</span>({
+        <span class="text-text-main">model</span>: <span class="text-accent-ai">'gpt-4-turbo'</span>,
+        <span class="text-text-main">prompt</span>: <span class="text-text-main">prompt</span>
+    });
+}`,
+                'types.ts': `<span class="text-accent-error">export interface</span> <span class="text-text-main">RouteConfig</span> {
+    <span class="text-text-main">threshold</span>: <span class="text-accent-error">number</span>;
+    <span class="text-text-main">providers</span>: <span class="text-text-main">Provider</span>[];
+}
+
+<span class="text-accent-error">export type</span> <span class="text-text-main">Provider</span> = <span class="text-accent-ai">'ollama'</span> | <span class="text-accent-ai">'openai'</span> | <span class="text-accent-ai">'anthropic'</span>;`
+            };
+
+            document.getElementById('code-content').innerHTML = files[fileName];
+            
+            // Update tabs UI
+            ['router.ts', 'types.ts'].forEach(f => {
+                const tab = document.getElementById('tab-' + f);
+                const text = tab.querySelector('span:last-child');
+                if (f === fileName) {
+                    tab.classList.replace('bg-surface', 'bg-background');
+                    tab.classList.add('border-t-2', 'border-primary');
+                    text.classList.replace('text-muted', 'text-text-main');
+                } else {
+                    tab.classList.replace('bg-background', 'bg-surface');
+                    tab.classList.remove('border-t-2', 'border-primary');
+                    text.classList.replace('text-text-main', 'text-muted');
+                }
+            });
+
+            // Update Breadcrumb
+            updateBreadcrumb(fileName);
+
+            // Mock highlight (simple scroll to relevant section if it was a real editor)
+            const codeEl = document.getElementById('code-content');
+            codeEl.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateBreadcrumb(fileName) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.classList.remove('hidden');
+            breadcrumb.innerHTML = `<span class="hover:text-text-main cursor-pointer transition-colors">nexus_core</span><span class="material-symbols-outlined text-xs">chevron_right</span><span class="text-text-main">${fileName}</span>`;
+        }
+
+        function runTest() {
+            const prompt = document.getElementById('test-prompt').value.trim();
+            const output = document.getElementById('test-output');
+            if (!prompt) return;
+
+            output.innerHTML += `<br><span class="text-text-main">> Analyzing: "${prompt}"</span>`;
+            output.scrollTop = output.scrollHeight;
+
+            setTimeout(() => {
+                const complexity = prompt.length > 50 ? 'HIGH' : 'LOW';
+                output.innerHTML += `<br><span class="text-accent-ai">> Complexity: ${complexity}</span>`;
+                output.innerHTML += `<br><span class="text-primary">> Routing to: ${complexity === 'LOW' ? 'Ollama (Local)' : 'OpenAI (Primary)'}</span>`;
+                output.innerHTML += `<br><span class="text-muted">> Request successful. Latency: ${complexity === 'LOW' ? '45ms' : '850ms'}</span>`;
+                output.scrollTop = output.scrollHeight;
+            }, 800);
+        }
+
+        function switchView(viewId) {
+            currentView = viewId;
+
+            // Update Header Navigation UI
+            const navButtons = {
+                'blueprint': document.getElementById('btn-blueprint'),
+                'code': document.getElementById('btn-code')
+            };
+
+            // Reset all header nav buttons
+            Object.values(navButtons).forEach(btn => {
+                if (!btn) return;
+                btn.classList.remove('bg-primary', 'text-background', 'font-bold', 'shadow-neon');
+                btn.classList.add('text-muted', 'font-medium');
+            });
+
+            // Set active button
+            if (navButtons[viewId]) {
+                navButtons[viewId].classList.remove('text-muted', 'font-medium');
+                navButtons[viewId].classList.add('bg-primary', 'text-background', 'font-bold', 'shadow-neon');
+            }
+
+            // Update view visibility
+            const views = ['blueprint', 'code', 'orchestrator'];
+            views.forEach(v => {
+                const el = document.getElementById('view-' + v);
+                if (v === viewId) {
+                    el.classList.replace('view-hidden', 'view-active');
+                } else {
+                    el.classList.replace('view-active', 'view-hidden');
+                }
+            });
+
+            // Manage Sidebar visibility
+            const sidebar = document.getElementById('main-sidebar');
+            if (viewId === 'orchestrator') {
+                sidebar.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('hidden');
+            }
+
+            // Breadcrumb visibility
+            const breadcrumb = document.getElementById('breadcrumb');
+            if (viewId === 'code') {
+                breadcrumb.classList.remove('hidden');
+                // Ensure correct file is shown in breadcrumb
+                const activeTab = document.querySelector('#file-tabs .bg-background span:last-child');
+                if (activeTab) updateBreadcrumb(activeTab.innerText);
+            } else {
+                breadcrumb.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
