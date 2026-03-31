@@ -1,6 +1,6 @@
 # Neon Protocol IDE
 
-A visionary, agentic integrated development environment (IDE) that bridges the gap between high-level architectural design and low-level code implementation.
+An agentic integrated development environment (IDE) that bridges the gap between high-level architectural design and low-level code implementation.
 
 ![Cybernetic Blueprint Theme](design_reference/design/global_architecture_map/screen.png)
 
