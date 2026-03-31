@@ -1,56 +1,82 @@
 #!/bin/bash
 
-# --- COLOR DEFINITIONS FOR BETTER READABILITY ---
+# ==========================================
+#   NEON PROTOCOL IDE - Mac Launcher
+#   Double-click this file to start the IDE
+# ==========================================
+
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${CYAN}--- NEON PROTOCOL IDE: BEGINNER-FRIENDLY SETUP (macOS) ---${NC}"
+echo ""
+echo -e "${CYAN}==========================================${NC}"
+echo -e "${CYAN}  NEON PROTOCOL IDE - Launcher${NC}"
+echo -e "${CYAN}==========================================${NC}"
+echo ""
+
+# Navigate to script directory (handles double-click from Finder)
+cd "$(dirname "$0")"
 
 # --- CHECK FOR NODE.JS ---
-echo -e "${YELLOW}Checking for Node.js (the 'engine' that runs the IDE)...${NC}"
-if ! command -v node &> /dev/null
-then
-    echo -e "${RED}Node.js is NOT installed!${NC}"
-    echo -e "${CYAN}Don't worry, I'll try to install it for you. This might ask for your password.${NC}"
-    
-    if command -v brew &> /dev/null
-    then
-        echo -e "${GREEN}Homebrew found. Installing Node.js via Homebrew...${NC}"
+if ! command -v node &> /dev/null; then
+    echo -e "${YELLOW}Node.js is not installed.${NC}"
+    echo ""
+
+    if command -v brew &> /dev/null; then
+        echo -e "${GREEN}Installing Node.js via Homebrew...${NC}"
         brew install node
     else
-        echo -e "${YELLOW}Homebrew not found. Downloading the official Node.js installer...${NC}"
-        curl -L https://nodejs.org/dist/v20.11.1/node-v20.11.1.pkg -o node-v20.11.1.pkg
-        echo -e "${CYAN}Running installer. Please follow the on-screen prompts if any.${NC}"
-        sudo installer -pkg node-v20.11.1.pkg -target /
-        rm node-v20.11.1.pkg
+        echo -e "${YELLOW}Installing Homebrew first...${NC}"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Add Homebrew to PATH for Apple Silicon Macs
+        if [ -f /opt/homebrew/bin/brew ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
+
+        echo -e "${GREEN}Installing Node.js...${NC}"
+        brew install node
     fi
-    
-    if ! command -v node &> /dev/null
-    then
-        echo -e "${RED}Automatic installation failed.${NC}"
-        echo -e "Please visit https://nodejs.org/ and download the 'LTS' version manually."
+
+    if ! command -v node &> /dev/null; then
+        echo ""
+        echo -e "${RED}Could not install Node.js automatically.${NC}"
+        echo "Please install it from https://nodejs.org/ and run this script again."
+        echo ""
+        read -p "Press Enter to close..."
         exit 1
     fi
 fi
 
+echo -e "${GREEN}Node.js found:${NC} $(node --version)"
+echo ""
+
 # --- INSTALL DEPENDENCIES ---
-echo -e "${GREEN}Node.js found! Installing the project dependencies...${NC}"
-echo -e "${CYAN}This is like gathering all the tools needed to build the IDE.${NC}"
-# Use npm.cmd on Windows via WSL, but for native Mac it's just npm
-npm install --legacy-peer-deps --no-audit --no-fund
+echo "Installing dependencies..."
+npm install --legacy-peer-deps --no-audit --no-fund 2>&1 | tail -3
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}An error occurred while installing tools. Try running 'npm install' manually.${NC}"
-    exit 1
+    echo -e "${YELLOW}Retrying...${NC}"
+    npm install --legacy-peer-deps 2>&1 | tail -3
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}npm install failed.${NC}"
+        read -p "Press Enter to close..."
+        exit 1
+    fi
 fi
 
-# --- START THE APP ---
-echo -e "${GREEN}Everything is ready!${NC}"
-echo -e "${CYAN}Starting the Neon Protocol IDE on port 3001...${NC}"
-echo -e "${YELLOW}Once it starts, open your browser to: http://localhost:3001${NC}"
-echo -e "${YELLOW}If you want the desktop window, run 'npm run electron-dev' in a new terminal tab.${NC}"
+echo ""
+echo -e "${GREEN}==========================================${NC}"
+echo -e "${GREEN}  Starting on http://localhost:3001${NC}"
+echo -e "${GREEN}  Opening in your browser...${NC}"
+echo -e "${GREEN}==========================================${NC}"
+echo ""
 
+# Open browser after a short delay
+(sleep 3 && open "http://localhost:3001") &
+
+# Start the dev server
 npm run dev
