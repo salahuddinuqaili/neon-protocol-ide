@@ -1,26 +1,85 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 const { execSync } = require('child_process');
-const { pathToFileURL } = require('url');
 const isDev = !app.isPackaged;
 
-// Register a custom protocol to serve the Next.js static export.
-// This is needed because Next.js uses absolute paths like /_next/...
-// which don't resolve under the file:// protocol.
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'app',
-    privileges: {
-      standard: true,
-      secure: true,
-      allowServiceWorkers: true,
-      supportFetchAPI: true,
-    },
-  },
-]);
+// MIME types for serving static files
+const MIME_TYPES = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.map': 'application/json',
+  '.txt': 'text/plain',
+};
 
-function createWindow() {
+/**
+ * Start a local HTTP server to serve the Next.js static export.
+ * This is needed because Next.js uses absolute paths like /_next/...
+ * which don't resolve under the file:// protocol.
+ * A local HTTP server makes everything work exactly like in dev mode.
+ */
+function startStaticServer(outDir) {
+  return new Promise((resolve) => {
+    const server = http.createServer((req, res) => {
+      let urlPath = decodeURIComponent(req.url.split('?')[0]);
+
+      // Map URL to file path
+      let filePath = path.join(outDir, urlPath);
+
+      // Directory -> index.html
+      if (urlPath === '/' || urlPath === '') {
+        filePath = path.join(outDir, 'index.html');
+      }
+
+      // Try the exact path, then .html, then fallback to index.html
+      if (!fs.existsSync(filePath) && !path.extname(filePath)) {
+        const withHtml = filePath + '.html';
+        if (fs.existsSync(withHtml)) {
+          filePath = withHtml;
+        } else {
+          filePath = path.join(outDir, 'index.html');
+        }
+      }
+
+      if (!fs.existsSync(filePath)) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+
+      const ext = path.extname(filePath);
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+      try {
+        const content = fs.readFileSync(filePath);
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(content);
+      } catch {
+        res.writeHead(500);
+        res.end('Server error');
+      }
+    });
+
+    // Listen on a random available port
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      console.log(`Static server running at http://127.0.0.1:${port}`);
+      resolve(port);
+    });
+  });
+}
+
+async function createWindow() {
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -38,32 +97,11 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:3001');
   } else {
-    // Register the app:// protocol handler to serve files from out/
+    // Serve the Next.js static export via a local HTTP server.
+    // This ensures /_next/... paths resolve correctly on all platforms.
     const outDir = path.join(__dirname, 'out');
-
-    protocol.handle('app', (request) => {
-      const url = new URL(request.url);
-      let filePath = path.join(outDir, decodeURIComponent(url.pathname));
-
-      // If path is a directory, serve index.html
-      if (filePath.endsWith('/') || filePath.endsWith(path.sep)) {
-        filePath = path.join(filePath, 'index.html');
-      }
-
-      // If file doesn't exist and has no extension, try .html
-      if (!fs.existsSync(filePath) && !path.extname(filePath)) {
-        filePath = filePath + '.html';
-      }
-
-      // Fallback to index.html for client-side routing
-      if (!fs.existsSync(filePath)) {
-        filePath = path.join(outDir, 'index.html');
-      }
-
-      return net.fetch(pathToFileURL(filePath).toString());
-    });
-
-    win.loadURL('app://./index.html');
+    const port = await startStaticServer(outDir);
+    win.loadURL(`http://127.0.0.1:${port}`);
   }
 }
 
@@ -153,11 +191,11 @@ ipcMain.handle('git:getStatus', async (_event, dirPath) => {
 
 // --- App lifecycle ---
 
-app.whenReady().then(() => {
-  createWindow();
+app.whenReady().then(async () => {
+  await createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  app.on('activate', async () => {
+    if (BrowserWindow.getAllWindows().length === 0) await createWindow();
   });
 });
 
