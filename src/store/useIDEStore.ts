@@ -1,42 +1,227 @@
 import { create } from 'zustand';
-import { IDEState, IDEView, FileEntry } from '../types';
+import { persist } from 'zustand/middleware';
+import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig } from '../types';
 
-/**
- * 🎓 LEARNER TIP: The "Store" is the app's central memory.
- * We use Zustand because it's simple and fast. Instead of passing data through 
- * every component, we just "ask" the store for what we need.
- */
-export const useIDEStore = create<IDEState>((set) => ({
-  // 1. DATA (The current "state" of the app)
-  currentView: 'blueprint', // Which screen are we on?
-  selectedModule: null,    // Which box on the map did you click?
-  isExplorerOpen: false,   // Is the side drawer open?
-  projectPath: null,       // Where on your computer are the files?
-  files: [],               // The list of all your project files
-  activeFile: null,        // The file you are currently editing
-  
-  // 2. ACTIONS (Functions to change the data)
-  setView: (view: IDEView) => set({ currentView: view }),
-  
-  selectModule: (name: string | null) => set({ 
-    selectedModule: name, 
-    isExplorerOpen: !!name // Automatically open the side drawer if a module is clicked
-  }),
-  
-  toggleExplorer: (open?: boolean) => set((state) => ({ 
-    isExplorerOpen: typeof open !== 'undefined' ? open : !state.isExplorerOpen 
-  })),
-  
-  setProject: (path: string | null, files: FileEntry[]) => set({ 
-    projectPath: path, 
-    files, 
-    activeFile: files.length > 0 ? files[0].path : null 
-  }),
-  
-  setActiveFile: (path: string | null) => set({ activeFile: path }),
-  
-  updateFileContent: (path: string, content: string) => set((state) => ({
-    // Use the .map() function to find the file and update its content safely
-    files: state.files.map(f => f.path === path ? { ...f, content } : f)
-  })),
-}));
+let toastCounter = 0;
+
+const DEFAULT_PROVIDERS: LLMProviderConfig[] = [
+  { id: 'ollama', name: 'Ollama', type: 'ollama', model: 'llama3:8b', baseUrl: 'http://localhost:11434', enabled: true, priority: 1 },
+  { id: 'openai', name: 'OpenAI', type: 'openai', model: 'gpt-4-turbo', baseUrl: 'https://api.openai.com/v1', apiKey: '', enabled: false, priority: 2 },
+  { id: 'anthropic', name: 'Anthropic', type: 'anthropic', model: 'claude-sonnet-4-20250514', baseUrl: 'https://api.anthropic.com/v1', apiKey: '', enabled: false, priority: 3 },
+];
+
+const LANG_MAP: Record<string, string> = {
+  'ts': 'typescript', 'tsx': 'typescript', 'js': 'javascript', 'jsx': 'javascript',
+  'py': 'python', 'json': 'json', 'md': 'markdown', 'css': 'css', 'html': 'html',
+  'rb': 'ruby', 'rs': 'rust', 'go': 'go', 'c': 'c', 'cpp': 'cpp', 'java': 'java',
+};
+
+export const useIDEStore = create<IDEState>()(
+  persist(
+    (set) => ({
+      currentView: 'blueprint',
+      selectedModule: null,
+      isExplorerOpen: false,
+      projectPath: null,
+      files: [],
+      openTabs: [],
+      activeFile: null,
+      gitBranch: null,
+      ollamaStatus: 'checking',
+      hasCompletedOnboarding: false,
+      chatMessages: [],
+      editorSettings: { fontSize: 13, wordWrap: true, minimap: false, lineHeight: 1.6, systemRamGb: 16 },
+      toasts: [],
+      isScanning: false,
+      isSidebarOpen: true,
+      recentProjects: [],
+      dismissedHints: [],
+      providers: DEFAULT_PROVIDERS,
+
+      setView: (view: IDEView) => set({ currentView: view }),
+
+      selectModule: (name: string | null) => set({
+        selectedModule: name,
+        isExplorerOpen: !!name,
+      }),
+
+      toggleExplorer: (open?: boolean) => set((state) => ({
+        isExplorerOpen: typeof open !== 'undefined' ? open : !state.isExplorerOpen,
+      })),
+
+      setProject: (path: string | null, files: FileEntry[]) => set({
+        projectPath: path,
+        files: files.map(f => ({ ...f, isDirty: false })),
+        openTabs: files.length > 0 ? [files[0].path] : [],
+        activeFile: files.length > 0 ? files[0].path : null,
+        isScanning: false,
+      }),
+
+      openFile: (path: string) => set((state) => ({
+        openTabs: state.openTabs.includes(path) ? state.openTabs : [...state.openTabs, path],
+        activeFile: path,
+      })),
+
+      setActiveFile: (path: string | null) => set({ activeFile: path }),
+
+      updateFileContent: (path: string, content: string) => set((state) => ({
+        files: state.files.map(f => f.path === path ? { ...f, content, isDirty: true } : f),
+      })),
+
+      closeTab: (path: string) => set((state) => {
+        const newTabs = state.openTabs.filter(t => t !== path);
+        let newActive = state.activeFile;
+        if (state.activeFile === path) {
+          const idx = state.openTabs.indexOf(path);
+          newActive = newTabs[Math.min(idx, newTabs.length - 1)] || null;
+        }
+        return { openTabs: newTabs, activeFile: newActive };
+      }),
+
+      markFileSaved: (path: string) => set((state) => ({
+        files: state.files.map(f => f.path === path ? { ...f, isDirty: false } : f),
+      })),
+
+      createFile: (name: string, folderPath: string) => set((state) => {
+        const path = folderPath ? `${folderPath}/${name}` : `${state.projectPath}/${name}`;
+        const ext = name.split('.').pop() || 'text';
+        const newFile: FileEntry = {
+          name, path, content: '',
+          language: LANG_MAP[ext] || 'text',
+          isDirty: true,
+        };
+        return {
+          files: [...state.files, newFile],
+          openTabs: [...state.openTabs, path],
+          activeFile: path,
+        };
+      }),
+
+      renameFile: (oldPath: string, newName: string) => set((state) => {
+        const parts = oldPath.split('/');
+        parts[parts.length - 1] = newName;
+        const newPath = parts.join('/');
+        const ext = newName.split('.').pop() || 'text';
+        return {
+          files: state.files.map(f =>
+            f.path === oldPath
+              ? { ...f, name: newName, path: newPath, language: LANG_MAP[ext] || f.language, isDirty: true }
+              : f
+          ),
+          openTabs: state.openTabs.map(t => t === oldPath ? newPath : t),
+          activeFile: state.activeFile === oldPath ? newPath : state.activeFile,
+        };
+      }),
+
+      deleteFile: (path: string) => set((state) => {
+        const remaining = state.files.filter(f => f.path !== path);
+        const newTabs = state.openTabs.filter(t => t !== path);
+        return {
+          files: remaining,
+          openTabs: newTabs,
+          activeFile: state.activeFile === path
+            ? (newTabs.length > 0 ? newTabs[0] : null)
+            : state.activeFile,
+        };
+      }),
+
+      setGitBranch: (branch: string | null) => set({ gitBranch: branch }),
+      setOllamaStatus: (status: OllamaStatus) => set({ ollamaStatus: status }),
+      setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
+
+      addChatMessage: (message: ChatMessage) => set((state) => ({
+        chatMessages: [...state.chatMessages, message],
+      })),
+      clearChatMessages: () => set({ chatMessages: [] }),
+
+      updateEditorSettings: (settings: Partial<EditorSettings>) => set((state) => ({
+        editorSettings: { ...state.editorSettings, ...settings },
+      })),
+
+      addToast: (message: string, type: Toast['type']) => {
+        const id = `toast-${++toastCounter}`;
+        set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
+        setTimeout(() => {
+          set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) }));
+        }, 3000);
+      },
+
+      removeToast: (id: string) => set((state) => ({
+        toasts: state.toasts.filter(t => t.id !== id),
+      })),
+
+      setIsScanning: (scanning: boolean) => set({ isScanning: scanning }),
+      toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+
+      addRecentProject: (name: string) => set((state) => {
+        const filtered = state.recentProjects.filter(p => p !== name);
+        return { recentProjects: [name, ...filtered].slice(0, 5) };
+      }),
+
+      dismissHint: (hintId: string) => set((state) => ({
+        dismissedHints: [...state.dismissedHints, hintId],
+      })),
+
+      closeProject: () => set({
+        projectPath: null,
+        files: [],
+        openTabs: [],
+        activeFile: null,
+        chatMessages: [],
+      }),
+
+      updateProvider: (id: string, updates: Partial<LLMProviderConfig>) => set((state) => ({
+        providers: state.providers.map(p => p.id === id ? { ...p, ...updates } : p),
+      })),
+
+      reorderProviders: (providers: LLMProviderConfig[]) => set({ providers }),
+
+      addProvider: (provider: LLMProviderConfig) => set((state) => ({
+        providers: [...state.providers, { ...provider, priority: state.providers.length + 1 }],
+      })),
+
+      removeProvider: (id: string) => set((state) => ({
+        providers: state.providers.filter(p => p.id !== id).map((p, i) => ({ ...p, priority: i + 1 })),
+      })),
+
+      trackTokenUsage: (providerId: string, tokens: number) => set((state) => ({
+        providers: state.providers.map(p =>
+          p.id === providerId
+            ? { ...p, tokensUsed: (p.tokensUsed || 0) + tokens, requestCount: (p.requestCount || 0) + 1 }
+            : p
+        ),
+      })),
+    }),
+    {
+      name: 'neon-protocol-ide',
+      version: 2,
+      partialize: (state) => ({
+        currentView: state.currentView,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+        editorSettings: state.editorSettings,
+        isSidebarOpen: state.isSidebarOpen,
+        recentProjects: state.recentProjects,
+        dismissedHints: state.dismissedHints,
+        providers: state.providers,
+      }),
+      migrate: (persisted: any, version: number) => {
+        if (version < 2) {
+          // Fix providers missing type field
+          if (persisted?.providers) {
+            persisted.providers = persisted.providers.map((p: any) => ({
+              ...p,
+              type: p.type || (p.name === 'Ollama' ? 'ollama' : p.name === 'Anthropic' ? 'anthropic' : p.name === 'OpenAI' ? 'openai' : 'openai-compatible'),
+              tokensUsed: p.tokensUsed || 0,
+              requestCount: p.requestCount || 0,
+            }));
+          }
+          // Fix editorSettings missing systemRamGb
+          if (persisted?.editorSettings && !persisted.editorSettings.systemRamGb) {
+            persisted.editorSettings.systemRamGb = 16;
+          }
+        }
+        return persisted;
+      },
+    }
+  )
+);
