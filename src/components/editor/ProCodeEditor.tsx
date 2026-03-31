@@ -6,6 +6,7 @@ import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
 import { routeChat } from '../../lib/llm/provider';
 import ViewHint from '../onboarding/ViewHint';
+import ConceptTooltip from '../learning/ConceptTooltip';
 
 const ProCodeEditor: React.FC = () => {
   const {
@@ -222,6 +223,7 @@ const ProCodeEditor: React.FC = () => {
         {/* Copilot Toggle */}
         <button
           onClick={() => setCopilotVisible(v => !v)}
+          data-tutorial="copilot-toggle"
           className={`w-8 shrink-0 flex items-center justify-center border-l border-muted/30 transition-colors ${copilotVisible ? 'bg-surface-hover text-accent-ai' : 'bg-surface text-muted hover:text-accent-ai'}`}
           title={copilotVisible ? 'Hide copilot' : 'Show copilot'}
         >
@@ -235,7 +237,7 @@ const ProCodeEditor: React.FC = () => {
           <div className="h-9 flex items-center justify-between px-3 border-b border-muted/30 bg-surface-hover">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-base text-accent-ai">smart_toy</span>
-              <span className="text-[10px] font-display font-bold tracking-widest text-text-main uppercase">Copilot</span>
+              <span className="text-[10px] font-display font-bold tracking-widest text-text-main uppercase"><ConceptTooltip termId="copilot">COPILOT</ConceptTooltip></span>
             </div>
             <span className={`text-[8px] font-mono uppercase px-1.5 py-0.5 border ${
               hasEnabledProvider

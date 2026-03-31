@@ -1,0 +1,126 @@
+name: Build Installers
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v1.1.0, etc.
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write  # Needed to create releases and upload assets
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate icons
+        run: npm run generate-icons
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build Windows installers
+        run: npx electron-builder --win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            dist/NeonProtocolIDE-*-Setup.exe
+            dist/NeonProtocolIDE-*-Portable.exe
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate icons
+        run: npm run generate-icons
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build macOS installers
+        run: npx electron-builder --mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installers
+          path: |
+            dist/NeonProtocolIDE-*.dmg
+          retention-days: 30
+
+  create-release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f -name "NeonProtocolIDE-*" | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Neon Protocol IDE ${{ github.ref_name }}"
+          body: |
+            ## Neon Protocol IDE ${{ github.ref_name }}
+
+            ### Downloads
+
+            | Platform | File | Description |
+            |----------|------|-------------|
+            | Windows | `NeonProtocolIDE-*-Setup.exe` | Installer (recommended) |
+            | Windows | `NeonProtocolIDE-*-Portable.exe` | Portable (no install needed) |
+            | macOS (Intel) | `NeonProtocolIDE-*-x64.dmg` | For Intel Macs |
+            | macOS (Apple Silicon) | `NeonProtocolIDE-*-arm64.dmg` | For M1/M2/M3/M4 Macs |
+
+            ### First time?
+            1. Download the file for your platform
+            2. Run the installer (Windows) or drag to Applications (macOS)
+            3. Open the app and click "I'm New to Coding" to start the guided tour
+
+            > **Note:** The app is not code-signed. On Windows, click "More info" → "Run anyway". On macOS, right-click → "Open" on first launch.
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/windows-installers/NeonProtocolIDE-*-Setup.exe
+            artifacts/windows-installers/NeonProtocolIDE-*-Portable.exe
+            artifacts/macos-installers/NeonProtocolIDE-*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -23,6 +23,7 @@ import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
 import ViewHint from '../onboarding/ViewHint';
+import ArchitectureGuide from './ArchitectureGuide';
 
 interface CustomNodeData {
   label: string;
@@ -108,17 +109,27 @@ function generateFileNodes(files: FileEntry[]): Node[] {
   return nodes;
 }
 
-function generateEdges(nodes: Node[]): Edge[] {
+// Educational labels for default demo edges (shown in beginner mode)
+const EDGE_LABELS: Record<string, string> = {
+  'e1-2': 'Sends user requests',
+  'e2-3': 'Stores & retrieves data',
+  'e3-4': 'Provides AI responses',
+  'e2-4': 'Routes to AI provider',
+};
+
+function generateEdges(nodes: Node[], isBeginnerMode?: boolean): Edge[] {
   const edges: Edge[] = [];
   if (nodes.length > 1) {
     for (let i = 0; i < nodes.length - 1; i++) {
+      const edgeId = `e${nodes[i].id}-${nodes[i+1].id}`;
       edges.push({
-        id: `e${nodes[i].id}-${nodes[i+1].id}`,
+        id: edgeId,
         source: nodes[i].id,
         target: nodes[i+1].id,
         animated: true,
         style: { stroke: 'var(--color-primary)', strokeWidth: 2 },
         type: ConnectionLineType.SmoothStep,
+        ...(isBeginnerMode && EDGE_LABELS[edgeId] ? { label: EDGE_LABELS[edgeId], labelStyle: { fill: '#4E5666', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }, labelBgStyle: { fill: '#181A20', stroke: '#4E5666', strokeWidth: 0.5 }, labelBgPadding: [4, 2] as [number, number] } : {}),
       });
     }
   }
@@ -126,13 +137,14 @@ function generateEdges(nodes: Node[]): Edge[] {
 }
 
 const BlueprintCanvasInner: React.FC = () => {
-  const { selectModule, files, addToast } = useIDEStore();
+  const { selectModule, files, addToast, learningMode } = useIDEStore();
   const reactFlow = useReactFlow();
   const [hasUserEdited, setHasUserEdited] = useState(false);
   const [initialFitDone, setInitialFitDone] = useState(false);
 
   const seedNodes = useMemo(() => files.length === 0 ? generateDefaultNodes() : generateFileNodes(files), [files]);
-  const seedEdges = useMemo(() => generateEdges(seedNodes), [seedNodes]);
+  const isBeginnerMode = learningMode === 'beginner';
+  const seedEdges = useMemo(() => generateEdges(seedNodes, isBeginnerMode), [seedNodes, isBeginnerMode]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(seedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(seedEdges);
@@ -243,6 +255,13 @@ const BlueprintCanvasInner: React.FC = () => {
                 Delete
               </button>
             )}
+          </div>
+        </Panel>
+
+        {/* Architecture Guide (beginner mode) */}
+        <Panel position="bottom-right">
+          <div className="mb-14 mr-2">
+            <ArchitectureGuide />
           </div>
         </Panel>
 

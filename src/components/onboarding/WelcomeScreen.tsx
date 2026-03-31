@@ -2,111 +2,30 @@
 
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
-
-const DEMO_FILES = [
-  {
-    name: 'Dashboard.tsx',
-    path: 'demo-project/components/Dashboard.tsx',
-    language: 'typescript',
-    content: `// Main dashboard component
-import React from 'react';
-
-export function Dashboard() {
-  return (
-    <div className="dashboard">
-      <h1>Welcome to the App</h1>
-      <UserList />
-      <ActivityFeed />
-    </div>
-  );
-}`,
-  },
-  {
-    name: 'UserList.tsx',
-    path: 'demo-project/components/UserList.tsx',
-    language: 'typescript',
-    content: `// Displays a list of users from the API
-import React, { useEffect, useState } from 'react';
-
-export function UserList() {
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    fetch('/api/users').then(r => r.json()).then(setUsers);
-  }, []);
-
-  return (
-    <ul>
-      {users.map((u: any) => <li key={u.id}>{u.name}</li>)}
-    </ul>
-  );
-}`,
-  },
-  {
-    name: 'users.ts',
-    path: 'demo-project/api/users.ts',
-    language: 'typescript',
-    content: `// API endpoint for user management
-import { db } from '../store/database';
-
-export async function getUsers() {
-  return db.query('SELECT * FROM users');
-}
-
-export async function createUser(name: string, email: string) {
-  return db.query('INSERT INTO users (name, email) VALUES (?, ?)', [name, email]);
-}`,
-  },
-  {
-    name: 'health.ts',
-    path: 'demo-project/api/health.ts',
-    language: 'typescript',
-    content: `// Health check endpoint
-export async function healthCheck() {
-  return { status: 'ok', uptime: process.uptime() };
-}`,
-  },
-  {
-    name: 'database.ts',
-    path: 'demo-project/store/database.ts',
-    language: 'typescript',
-    content: `// Database connection and query layer
-export const db = {
-  async query(sql: string, params?: any[]) {
-    console.log('Executing:', sql, params);
-    return [];
-  },
-  async close() {
-    console.log('Connection closed');
-  }
-};`,
-  },
-  {
-    name: 'app.ts',
-    path: 'demo-project/app.ts',
-    language: 'typescript',
-    content: `// Application entry point
-// Open the Blueprint view to see how these modules connect!
-
-import { getUsers } from './api/users';
-import { healthCheck } from './api/health';
-
-async function main() {
-  console.log(await healthCheck());
-  console.log(await getUsers());
-}
-
-main();`,
-  },
-];
+import { DEMO_FILES } from '../../data/demoProject';
 
 const WelcomeScreen: React.FC = () => {
-  const { setOnboardingComplete, setProject, setView, recentProjects } = useIDEStore();
+  const { setOnboardingComplete, setProject, setView, recentProjects, setLearningMode, startTutorial } = useIDEStore();
 
-  const handleTryDemo = () => {
+  const handleBeginner = () => {
+    setLearningMode('beginner');
     setProject('demo-project', DEMO_FILES);
     setOnboardingComplete();
     setView('blueprint');
+    startTutorial('welcome-tour');
+  };
+
+  const handleExperienced = () => {
+    setLearningMode('experienced');
+    setOnboardingComplete();
+  };
+
+  const handleTryDemo = () => {
+    setLearningMode('beginner');
+    setProject('demo-project', DEMO_FILES);
+    setOnboardingComplete();
+    setView('blueprint');
+    startTutorial('welcome-tour');
   };
 
   const handleSkip = () => {
@@ -174,6 +93,30 @@ const WelcomeScreen: React.FC = () => {
           </div>
         )}
 
+        {/* Learning Mode Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={handleBeginner}
+            className="bg-surface border border-muted/30 p-5 text-left hover:border-primary hover:shadow-neon transition-all group"
+          >
+            <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">school</span>
+            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I'm New to Coding</h3>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Start with a guided tour and a demo project with step-by-step lessons. Perfect for absolute beginners.
+            </p>
+          </button>
+          <button
+            onClick={handleExperienced}
+            className="bg-surface border border-muted/30 p-5 text-left hover:border-primary hover:shadow-neon transition-all group"
+          >
+            <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">code</span>
+            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I Have Experience</h3>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Jump straight into the IDE. Open your own project and start building with the AI copilot right away.
+            </p>
+          </button>
+        </div>
+
         {/* Actions */}
         <div className="flex flex-col items-center gap-4">
           <button
@@ -187,6 +130,12 @@ const WelcomeScreen: React.FC = () => {
             className="px-6 py-2 text-muted text-xs font-mono hover:text-text-main transition-colors"
           >
             Skip — I'll open my own project
+          </button>
+          <button
+            onClick={handleTryDemo}
+            className="text-[10px] text-primary/70 font-mono hover:text-primary transition-colors underline underline-offset-2"
+          >
+            Take the guided tour
           </button>
         </div>
 

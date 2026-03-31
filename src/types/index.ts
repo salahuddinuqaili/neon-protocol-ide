@@ -49,6 +49,65 @@ export interface LLMProviderConfig {
   connectionError?: string;
 }
 
+// --- Learning System Types ---
+
+export type LearningMode = 'beginner' | 'experienced';
+
+export interface TutorialStep {
+  id: string;
+  title: string;
+  description: string;
+  targetView: IDEView | null;       // which view to switch to, or null for modal-only
+  targetSelector: string | null;     // CSS selector for spotlight highlight
+  action: 'click' | 'observe' | 'interact';
+  completionTrigger: string;         // store action or event that marks completion
+}
+
+export interface LearningProgress {
+  completedSteps: string[];
+  completedLessons: string[];
+  currentTutorialStep: number;
+  activeTutorialId: string | null;
+}
+
+export type GlossaryCategory = 'coding' | 'llm' | 'architecture' | 'ide';
+
+export interface GlossaryEntry {
+  id: string;
+  term: string;
+  shortDefinition: string;
+  fullExplanation: string;
+  relatedTerms: string[];
+  category: GlossaryCategory;
+}
+
+export type LessonCategory = 'coding-basics' | 'architecture' | 'llm-orchestration';
+
+export interface LessonStep {
+  instruction: string;
+  codeHighlight?: { file: string; startLine: number; endLine: number };
+  nodeHighlight?: string;
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  category: LessonCategory;
+  steps: LessonStep[];
+  requiredView: IDEView;
+  prerequisiteLessons: string[];
+}
+
+export interface NodeEducation {
+  title: string;
+  concept: string;
+  explanation: string;
+  realWorldAnalogy: string;
+}
+
+// --- IDE State ---
+
 export interface IDEState {
   currentView: IDEView;
   selectedModule: string | null;
@@ -68,6 +127,13 @@ export interface IDEState {
   recentProjects: string[];
   dismissedHints: string[];
   providers: LLMProviderConfig[];
+
+  // Learning system
+  learningMode: LearningMode;
+  learningProgress: LearningProgress;
+  isTutorialActive: boolean;
+  isGlossaryOpen: boolean;
+  isLearningPathOpen: boolean;
 
   setView: (view: IDEView) => void;
   selectModule: (name: string | null) => void;
@@ -99,4 +165,15 @@ export interface IDEState {
   addProvider: (provider: LLMProviderConfig) => void;
   removeProvider: (id: string) => void;
   trackTokenUsage: (providerId: string, tokens: number) => void;
+
+  // Learning actions
+  setLearningMode: (mode: LearningMode) => void;
+  startTutorial: (tutorialId: string) => void;
+  advanceTutorial: () => void;
+  completeTutorial: () => void;
+  skipTutorial: () => void;
+  completeLesson: (lessonId: string) => void;
+  toggleGlossary: (open?: boolean) => void;
+  toggleLearningPath: (open?: boolean) => void;
+  resetLearningProgress: () => void;
 }

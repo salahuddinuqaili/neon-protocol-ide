@@ -4,11 +4,14 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ModuleExplorer from '../copilot/ModuleExplorer';
+import GlossaryPanel from '../learning/GlossaryPanel';
 import WelcomeScreen from '../onboarding/WelcomeScreen';
 import QuickOpen from '../search/QuickOpen';
 import GlobalSearch from '../search/GlobalSearch';
 import SettingsPanel from '../settings/SettingsPanel';
 import ToastContainer from '../notifications/ToastContainer';
+import TutorialOverlay from '../onboarding/TutorialOverlay';
+import LearningPathPanel from '../learning/LearningPathPanel';
 import ErrorBoundary from '../ErrorBoundary';
 import { useIDEStore } from '../../store/useIDEStore';
 
@@ -26,7 +29,7 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar } = useIDEStore();
+  const { currentView, gitBranch, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode } = useIDEStore();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -147,6 +150,7 @@ const MainLayout: React.FC = () => {
             </ErrorBoundary>
           </div>
           <ModuleExplorer />
+          <GlossaryPanel />
         </div>
       </main>
       
@@ -159,6 +163,13 @@ const MainLayout: React.FC = () => {
             title={`${isSidebarOpen ? 'Hide' : 'Show'} sidebar (Ctrl+B)`}
           >
             <span className="material-symbols-outlined text-[12px]">{isSidebarOpen ? 'left_panel_close' : 'left_panel_open'}</span>
+          </button>
+          <button
+            onClick={() => setLearningMode(learningMode === 'beginner' ? 'experienced' : 'beginner')}
+            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+            title={`Learning mode: ${learningMode === 'beginner' ? 'Beginner' : 'Experienced'}`}
+          >
+            <span className="material-symbols-outlined text-[12px]">school</span>
           </button>
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-[12px]">account_tree</span>
@@ -176,6 +187,8 @@ const MainLayout: React.FC = () => {
         </div>
       </footer>
       <ToastContainer />
+      <TutorialOverlay />
+      <LearningPathPanel />
     </div>
   );
 };

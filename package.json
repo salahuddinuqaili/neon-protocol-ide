@@ -9,7 +9,94 @@
     "start": "next start",
     "lint": "next lint",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
-    "electron-build": "next build && electron-builder"
+    "electron-build": "next build && electron-builder",
+    "electron-build:win": "next build && electron-builder --win",
+    "electron-build:mac": "next build && electron-builder --mac",
+    "electron-build:all": "next build && electron-builder --win --mac",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "build": {
+    "appId": "com.neonprotocol.ide",
+    "productName": "Neon Protocol IDE",
+    "copyright": "Copyright © 2025 Neon Protocol Team",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*",
+      "index.js",
+      "src/electron/**/*",
+      "!node_modules/**/*",
+      "node_modules/electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "out",
+        "to": "out",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "NeonProtocolIDE-${version}-Setup.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Neon Protocol IDE"
+    },
+    "portable": {
+      "artifactName": "NeonProtocolIDE-${version}-Portable.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "NeonProtocolIDE-${version}-${arch}.${ext}",
+      "category": "public.app-category.developer-tools"
+    },
+    "dmg": {
+      "title": "Neon Protocol IDE",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "build/icon.png",
+      "category": "Development"
+    }
   },
   "keywords": [
     "IDE",
@@ -38,6 +125,7 @@
     "electron": "^29.1.0",
     "electron-builder": "^24.13.3",
     "postcss": "^8.4.35",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "wait-on": "^7.2.0"

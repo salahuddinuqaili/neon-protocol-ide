@@ -9,7 +9,7 @@ interface SettingsPanelProps {
 }
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
-  const { editorSettings, updateEditorSettings, setView } = useIDEStore();
+  const { editorSettings, updateEditorSettings, setView, learningMode, setLearningMode, resetLearningProgress, startTutorial } = useIDEStore();
 
   if (!isOpen) return null;
 
@@ -123,6 +123,77 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
                     +
                   </button>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Learning */}
+          <section>
+            <h3 className="text-xs font-bold text-muted uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">school</span>
+              Learning
+            </h3>
+            <div className="space-y-3">
+              {/* Learning Mode */}
+              <div className="flex items-center justify-between py-2 border-b border-muted/10">
+                <div>
+                  <p className="text-xs text-text-main font-mono">Learning Mode</p>
+                  <p className="text-[10px] text-muted max-w-[300px]">Beginner mode shows tooltips, guided tutorials, and learning lessons. Experienced mode hides all learning overlays.</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setLearningMode('beginner')}
+                    className={`text-xs font-mono px-3 py-1 border transition-colors ${
+                      learningMode === 'beginner'
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface border border-muted/30 text-muted hover:text-text-main'
+                    }`}
+                  >
+                    Beginner
+                  </button>
+                  <button
+                    onClick={() => setLearningMode('experienced')}
+                    className={`text-xs font-mono px-3 py-1 border transition-colors ${
+                      learningMode === 'experienced'
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface border border-muted/30 text-muted hover:text-text-main'
+                    }`}
+                  >
+                    Experienced
+                  </button>
+                </div>
+              </div>
+
+              {/* Reset Learning Progress */}
+              <div className="flex items-center justify-between py-2 border-b border-muted/10">
+                <div>
+                  <p className="text-xs text-text-main font-mono">Reset Progress</p>
+                  <p className="text-[10px] text-muted">Clear all learning progress and start fresh</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to reset all learning progress? This cannot be undone.')) {
+                      resetLearningProgress();
+                    }
+                  }}
+                  className="text-xs font-mono px-3 py-1 border transition-colors text-accent-error border-accent-error/30 hover:bg-accent-error/10"
+                >
+                  Reset Learning Progress
+                </button>
+              </div>
+
+              {/* Restart Welcome Tour */}
+              <div className="flex items-center justify-between py-2 border-b border-muted/10">
+                <div>
+                  <p className="text-xs text-text-main font-mono">Welcome Tour</p>
+                  <p className="text-[10px] text-muted">Replay the introductory guided tour</p>
+                </div>
+                <button
+                  onClick={() => { startTutorial('welcome-tour'); onClose(); }}
+                  className="text-xs font-mono px-3 py-1 border transition-colors text-text-main border-muted hover:border-primary"
+                >
+                  Restart Welcome Tour
+                </button>
               </div>
             </div>
           </section>

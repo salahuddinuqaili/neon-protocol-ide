@@ -3,9 +3,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { routeChat } from '../../lib/llm/provider';
+import ConceptTooltip from '../learning/ConceptTooltip';
+import { NODE_EDUCATION } from '../../data/lessons';
 
 const ModuleExplorer: React.FC = () => {
-  const { selectedModule, isExplorerOpen, toggleExplorer, setView, activeFile, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage } = useIDEStore();
+  const { selectedModule, isExplorerOpen, toggleExplorer, setView, activeFile, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
   const [chatInput, setChatInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,8 @@ const ModuleExplorer: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
+      data-tutorial="module-explorer"
       className={`absolute right-0 top-0 h-full w-[450px] bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-50 transform transition-transform duration-300 ease-in-out ${
         isExplorerOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
@@ -115,6 +118,21 @@ const ModuleExplorer: React.FC = () => {
           </div>
         )}
 
+        {/* Educational card for selected module (beginner mode) */}
+        {selectedModule && learningMode === 'beginner' && NODE_EDUCATION[selectedModule] && (
+          <div className="bg-surface-hover border border-accent-ai/30 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-sm text-accent-ai">school</span>
+              <span className="text-[10px] font-bold text-accent-ai uppercase tracking-widest">{NODE_EDUCATION[selectedModule].concept}</span>
+            </div>
+            <p className="text-[11px] text-text-main leading-relaxed mb-2">{NODE_EDUCATION[selectedModule].explanation}</p>
+            <div className="bg-background/50 border border-muted/20 p-2 mt-2">
+              <span className="text-[9px] text-muted font-mono uppercase block mb-1">Real-world analogy</span>
+              <p className="text-[10px] text-muted leading-relaxed">{NODE_EDUCATION[selectedModule].realWorldAnalogy}</p>
+            </div>
+          </div>
+        )}
+
         {selectedModule && chatMessages.length === 0 && (
           <div className="flex gap-3 w-full">
             <div className="w-6 h-6 rounded bg-surface border border-accent-ai flex items-center justify-center text-accent-ai shrink-0 mt-1">
@@ -123,7 +141,7 @@ const ModuleExplorer: React.FC = () => {
             <div className="flex flex-col gap-1 w-full">
               <span className="text-[9px] text-muted font-mono uppercase">Architect Copilot</span>
               <div className="bg-surface-hover border-l-2 border-accent-ai p-3 text-xs text-text-main font-mono leading-relaxed">
-                I'm ready to discuss <code className="text-accent-ai">{selectedModule}</code>. Ask me about its architecture, dependencies, or how to improve it.
+                I'm ready to discuss <code className="text-accent-ai">{selectedModule}</code>. Ask me about its <ConceptTooltip termId="module">architecture</ConceptTooltip>, <ConceptTooltip termId="dependency">dependencies</ConceptTooltip>, or how to improve it.
               </div>
             </div>
           </div>

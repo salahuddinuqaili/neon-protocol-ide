@@ -11,10 +11,14 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'src', 'electron', 'preload.js'),
+      preload: isDev
+        ? path.join(__dirname, 'src', 'electron', 'preload.js')
+        : path.join(__dirname, 'src', 'electron', 'preload.js'),
     },
     title: 'Neon Protocol IDE',
+    icon: path.join(__dirname, 'build', 'icon.png'),
     backgroundColor: '#181A20',
+    autoHideMenuBar: true,
   });
 
   if (isDev) {
@@ -23,7 +27,9 @@ function createWindow() {
     // win.webContents.openDevTools(); // Uncomment to see dev tools
   } else {
     // When packaged, load the static HTML from the build folder
-    win.loadFile(path.join(__dirname, 'out/index.html'));
+    // In packaged app, __dirname points to app.asar root
+    const indexPath = path.join(__dirname, 'out', 'index.html');
+    win.loadFile(indexPath);
   }
 }
 

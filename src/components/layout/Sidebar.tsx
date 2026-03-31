@@ -281,7 +281,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-[240px] flex-shrink-0 h-full bg-surface border-r border-muted/30 flex flex-col z-40 transition-all overflow-hidden">
+    <aside data-tutorial="sidebar" className="w-[240px] flex-shrink-0 h-full bg-surface border-r border-muted/30 flex flex-col z-40 transition-all overflow-hidden">
       <div className="p-4 border-b border-muted/10 bg-surface-hover/30 flex items-center justify-between">
         <h3 className="text-xs font-bold text-muted uppercase tracking-widest">Your Files</h3>
         <button

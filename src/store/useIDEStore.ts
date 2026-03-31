@@ -1,8 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig } from '../types';
+import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig, LearningMode, LearningProgress } from '../types';
 
 let toastCounter = 0;
+
+const DEFAULT_LEARNING_PROGRESS: LearningProgress = {
+  completedSteps: [],
+  completedLessons: [],
+  currentTutorialStep: 0,
+  activeTutorialId: null,
+};
 
 const DEFAULT_PROVIDERS: LLMProviderConfig[] = [
   { id: 'ollama', name: 'Ollama', type: 'ollama', model: 'llama3:8b', baseUrl: 'http://localhost:11434', enabled: true, priority: 1 },
@@ -37,6 +44,13 @@ export const useIDEStore = create<IDEState>()(
       recentProjects: [],
       dismissedHints: [],
       providers: DEFAULT_PROVIDERS,
+
+      // Learning system
+      learningMode: 'beginner',
+      learningProgress: DEFAULT_LEARNING_PROGRESS,
+      isTutorialActive: false,
+      isGlossaryOpen: false,
+      isLearningPathOpen: false,
 
       setView: (view: IDEView) => set({ currentView: view }),
 
@@ -191,10 +205,71 @@ export const useIDEStore = create<IDEState>()(
             : p
         ),
       })),
+
+      // Learning actions
+      setLearningMode: (mode: LearningMode) => set({ learningMode: mode }),
+
+      startTutorial: (tutorialId: string) => set((state) => ({
+        isTutorialActive: true,
+        learningProgress: {
+          ...state.learningProgress,
+          activeTutorialId: tutorialId,
+          currentTutorialStep: 0,
+        },
+      })),
+
+      advanceTutorial: () => set((state) => {
+        const stepId = `${state.learningProgress.activeTutorialId}-step-${state.learningProgress.currentTutorialStep}`;
+        return {
+          learningProgress: {
+            ...state.learningProgress,
+            currentTutorialStep: state.learningProgress.currentTutorialStep + 1,
+            completedSteps: state.learningProgress.completedSteps.includes(stepId)
+              ? state.learningProgress.completedSteps
+              : [...state.learningProgress.completedSteps, stepId],
+          },
+        };
+      }),
+
+      completeTutorial: () => set((state) => ({
+        isTutorialActive: false,
+        learningProgress: {
+          ...state.learningProgress,
+          activeTutorialId: null,
+          currentTutorialStep: 0,
+        },
+      })),
+
+      skipTutorial: () => set({
+        isTutorialActive: false,
+        learningProgress: { ...DEFAULT_LEARNING_PROGRESS },
+      }),
+
+      completeLesson: (lessonId: string) => set((state) => ({
+        learningProgress: {
+          ...state.learningProgress,
+          completedLessons: state.learningProgress.completedLessons.includes(lessonId)
+            ? state.learningProgress.completedLessons
+            : [...state.learningProgress.completedLessons, lessonId],
+        },
+      })),
+
+      toggleGlossary: (open?: boolean) => set((state) => ({
+        isGlossaryOpen: typeof open !== 'undefined' ? open : !state.isGlossaryOpen,
+      })),
+
+      toggleLearningPath: (open?: boolean) => set((state) => ({
+        isLearningPathOpen: typeof open !== 'undefined' ? open : !state.isLearningPathOpen,
+      })),
+
+      resetLearningProgress: () => set({
+        learningProgress: { ...DEFAULT_LEARNING_PROGRESS },
+        isTutorialActive: false,
+      }),
     }),
     {
       name: 'neon-protocol-ide',
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         currentView: state.currentView,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
@@ -203,10 +278,11 @@ export const useIDEStore = create<IDEState>()(
         recentProjects: state.recentProjects,
         dismissedHints: state.dismissedHints,
         providers: state.providers,
+        learningMode: state.learningMode,
+        learningProgress: state.learningProgress,
       }),
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
-          // Fix providers missing type field
           if (persisted?.providers) {
             persisted.providers = persisted.providers.map((p: any) => ({
               ...p,
@@ -215,10 +291,18 @@ export const useIDEStore = create<IDEState>()(
               requestCount: p.requestCount || 0,
             }));
           }
-          // Fix editorSettings missing systemRamGb
           if (persisted?.editorSettings && !persisted.editorSettings.systemRamGb) {
             persisted.editorSettings.systemRamGb = 16;
           }
+        }
+        if (version < 3) {
+          persisted.learningMode = persisted.learningMode || 'beginner';
+          persisted.learningProgress = persisted.learningProgress || {
+            completedSteps: [],
+            completedLessons: [],
+            currentTutorialStep: 0,
+            activeTutorialId: null,
+          };
         }
         return persisted;
       },

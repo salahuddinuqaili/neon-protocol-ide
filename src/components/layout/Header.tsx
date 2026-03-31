@@ -23,7 +23,7 @@ const HELP_TEXT: Record<string, { title: string; body: string }> = {
 };
 
 const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
-  const { currentView, setView, projectPath, activeFile } = useIDEStore();
+  const { currentView, setView, projectPath, activeFile, learningMode, toggleGlossary, toggleLearningPath, learningProgress } = useIDEStore();
   const [helpOpen, setHelpOpen] = React.useState(false);
 
   const activeFileName = activeFile?.split('/').pop();
@@ -58,37 +58,74 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
             onClick={() => setView('blueprint')}
             title="Visual map of your project (Ctrl+1)"
             aria-label="Switch to visual map"
+            data-tutorial="view-toggle-blueprint"
             className={`flex items-center gap-1.5 px-4 py-1 text-sm font-display font-bold transition-all ${
               currentView === 'blueprint' ? 'bg-primary text-background shadow-neon' : 'text-muted hover:text-text-main'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">map</span>
-            MAP
+            <span className="flex flex-col items-start leading-none">
+              <span>{learningMode === 'beginner' ? 'Visual Map' : 'MAP'}</span>
+              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">see your app</span>}
+            </span>
           </button>
           <button
             onClick={() => setView('code')}
             title="Edit code files (Ctrl+2)"
             aria-label="Switch to code editor"
+            data-tutorial="view-toggle-code"
             className={`flex items-center gap-1.5 px-4 py-1 text-sm font-display font-bold transition-all ${
               currentView === 'code' ? 'bg-primary text-background shadow-neon' : 'text-muted hover:text-text-main'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">code</span>
-            CODE
+            <span className="flex flex-col items-start leading-none">
+              <span>{learningMode === 'beginner' ? 'Code Editor' : 'CODE'}</span>
+              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">edit files</span>}
+            </span>
           </button>
           <button
             onClick={() => setView('orchestrator')}
             title="AI assistant settings (Ctrl+3)"
             aria-label="Switch to AI settings"
+            data-tutorial="view-toggle-ai"
             className={`flex items-center gap-1.5 px-4 py-1 text-sm font-display font-bold transition-all ${
               currentView === 'orchestrator' ? 'bg-primary text-background shadow-neon' : 'text-muted hover:text-text-main'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">smart_toy</span>
-            AI
+            <span className="flex flex-col items-start leading-none">
+              <span>{learningMode === 'beginner' ? 'AI Settings' : 'AI'}</span>
+              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">connect AI</span>}
+            </span>
           </button>
         </div>
         <div className="flex items-center gap-3 border-l border-muted/30 pl-4">
+          {learningMode === 'beginner' && (
+            <>
+              <button
+                onClick={() => toggleLearningPath()}
+                className="text-muted hover:text-text-main transition-colors relative"
+                title="Learning Path"
+                aria-label="Open learning path"
+              >
+                <span className="material-symbols-outlined text-xl">school</span>
+                {learningProgress.completedLessons.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-background text-[7px] font-bold w-3.5 h-3.5 flex items-center justify-center">
+                    {learningProgress.completedLessons.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => toggleGlossary()}
+                className="text-muted hover:text-text-main transition-colors"
+                title="Glossary"
+                aria-label="Open glossary"
+              >
+                <span className="material-symbols-outlined text-xl">menu_book</span>
+              </button>
+            </>
+          )}
           <div className="relative">
             <button
               onClick={() => setHelpOpen(h => !h)}

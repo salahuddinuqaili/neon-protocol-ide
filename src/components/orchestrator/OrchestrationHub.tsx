@@ -6,6 +6,7 @@ import { LLMProviderConfig, ProviderType, ConnectionStatus } from '../../types';
 import { routeChat, chatWithProvider } from '../../lib/llm/provider';
 import ViewHint from '../onboarding/ViewHint';
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
+import ConceptTooltip from '../learning/ConceptTooltip';
 
 type LogEntry = { msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
 type Tab = 'providers' | 'usage';
@@ -180,13 +181,24 @@ const STATUS_DISPLAY: Record<ConnectionStatus, { label: string; color: string }>
   failed: { label: 'Failed', color: 'text-accent-error border-accent-error/30' },
 };
 
+const BEGINNER_EXPLAINER = [
+  { icon: 'smart_toy', q: 'What is an AI Provider?', a: 'A provider is a service that runs AI models. Think of it like choosing a restaurant: Ollama is cooking at home (free, on your computer), OpenAI and Anthropic are restaurants (cloud services that charge per use).' },
+  { icon: 'psychology', q: 'What is a Model?', a: 'A model is a specific AI "brain." Smaller models (2B-7B) are fast but less capable. Larger models (70B+) are smarter but slower and need more memory. It\'s like choosing between a quick snack and a gourmet meal.' },
+  { icon: 'token', q: 'What are Tokens?', a: 'Tokens are how AI measures text -- roughly 1 token per word. When the AI reads your question and writes a response, it counts tokens. Cloud providers charge by token usage.' },
+  { icon: 'key', q: 'What is an API Key?', a: 'An API key is like a membership card for cloud AI services. You sign up on their website, get a unique key, and paste it here. Keep it secret! Local providers like Ollama don\'t need one.' },
+  { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice (e.g., Ollama) fails, the system automatically tries the next one (e.g., Groq). Use the arrows to set the order.' },
+];
+
 const OrchestrationHub: React.FC = () => {
-  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, editorSettings, updateEditorSettings } = useIDEStore();
+  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, editorSettings, updateEditorSettings, learningMode, dismissedHints, dismissHint } = useIDEStore();
   const systemRam = editorSettings.systemRamGb;
   const [activeTab, setActiveTab] = useState<Tab>('providers');
   const [testPrompt, setTestPrompt] = useState('');
+  const isBeginnerMode = learningMode === 'beginner';
   const [testLog, setTestLog] = useState<LogEntry[]>([
-    { msg: '> Ready. Type a message to test your AI connection.', type: 'info' },
+    { msg: isBeginnerMode
+      ? '> Welcome! This is like a chat window for testing your AI. Try typing a simple question below and press Send.'
+      : '> Ready. Type a message to test your AI connection.', type: 'info' },
   ]);
   const [isTesting, setIsTesting] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -285,6 +297,29 @@ const OrchestrationHub: React.FC = () => {
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             {activeTab === 'providers' && (
               <div className="p-4 flex flex-col gap-3">
+                {/* Beginner Explainer */}
+                {learningMode === 'beginner' && !dismissedHints.includes('orchestrator-explainer') && (
+                  <div className="bg-background border border-accent-ai/20 p-3 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm text-accent-ai">school</span>
+                        <span className="text-[10px] font-bold text-accent-ai uppercase tracking-widest">New to AI? Start here</span>
+                      </div>
+                      <button onClick={() => dismissHint('orchestrator-explainer')} className="text-[9px] text-muted hover:text-text-main font-mono">Got it, let me configure</button>
+                    </div>
+                    {BEGINNER_EXPLAINER.map((item, i) => (
+                      <details key={i} className="group">
+                        <summary className="flex items-center gap-2 cursor-pointer text-[11px] text-text-main font-bold py-1 hover:text-primary transition-colors list-none">
+                          <span className="material-symbols-outlined text-[14px] text-accent-ai">{item.icon}</span>
+                          {item.q}
+                          <span className="material-symbols-outlined text-[12px] text-muted ml-auto group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p className="text-[10px] text-muted leading-relaxed pl-6 pb-1">{item.a}</p>
+                      </details>
+                    ))}
+                  </div>
+                )}
+
                 {/* RAM Input */}
                 <div className="flex items-center gap-3 bg-surface border border-muted p-3">
                   <span className="material-symbols-outlined text-primary text-sm">memory</span>
@@ -295,7 +330,7 @@ const OrchestrationHub: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-muted font-mono">AI models that power your copilot</p>
+                  <p className="text-[10px] text-muted font-mono"><ConceptTooltip termId="model">AI models</ConceptTooltip> that power your <ConceptTooltip termId="copilot">copilot</ConceptTooltip></p>
                   <div className="relative">
                     <button onClick={() => setShowAddMenu(s => !s)} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-background text-[10px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all">
                       <span className="material-symbols-outlined text-[14px]">add</span> Add
@@ -304,9 +339,14 @@ const OrchestrationHub: React.FC = () => {
                       <div className="fixed inset-0 z-[99]" onClick={() => setShowAddMenu(false)} />
                       <div className="absolute right-0 top-9 z-[100] w-72 bg-surface border border-muted shadow-lg py-1 max-h-80 overflow-y-auto custom-scrollbar">
                         {PROVIDER_PRESETS.map((preset, i) => (
-                          <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-2 text-xs font-mono text-text-main hover:bg-surface-hover flex justify-between">
+                          <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-2 text-xs font-mono text-text-main hover:bg-surface-hover flex justify-between items-center">
                             <span>{preset.label}</span>
-                            {preset.type === 'ollama' && <span className="text-[9px] text-primary">FREE</span>}
+                            <span className="flex items-center gap-1">
+                              {preset.type === 'ollama' && <span className="text-[9px] text-primary">FREE</span>}
+                              {learningMode === 'beginner' && (preset.type === 'ollama' || preset.label.includes('Groq')) && (
+                                <span className="text-[8px] bg-accent-ai/20 text-accent-ai px-1 py-0.5">BEGINNER</span>
+                              )}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -343,7 +383,7 @@ const OrchestrationHub: React.FC = () => {
 
             {activeTab === 'usage' && (
               <div className="p-4 flex flex-col gap-4">
-                <h3 className="text-[10px] text-muted font-bold uppercase tracking-widest">Token Usage by Provider</h3>
+                <h3 className="text-[10px] text-muted font-bold uppercase tracking-widest"><ConceptTooltip termId="token">Token</ConceptTooltip> Usage by <ConceptTooltip termId="provider">Provider</ConceptTooltip></h3>
                 {providers.filter(p => (p.tokensUsed || 0) > 0).length === 0 ? (
                   <div className="flex flex-col items-center text-center gap-3 py-10">
                     <span className="material-symbols-outlined text-4xl text-muted/30">bar_chart</span>
@@ -396,11 +436,21 @@ const OrchestrationHub: React.FC = () => {
               ))}
               <div ref={logEndRef} />
             </div>
+            {isBeginnerMode && !testPrompt && (
+              <div className="flex gap-2 flex-wrap">
+                {['What is TypeScript?', 'Explain what an API is', 'Write a hello world function'].map(suggestion => (
+                  <button key={suggestion} onClick={() => setTestPrompt(suggestion)}
+                    className="text-[10px] font-mono text-accent-ai border border-accent-ai/30 px-2 py-1 hover:bg-accent-ai/10 transition-colors">
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2">
               <input value={testPrompt} onChange={(e) => setTestPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isTesting && runTest()} disabled={isTesting}
                 className="flex-1 bg-surface border border-muted text-text-main font-mono text-xs px-4 py-2.5 outline-none focus:border-primary placeholder-muted disabled:opacity-50"
-                placeholder="Type a test message..." />
+                placeholder={isBeginnerMode ? 'Try asking a question...' : 'Type a test message...'} />
               <button onClick={runTest} disabled={isTesting || !testPrompt}
                 className={`bg-primary text-background px-5 py-2 font-bold text-xs uppercase tracking-widest hover:bg-[#0cf1f1] transition-all ${isTesting || !testPrompt ? 'opacity-50' : ''}`}>
                 {isTesting ? '...' : 'Send'}
