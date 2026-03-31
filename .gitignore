@@ -8,7 +8,10 @@ yarn-error.log*
 # Next.js
 .next/
 out/
-build/
+build/*
+!build/icon.png
+!build/icon.ico
+!build/icon.svg
 
 # Electron
 dist/
