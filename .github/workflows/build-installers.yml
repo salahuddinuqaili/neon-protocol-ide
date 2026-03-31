@@ -3,23 +3,26 @@ name: Build Installers
 on:
   push:
     tags:
-      - 'v*'  # Triggers on version tags like v1.0.0, v1.1.0, etc.
-  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
-  contents: write  # Needed to create releases and upload assets
+  contents: write
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -34,7 +37,7 @@ jobs:
       - name: Build Windows installers
         run: npx electron-builder --win
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifacts
@@ -50,12 +53,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -70,7 +73,7 @@ jobs:
       - name: Build macOS installers
         run: npx electron-builder --mac
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload macOS artifacts
@@ -115,7 +118,7 @@ jobs:
             2. Run the installer (Windows) or drag to Applications (macOS)
             3. Open the app and click "I'm New to Coding" to start the guided tour
 
-            > **Note:** The app is not code-signed. On Windows, click "More info" → "Run anyway". On macOS, right-click → "Open" on first launch.
+            > **Note:** The app is not code-signed. On Windows, click "More info" then "Run anyway". On macOS, right-click then "Open" on first launch.
           draft: false
           prerelease: false
           files: |
