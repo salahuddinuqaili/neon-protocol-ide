@@ -1,8 +1,24 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const { pathToFileURL } = require('url');
 const isDev = !app.isPackaged;
+
+// Register a custom protocol to serve the Next.js static export.
+// This is needed because Next.js uses absolute paths like /_next/...
+// which don't resolve under the file:// protocol.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      allowServiceWorkers: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -11,9 +27,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: isDev
-        ? path.join(__dirname, 'src', 'electron', 'preload.js')
-        : path.join(__dirname, 'src', 'electron', 'preload.js'),
+      preload: path.join(__dirname, 'src', 'electron', 'preload.js'),
     },
     title: 'Neon Protocol IDE',
     icon: path.join(__dirname, 'build', 'icon.png'),
@@ -22,14 +36,34 @@ function createWindow() {
   });
 
   if (isDev) {
-    // When in development, load from the Next.js dev server
     win.loadURL('http://localhost:3001');
-    // win.webContents.openDevTools(); // Uncomment to see dev tools
   } else {
-    // When packaged, load the static HTML from the build folder
-    // In packaged app, __dirname points to app.asar root
-    const indexPath = path.join(__dirname, 'out', 'index.html');
-    win.loadFile(indexPath);
+    // Register the app:// protocol handler to serve files from out/
+    const outDir = path.join(__dirname, 'out');
+
+    protocol.handle('app', (request) => {
+      const url = new URL(request.url);
+      let filePath = path.join(outDir, decodeURIComponent(url.pathname));
+
+      // If path is a directory, serve index.html
+      if (filePath.endsWith('/') || filePath.endsWith(path.sep)) {
+        filePath = path.join(filePath, 'index.html');
+      }
+
+      // If file doesn't exist and has no extension, try .html
+      if (!fs.existsSync(filePath) && !path.extname(filePath)) {
+        filePath = filePath + '.html';
+      }
+
+      // Fallback to index.html for client-side routing
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(outDir, 'index.html');
+      }
+
+      return net.fetch(pathToFileURL(filePath).toString());
+    });
+
+    win.loadURL('app://./index.html');
   }
 }
 
