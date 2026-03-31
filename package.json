@@ -1,6 +1,6 @@
 {
   "name": "neon-protocol-ide",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Neon Protocol IDE - Agentic Architectural Blueprint IDE",
   "main": "index.js",
   "scripts": {
@@ -71,11 +71,18 @@
         {
           "target": "dmg",
           "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
         }
       ],
       "icon": "build/icon.png",
       "artifactName": "NeonProtocolIDE-${version}-${arch}.${ext}",
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "dmg": {
       "title": "Neon Protocol IDE",
