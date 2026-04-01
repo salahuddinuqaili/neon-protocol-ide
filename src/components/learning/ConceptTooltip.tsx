@@ -98,12 +98,12 @@ const ConceptTooltip: React.FC<ConceptTooltipProps> = ({ termId, children }) => 
             onMouseLeave={handleTooltipMouseLeave}
           >
             <div className="text-xs font-bold text-text-main mb-1">{entry.term}</div>
-            <p className="text-[10px] text-muted leading-relaxed mb-2">
+            <p className="text-[11px] text-muted leading-relaxed mb-2">
               {entry.shortDefinition}
             </p>
             <button
               onClick={handleOpenGlossary}
-              className="text-[10px] text-accent-ai hover:text-primary font-bold uppercase tracking-wider transition-colors"
+              className="text-[11px] text-accent-ai hover:text-primary font-bold uppercase tracking-wider transition-colors"
             >
               Open Glossary
             </button>

@@ -70,7 +70,7 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
             placeholder="Search files by name..."
             className="flex-1 bg-transparent text-text-main text-sm font-mono py-3 outline-none placeholder-muted"
           />
-          <span className="text-[9px] text-muted font-mono bg-background px-1.5 py-0.5 border border-muted/30">ESC</span>
+          <span className="text-[11px] text-muted font-mono bg-background px-1.5 py-0.5 border border-muted/30">ESC</span>
         </div>
         <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
           {filtered.length === 0 ? (
@@ -91,7 +91,7 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
                 <span className="material-symbols-outlined text-[14px]">code</span>
                 <div className="flex flex-col min-w-0">
                   <span className="text-text-main truncate">{file.name}</span>
-                  <span className="text-[10px] text-muted truncate">{file.path}</span>
+                  <span className="text-[11px] text-muted truncate">{file.path}</span>
                 </div>
               </div>
             ))

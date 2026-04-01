@@ -97,7 +97,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
             placeholder="Search in files..."
             className="flex-1 bg-transparent text-text-main text-sm font-mono py-3 outline-none placeholder-muted"
           />
-          <span className="text-[9px] text-muted font-mono bg-background px-1.5 py-0.5 border border-muted/30">ESC</span>
+          <span className="text-[11px] text-muted font-mono bg-background px-1.5 py-0.5 border border-muted/30">ESC</span>
         </div>
         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
           {query.length < 2 ? (
@@ -110,7 +110,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <>
-              <div className="px-4 py-1.5 text-[9px] text-muted font-mono border-b border-muted/10">
+              <div className="px-4 py-1.5 text-[11px] text-muted font-mono border-b border-muted/10">
                 {results.length}{results.length >= 100 ? '+' : ''} results
               </div>
               {results.slice(0, 50).map((result, i) => (
@@ -129,7 +129,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
                       <span className="text-muted/50">:</span>
                       <span className="text-primary">{result.line}</span>
                     </div>
-                    <span className="text-muted truncate text-[11px]">{result.content}</span>
+                    <span className="text-muted truncate text-xs">{result.content}</span>
                   </div>
                 </div>
               ))}

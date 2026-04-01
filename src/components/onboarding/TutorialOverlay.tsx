@@ -169,7 +169,7 @@ const TutorialOverlay: React.FC = () => {
       >
         {/* Step counter */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
+          <span className="text-[11px] font-mono text-muted uppercase tracking-widest">
             Step {stepNumber} of {totalSteps}
           </span>
           <div className="flex gap-1">
@@ -198,7 +198,7 @@ const TutorialOverlay: React.FC = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={skipTutorial}
-            className="text-[10px] text-muted font-mono hover:text-text-main transition-colors"
+            className="text-[11px] text-muted font-mono hover:text-text-main transition-colors"
           >
             Skip Tour
           </button>

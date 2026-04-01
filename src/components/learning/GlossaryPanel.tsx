@@ -118,10 +118,10 @@ const GlossaryPanel: React.FC = () => {
                 >
                   expand_more
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-muted">
                   {CATEGORY_LABELS[cat]}
                 </span>
-                <span className="text-[9px] text-muted/50 font-mono ml-auto">
+                <span className="text-[11px] text-muted/50 font-mono ml-auto">
                   {entries.length}
                 </span>
               </button>
@@ -141,7 +141,7 @@ const GlossaryPanel: React.FC = () => {
                         className="w-full text-left px-4 py-3 hover:bg-surface-hover transition-colors"
                       >
                         <div className="text-xs font-bold text-text-main">{entry.term}</div>
-                        <div className="text-[10px] text-muted mt-0.5 leading-relaxed">
+                        <div className="text-[11px] text-muted mt-0.5 leading-relaxed">
                           {entry.shortDefinition}
                         </div>
                       </button>
@@ -149,12 +149,12 @@ const GlossaryPanel: React.FC = () => {
                       {/* Expanded Content */}
                       {expandedTerms[entry.id] && (
                         <div className="px-4 pb-3">
-                          <p className="text-[11px] text-text-main leading-relaxed bg-background/50 border-l-2 border-accent-ai p-3 mb-2">
+                          <p className="text-xs text-text-main leading-relaxed bg-background/50 border-l-2 border-accent-ai p-3 mb-2">
                             {entry.fullExplanation}
                           </p>
                           {entry.relatedTerms.length > 0 && (
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] text-muted font-mono uppercase">
+                              <span className="text-[11px] text-muted font-mono uppercase">
                                 Related:
                               </span>
                               {entry.relatedTerms.map((relId) => {
@@ -164,7 +164,7 @@ const GlossaryPanel: React.FC = () => {
                                   <button
                                     key={relId}
                                     onClick={() => scrollToTerm(relId)}
-                                    className="text-[10px] text-accent-ai hover:text-primary transition-colors underline"
+                                    className="text-[11px] text-accent-ai hover:text-primary transition-colors underline"
                                   >
                                     {relEntry.term}
                                   </button>

@@ -44,7 +44,7 @@ const CustomNode = React.memo(({ data, selected }: NodeProps<CustomNodeData>) =>
       <Handle type="target" position={Position.Left} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
 
       <div className="flex items-center justify-between w-full mb-1">
-        <span className={`text-[10px] font-mono uppercase tracking-wider ${selected ? 'text-primary' : 'text-muted'}`}>
+        <span className={`text-xs font-mono uppercase tracking-wider ${selected ? 'text-primary' : 'text-muted'}`}>
           {data.type}
         </span>
         {data.icon && <span className={`material-symbols-outlined text-[14px] ${selected ? 'text-primary' : data.color ? `text-${data.color}` : 'text-muted'}`}>{data.icon}</span>}
@@ -53,11 +53,11 @@ const CustomNode = React.memo(({ data, selected }: NodeProps<CustomNodeData>) =>
       <h3 className="text-text-main font-bold text-sm truncate">{data.label}</h3>
 
       {data.description && (
-        <div className="text-[9px] text-muted mt-1 leading-snug">{data.description}</div>
+        <div className="text-[11px] text-muted mt-1 leading-relaxed">{data.description}</div>
       )}
 
       {data.count !== undefined && data.count > 0 && !data.description && (
-        <div className="text-[9px] text-muted mt-0.5">{data.count} files</div>
+        <div className="text-[11px] text-muted mt-0.5">{data.count} files</div>
       )}
 
       <Handle type="source" position={Position.Right} className="!w-2 !h-4 !rounded-none !bg-muted !border-none" />
@@ -129,7 +129,7 @@ function generateEdges(nodes: Node[], isBeginnerMode?: boolean): Edge[] {
         animated: true,
         style: { stroke: 'var(--color-primary)', strokeWidth: 2 },
         type: ConnectionLineType.SmoothStep,
-        ...(isBeginnerMode && EDGE_LABELS[edgeId] ? { label: EDGE_LABELS[edgeId], labelStyle: { fill: '#4E5666', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }, labelBgStyle: { fill: '#181A20', stroke: '#4E5666', strokeWidth: 0.5 }, labelBgPadding: [4, 2] as [number, number] } : {}),
+        ...(isBeginnerMode && EDGE_LABELS[edgeId] ? { label: EDGE_LABELS[edgeId], labelStyle: { fill: '#6B7280', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }, labelBgStyle: { fill: '#181A20', stroke: '#6B7280', strokeWidth: 0.5 }, labelBgPadding: [4, 2] as [number, number] } : {}),
       });
     }
   }
@@ -240,7 +240,7 @@ const BlueprintCanvasInner: React.FC = () => {
             <button
               onClick={handleAddNode}
               title="Add a new node"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-muted text-text-main text-[10px] font-bold uppercase tracking-wider hover:bg-primary hover:text-background hover:shadow-neon transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-muted text-text-main text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-background hover:shadow-neon transition-all"
             >
               <span className="material-symbols-outlined text-[14px]">add</span>
               Add Node
@@ -249,7 +249,7 @@ const BlueprintCanvasInner: React.FC = () => {
               <button
                 onClick={handleDeleteSelected}
                 title="Delete selected node"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-muted text-accent-error text-[10px] font-bold uppercase tracking-wider hover:bg-accent-error hover:text-background transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-muted text-accent-error text-xs font-bold uppercase tracking-wider hover:bg-accent-error hover:text-background transition-all"
               >
                 <span className="material-symbols-outlined text-[14px]">delete</span>
                 Delete
@@ -267,7 +267,7 @@ const BlueprintCanvasInner: React.FC = () => {
 
         {/* Version Panel */}
         <Panel position="bottom-center">
-          <div className="mb-6 h-10 bg-surface border border-muted flex items-center shadow-lg px-4 text-[10px] font-mono text-text-main gap-4">
+          <div className="mb-6 h-10 bg-surface border border-muted flex items-center shadow-lg px-4 text-xs font-mono text-text-main gap-4">
             <span>NEON PROTOCOL CANVAS V1.0</span>
             <span className="text-muted">|</span>
             <span className="text-muted">{nodes.length} nodes</span>

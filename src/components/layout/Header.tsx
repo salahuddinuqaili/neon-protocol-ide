@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
             <span className="material-symbols-outlined text-[16px]">map</span>
             <span className="flex flex-col items-start leading-none">
               <span>{learningMode === 'beginner' ? 'Visual Map' : 'MAP'}</span>
-              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">see your app</span>}
+              {learningMode === 'beginner' && <span className="text-[10px] font-mono font-normal opacity-70">see your app</span>}
             </span>
           </button>
           <button
@@ -81,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
             <span className="material-symbols-outlined text-[16px]">code</span>
             <span className="flex flex-col items-start leading-none">
               <span>{learningMode === 'beginner' ? 'Code Editor' : 'CODE'}</span>
-              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">edit files</span>}
+              {learningMode === 'beginner' && <span className="text-[10px] font-mono font-normal opacity-70">edit files</span>}
             </span>
           </button>
           <button
@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
             <span className="material-symbols-outlined text-[16px]">smart_toy</span>
             <span className="flex flex-col items-start leading-none">
               <span>{learningMode === 'beginner' ? 'AI Settings' : 'AI'}</span>
-              {learningMode === 'beginner' && <span className="text-[7px] font-mono font-normal opacity-70">connect AI</span>}
+              {learningMode === 'beginner' && <span className="text-[10px] font-mono font-normal opacity-70">connect AI</span>}
             </span>
           </button>
         </div>
@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
               >
                 <span className="material-symbols-outlined text-xl">school</span>
                 {learningProgress.completedLessons.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-background text-[7px] font-bold w-3.5 h-3.5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-primary text-background text-xs font-bold w-3.5 h-3.5 flex items-center justify-center">
                     {learningProgress.completedLessons.length}
                   </span>
                 )}
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
                   <p className="text-xs text-text-main leading-relaxed">{help.body}</p>
                   <button
                     onClick={() => setHelpOpen(false)}
-                    className="mt-3 text-[10px] text-muted hover:text-text-main font-mono"
+                    className="mt-3 text-xs text-muted hover:text-text-main font-mono"
                   >
                     Close
                   </button>

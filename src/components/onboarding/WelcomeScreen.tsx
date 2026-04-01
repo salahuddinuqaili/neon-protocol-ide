@@ -53,21 +53,21 @@ const WelcomeScreen: React.FC = () => {
           <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
             <span className="material-symbols-outlined text-2xl text-primary mb-3 block">map</span>
             <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">Visual Map</h3>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               See your project as a visual diagram. Click any box to learn what it does and how it connects to other parts.
             </p>
           </div>
           <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
             <span className="material-symbols-outlined text-2xl text-primary mb-3 block">code</span>
             <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">Code Editor</h3>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Read and edit the actual code files. Changes are highlighted so you always know what you've modified.
             </p>
           </div>
           <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
             <span className="material-symbols-outlined text-2xl text-accent-ai mb-3 block">smart_toy</span>
             <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">AI Assistant</h3>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Ask questions about your code in plain English. The AI explains what things do and helps you make changes.
             </p>
           </div>
@@ -76,7 +76,7 @@ const WelcomeScreen: React.FC = () => {
         {/* Recent Projects */}
         {recentProjects.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-[10px] text-muted uppercase tracking-widest font-bold text-center mb-3">Recent Projects</h3>
+            <h3 className="text-[11px] text-muted uppercase tracking-widest font-bold text-center mb-3">Recent Projects</h3>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {recentProjects.map(name => (
                 <button
@@ -89,7 +89,7 @@ const WelcomeScreen: React.FC = () => {
                 </button>
               ))}
             </div>
-            <p className="text-center text-[9px] text-muted/50 mt-2 font-mono">Re-open from the sidebar file explorer</p>
+            <p className="text-center text-[11px] text-muted/50 mt-2 font-mono">Re-open from the sidebar file explorer</p>
           </div>
         )}
 
@@ -101,7 +101,7 @@ const WelcomeScreen: React.FC = () => {
           >
             <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">school</span>
             <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I'm New to Coding</h3>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Start with a guided tour and a demo project with step-by-step lessons. Perfect for absolute beginners.
             </p>
           </button>
@@ -111,7 +111,7 @@ const WelcomeScreen: React.FC = () => {
           >
             <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">code</span>
             <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I Have Experience</h3>
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Jump straight into the IDE. Open your own project and start building with the AI copilot right away.
             </p>
           </button>
@@ -133,13 +133,13 @@ const WelcomeScreen: React.FC = () => {
           </button>
           <button
             onClick={handleTryDemo}
-            className="text-[10px] text-primary/70 font-mono hover:text-primary transition-colors underline underline-offset-2"
+            className="text-[11px] text-primary/70 font-mono hover:text-primary transition-colors underline underline-offset-2"
           >
             Take the guided tour
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-muted/30 mt-8 font-mono">
+        <p className="text-center text-[11px] text-muted/30 mt-8 font-mono">
           Works best in Chrome or Edge
         </p>
       </div>

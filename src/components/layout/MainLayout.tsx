@@ -29,7 +29,7 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode } = useIDEStore();
+  const { currentView, gitBranch, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers } = useIDEStore();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -155,7 +155,7 @@ const MainLayout: React.FC = () => {
       </main>
       
       {/* Global Footer */}
-      <footer className="h-6 bg-primary flex items-center justify-between px-3 text-background text-[10px] font-mono font-bold shrink-0 z-50">
+      <footer className="h-6 bg-primary flex items-center justify-between px-3 text-background text-[11px] font-mono font-bold shrink-0 z-50">
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
@@ -177,12 +177,23 @@ const MainLayout: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
+          <button
+            onClick={() => setView('orchestrator')}
+            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+            title="AI provider status — click to configure"
+          >
             <span className="material-symbols-outlined text-[12px]">
-              {ollamaStatus === 'active' ? 'cloud_done' : ollamaStatus === 'checking' ? 'cloud_sync' : 'cloud_off'}
+              {providers.some(p => p.enabled && p.connectionStatus === 'verified') ? 'cloud_done'
+                : providers.some(p => p.enabled) ? 'cloud_sync' : 'cloud_off'}
             </span>
-            <span>Ollama: {ollamaStatus === 'active' ? 'Active' : ollamaStatus === 'checking' ? 'Checking...' : 'Offline'}</span>
-          </div>
+            <span>
+              {providers.some(p => p.enabled && p.connectionStatus === 'verified')
+                ? `AI: ${providers.find(p => p.enabled && p.connectionStatus === 'verified')!.name}`
+                : providers.some(p => p.enabled)
+                  ? 'AI: Not Verified'
+                  : 'AI: Not Connected'}
+            </span>
+          </button>
           <span>UTF-8</span>
         </div>
       </footer>

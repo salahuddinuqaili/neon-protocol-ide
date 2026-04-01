@@ -53,16 +53,25 @@ const POPULAR_MODELS: Record<string, { id: string; name: string; minRam?: number
   ],
 };
 
-const PROVIDER_PRESETS: { label: string; type: ProviderType; baseUrl: string; model: string }[] = [
-  { label: 'Ollama (local, free)', type: 'ollama', baseUrl: 'http://localhost:11434', model: 'llama3:8b' },
-  { label: 'OpenAI', type: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
-  { label: 'Anthropic', type: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514' },
-  { label: 'Groq (fast, free tier)', type: 'openai-compatible', baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
-  { label: 'Together AI', type: 'openai-compatible', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3-70b-chat-hf' },
-  { label: 'OpenRouter', type: 'openai-compatible', baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4-turbo' },
-  { label: 'HuggingFace Inference', type: 'openai-compatible', baseUrl: 'https://api-inference.huggingface.co/models', model: 'mistralai/Mistral-7B-Instruct-v0.2' },
-  { label: 'Custom (any OpenAI-compatible)', type: 'openai-compatible', baseUrl: '', model: '' },
+interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; model: string; group: 'free-local' | 'free-cloud' | 'paid-cloud' | 'custom'; badge?: string }
+
+const PROVIDER_PRESETS: ProviderPreset[] = [
+  { label: 'Ollama', type: 'ollama', baseUrl: 'http://localhost:11434', model: 'llama3:8b', group: 'free-local', badge: 'Free, runs on your PC' },
+  { label: 'Groq', type: 'openai-compatible', baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', group: 'free-cloud', badge: 'Free tier, fast' },
+  { label: 'OpenAI', type: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', group: 'paid-cloud' },
+  { label: 'Anthropic', type: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514', group: 'paid-cloud' },
+  { label: 'Together AI', type: 'openai-compatible', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3-70b-chat-hf', group: 'paid-cloud' },
+  { label: 'OpenRouter', type: 'openai-compatible', baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4-turbo', group: 'paid-cloud' },
+  { label: 'HuggingFace Inference', type: 'openai-compatible', baseUrl: 'https://api-inference.huggingface.co/models', model: 'mistralai/Mistral-7B-Instruct-v0.2', group: 'paid-cloud' },
+  { label: 'Custom (OpenAI-compatible)', type: 'openai-compatible', baseUrl: '', model: '', group: 'custom' },
 ];
+
+const PRESET_GROUP_LABELS: Record<string, string> = {
+  'free-local': 'Free & Local',
+  'free-cloud': 'Free Cloud Tier',
+  'paid-cloud': 'Cloud (API key required)',
+  'custom': 'Advanced',
+};
 
 function formatTokens(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -96,7 +105,7 @@ const ProviderCard: React.FC<{
         </div>
         <div className="flex-1 flex items-center gap-2 px-1 min-w-0">
           <span className="text-xs text-text-main font-bold truncate">{provider.name}</span>
-          <span className={`text-[8px] px-1.5 py-0.5 border shrink-0 ${statusDisplay.color}`}>{statusDisplay.label}</span>
+          <span className={`text-[10px] px-1.5 py-0.5 border shrink-0 ${statusDisplay.color}`}>{statusDisplay.label}</span>
         </div>
         <button onClick={() => onUpdate(provider.id, { enabled: !provider.enabled })} className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${provider.enabled ? 'bg-primary' : 'bg-muted/30'}`}>
           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-background transition-all ${provider.enabled ? 'left-[18px]' : 'left-0.5'}`} />
@@ -106,22 +115,22 @@ const ProviderCard: React.FC<{
       {provider.enabled && (
         <div className="px-3 pb-3 pt-1 border-t border-muted/10 flex flex-col gap-2">
           <div className="flex items-center gap-2 relative">
-            <span className="text-[9px] text-muted font-mono uppercase shrink-0 w-12">Model:</span>
+            <span className="text-[11px] text-muted font-mono uppercase shrink-0 w-12">Model:</span>
             <input value={provider.model} onChange={(e) => onUpdate(provider.id, { model: e.target.value, connectionStatus: 'untested' })}
               onFocus={() => setShowModels(true)}
-              className="flex-1 bg-background border border-muted/30 text-text-main text-[11px] font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder="model name" />
+              className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder="model name" />
             <button onClick={() => setShowModels(s => !s)} className="text-muted hover:text-primary"><span className="material-symbols-outlined text-[14px]">expand_more</span></button>
             {showModels && models.length > 0 && (<>
               <div className="fixed inset-0 z-[98]" onClick={() => setShowModels(false)} />
               <div className="absolute left-12 top-8 z-[99] w-72 bg-surface border border-muted shadow-lg max-h-48 overflow-y-auto custom-scrollbar">
                 {models.filter(m => !m.minRam || m.minRam <= systemRam).map(m => (
                   <button key={m.id} onClick={() => { onUpdate(provider.id, { model: m.id, connectionStatus: 'untested' }); setShowModels(false); }}
-                    className="w-full text-left px-3 py-1.5 text-[11px] font-mono text-text-main hover:bg-surface-hover">
+                    className="w-full text-left px-3 py-1.5 text-xs font-mono text-text-main hover:bg-surface-hover">
                     {m.name}
                   </button>
                 ))}
                 {models.some(m => m.minRam && m.minRam > systemRam) && (
-                  <div className="px-3 py-1 text-[9px] text-muted border-t border-muted/10">
+                  <div className="px-3 py-1 text-[11px] text-muted border-t border-muted/10">
                     {models.filter(m => m.minRam && m.minRam > systemRam).length} models hidden (need more RAM)
                   </div>
                 )}
@@ -130,22 +139,22 @@ const ProviderCard: React.FC<{
           </div>
           {(provider.type === 'openai-compatible' || provider.type === 'ollama') && (
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-muted font-mono uppercase shrink-0 w-12">URL:</span>
+              <span className="text-[11px] text-muted font-mono uppercase shrink-0 w-12">URL:</span>
               <input value={provider.baseUrl} onChange={(e) => onUpdate(provider.id, { baseUrl: e.target.value, connectionStatus: 'untested' })}
-                className="flex-1 bg-background border border-muted/30 text-text-main text-[11px] font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder="https://..." />
+                className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder="https://..." />
             </div>
           )}
           {provider.type !== 'ollama' && (
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-muted font-mono uppercase shrink-0 w-12">Key:</span>
+              <span className="text-[11px] text-muted font-mono uppercase shrink-0 w-12">Key:</span>
               <input type="password" value={provider.apiKey || ''} onChange={(e) => onUpdate(provider.id, { apiKey: e.target.value, connectionStatus: 'untested' })}
-                placeholder="paste your API key" className="flex-1 bg-background border border-muted/30 text-text-main text-[11px] font-mono px-2 py-1 focus:outline-none focus:border-primary" />
+                placeholder="paste your API key" className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" />
             </div>
           )}
           {provider.type === 'ollama' && ollamaStatus !== 'active' && status !== 'verified' && (
             <div className="bg-background border border-accent-ai/20 p-2.5">
-              <p className="text-[10px] text-accent-ai font-bold mb-1">Ollama not detected</p>
-              <ol className="text-[10px] text-muted leading-relaxed list-decimal list-inside space-y-0.5">
+              <p className="text-xs text-accent-ai font-bold mb-1">Ollama not detected</p>
+              <ol className="text-xs text-muted leading-relaxed list-decimal list-inside space-y-0.5">
                 <li>Download from <span className="text-primary">ollama.com</span></li>
                 <li>Install and open it</li>
                 <li>Run: <span className="text-primary font-mono">ollama pull {provider.model}</span></li>
@@ -153,11 +162,11 @@ const ProviderCard: React.FC<{
             </div>
           )}
           {status === 'failed' && provider.connectionError && (
-            <div className="text-[10px] text-accent-error bg-accent-error/5 border border-accent-error/20 p-2">{provider.connectionError}</div>
+            <div className="text-xs text-accent-error bg-accent-error/5 border border-accent-error/20 p-2">{provider.connectionError}</div>
           )}
           <div className="flex items-center justify-between mt-1">
             <button onClick={() => onVerify(provider)} disabled={status === 'testing'}
-              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1 border transition-all ${
+              className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 border transition-all ${
                 status === 'verified' ? 'text-primary border-primary/30 hover:bg-primary/10' :
                 status === 'testing' ? 'text-accent-ai border-accent-ai/30 opacity-50' :
                 'text-text-main border-muted hover:border-primary'}`}>
@@ -165,7 +174,7 @@ const ProviderCard: React.FC<{
               {status === 'verified' ? 'Re-verify' : status === 'testing' ? 'Testing...' : 'Verify Connection'}
             </button>
             {(provider.tokensUsed || 0) > 0 && (
-              <span className="text-[9px] text-muted font-mono">{formatTokens(provider.tokensUsed || 0)} tokens</span>
+              <span className="text-[11px] text-muted font-mono">{formatTokens(provider.tokensUsed || 0)} tokens</span>
             )}
           </div>
         </div>
@@ -243,7 +252,7 @@ const OrchestrationHub: React.FC = () => {
     reorderProviders(next.map((p, i) => ({ ...p, priority: i + 1 })));
   };
 
-  const handleAddPreset = (preset: typeof PROVIDER_PRESETS[0]) => {
+  const handleAddPreset = (preset: ProviderPreset) => {
     const id = `provider-${Date.now()}`;
     if (preset.type === 'openai-compatible' && !preset.baseUrl) {
       setDialog({
@@ -288,7 +297,7 @@ const OrchestrationHub: React.FC = () => {
           <div className="flex border-b border-muted/30 bg-surface/50">
             {([['providers', 'smart_toy', 'Providers'], ['usage', 'bar_chart', 'Usage']] as [Tab, string, string][]).map(([tab, icon, label]) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-text-main'}`}>
+                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-text-main'}`}>
                 <span className="material-symbols-outlined text-[16px]">{icon}</span>{label}
               </button>
             ))}
@@ -303,63 +312,126 @@ const OrchestrationHub: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-sm text-accent-ai">school</span>
-                        <span className="text-[10px] font-bold text-accent-ai uppercase tracking-widest">New to AI? Start here</span>
+                        <span className="text-xs font-bold text-accent-ai uppercase tracking-widest">New to AI? Start here</span>
                       </div>
-                      <button onClick={() => dismissHint('orchestrator-explainer')} className="text-[9px] text-muted hover:text-text-main font-mono">Got it, let me configure</button>
+                      <button onClick={() => dismissHint('orchestrator-explainer')} className="text-[11px] text-muted hover:text-text-main font-mono">Got it, let me configure</button>
                     </div>
                     {BEGINNER_EXPLAINER.map((item, i) => (
                       <details key={i} className="group">
-                        <summary className="flex items-center gap-2 cursor-pointer text-[11px] text-text-main font-bold py-1 hover:text-primary transition-colors list-none">
+                        <summary className="flex items-center gap-2 cursor-pointer text-xs text-text-main font-bold py-1 hover:text-primary transition-colors list-none">
                           <span className="material-symbols-outlined text-[14px] text-accent-ai">{item.icon}</span>
                           {item.q}
                           <span className="material-symbols-outlined text-[12px] text-muted ml-auto group-open:rotate-180 transition-transform">expand_more</span>
                         </summary>
-                        <p className="text-[10px] text-muted leading-relaxed pl-6 pb-1">{item.a}</p>
+                        <p className="text-xs text-muted leading-relaxed pl-6 pb-1">{item.a}</p>
                       </details>
                     ))}
                   </div>
                 )}
 
-                {/* RAM Input */}
-                <div className="flex items-center gap-3 bg-surface border border-muted p-3">
-                  <span className="material-symbols-outlined text-primary text-sm">memory</span>
-                  <span className="text-[10px] text-muted font-mono uppercase">Your RAM:</span>
-                  <input value={ramInput} onChange={(e) => handleRamChange(e.target.value)}
-                    className="w-16 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 text-center focus:outline-none focus:border-primary" type="number" min="1" max="1024" />
-                  <span className="text-[10px] text-muted font-mono">GB</span>
-                </div>
+                {/* Step-by-step guide when no providers */}
+                {providers.length === 0 ? (
+                  <div className="flex flex-col gap-4">
+                    <div className="bg-surface border border-primary/30 p-4">
+                      <h3 className="text-sm font-bold text-text-main mb-1">Get started in 3 steps</h3>
+                      <p className="text-xs text-muted leading-relaxed">Choose an AI provider below, configure it, then verify the connection.</p>
+                    </div>
 
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-muted font-mono"><ConceptTooltip termId="model">AI models</ConceptTooltip> that power your <ConceptTooltip termId="copilot">copilot</ConceptTooltip></p>
-                  <div className="relative">
-                    <button onClick={() => setShowAddMenu(s => !s)} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-background text-[10px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all">
-                      <span className="material-symbols-outlined text-[14px]">add</span> Add
-                    </button>
-                    {showAddMenu && (<>
-                      <div className="fixed inset-0 z-[99]" onClick={() => setShowAddMenu(false)} />
-                      <div className="absolute right-0 top-9 z-[100] w-72 bg-surface border border-muted shadow-lg py-1 max-h-80 overflow-y-auto custom-scrollbar">
-                        {PROVIDER_PRESETS.map((preset, i) => (
-                          <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-2 text-xs font-mono text-text-main hover:bg-surface-hover flex justify-between items-center">
-                            <span>{preset.label}</span>
-                            <span className="flex items-center gap-1">
-                              {preset.type === 'ollama' && <span className="text-[9px] text-primary">FREE</span>}
-                              {learningMode === 'beginner' && (preset.type === 'ollama' || preset.label.includes('Groq')) && (
-                                <span className="text-[8px] bg-accent-ai/20 text-accent-ai px-1 py-0.5">BEGINNER</span>
-                              )}
-                            </span>
-                          </button>
-                        ))}
+                    {/* Quick-start cards */}
+                    <button
+                      onClick={() => handleAddPreset(PROVIDER_PRESETS.find(p => p.type === 'ollama')!)}
+                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="material-symbols-outlined text-xl text-primary">computer</span>
+                        <div>
+                          <div className="text-sm font-bold text-text-main">Ollama</div>
+                          <div className="text-xs text-primary font-bold">Free &middot; Runs locally on your computer</div>
+                        </div>
                       </div>
-                    </>)}
-                  </div>
-                </div>
+                      <p className="text-xs text-muted leading-relaxed">Best for privacy. No account needed. Requires downloading Ollama from ollama.com first.</p>
+                    </button>
 
-                {providers.length === 0 && (
-                  <div className="flex flex-col items-center text-center gap-3 py-10">
-                    <span className="material-symbols-outlined text-4xl text-muted/30">smart_toy</span>
-                    <p className="text-xs text-muted">No providers yet. Click <strong className="text-primary">Add</strong> above.</p>
+                    <button
+                      onClick={() => handleAddPreset(PROVIDER_PRESETS.find(p => p.label === 'Groq')!)}
+                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="material-symbols-outlined text-xl text-accent-ai">bolt</span>
+                        <div>
+                          <div className="text-sm font-bold text-text-main">Groq</div>
+                          <div className="text-xs text-accent-ai font-bold">Free tier &middot; Very fast cloud AI</div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted leading-relaxed">Easiest way to start. Sign up at groq.com for a free API key, paste it here, and you're ready.</p>
+                    </button>
+
+                    <button
+                      onClick={() => setShowAddMenu(true)}
+                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="material-symbols-outlined text-xl text-muted">cloud</span>
+                        <div>
+                          <div className="text-sm font-bold text-text-main">OpenAI, Anthropic, or others</div>
+                          <div className="text-xs text-muted font-bold">Paid cloud &middot; Most capable models</div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted leading-relaxed">Use GPT-4, Claude, or other premium models. Requires an API key from the provider.</p>
+                    </button>
                   </div>
+                ) : (
+                  <>
+                    {/* Header row with Add button */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-text-main">Your AI Providers</h3>
+                        <p className="text-xs text-muted mt-0.5">Providers are tried in order from top to bottom.</p>
+                      </div>
+                      <div className="relative">
+                        <button onClick={() => setShowAddMenu(s => !s)} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-background text-xs font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all">
+                          <span className="material-symbols-outlined text-[14px]">add</span> Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* RAM input — only shown when there's an Ollama provider */}
+                    {providers.some(p => p.type === 'ollama') && (
+                      <div className="flex items-center gap-3 bg-surface border border-muted/30 p-2.5">
+                        <span className="material-symbols-outlined text-primary text-sm">memory</span>
+                        <span className="text-xs text-muted font-mono">System RAM:</span>
+                        <input value={ramInput} onChange={(e) => handleRamChange(e.target.value)}
+                          className="w-16 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 text-center focus:outline-none focus:border-primary" type="number" min="1" max="1024" />
+                        <span className="text-xs text-muted font-mono">GB</span>
+                        <span className="text-xs text-muted ml-auto">Filters model recommendations</span>
+                      </div>
+                    )}
+                  </>
                 )}
+
+                {/* Add menu dropdown (shared between empty state card and header button) */}
+                {showAddMenu && (<>
+                  <div className="fixed inset-0 z-[99]" onClick={() => setShowAddMenu(false)} />
+                  <div className="fixed top-1/2 left-1/4 -translate-y-1/2 z-[100] w-80 bg-surface border border-muted shadow-lg max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    {(['free-local', 'free-cloud', 'paid-cloud', 'custom'] as const).map(group => {
+                      const items = PROVIDER_PRESETS.filter(p => p.group === group);
+                      if (items.length === 0) return null;
+                      return (
+                        <div key={group}>
+                          <div className="px-4 py-2 text-xs font-bold text-muted uppercase tracking-wider bg-background/50 border-b border-muted/10">
+                            {PRESET_GROUP_LABELS[group]}
+                          </div>
+                          {items.map((preset, i) => (
+                            <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-2.5 text-xs font-mono text-text-main hover:bg-surface-hover flex justify-between items-center border-b border-muted/5">
+                              <span>{preset.label}</span>
+                              {preset.badge && <span className="text-xs text-primary">{preset.badge}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>)}
 
                 {providers.map((provider, index) => (
                   <ProviderCard
@@ -383,7 +455,7 @@ const OrchestrationHub: React.FC = () => {
 
             {activeTab === 'usage' && (
               <div className="p-4 flex flex-col gap-4">
-                <h3 className="text-[10px] text-muted font-bold uppercase tracking-widest"><ConceptTooltip termId="token">Token</ConceptTooltip> Usage by <ConceptTooltip termId="provider">Provider</ConceptTooltip></h3>
+                <h3 className="text-xs text-muted font-bold uppercase tracking-widest"><ConceptTooltip termId="token">Token</ConceptTooltip> Usage by <ConceptTooltip termId="provider">Provider</ConceptTooltip></h3>
                 {providers.filter(p => (p.tokensUsed || 0) > 0).length === 0 ? (
                   <div className="flex flex-col items-center text-center gap-3 py-10">
                     <span className="material-symbols-outlined text-4xl text-muted/30">bar_chart</span>
@@ -398,10 +470,10 @@ const OrchestrationHub: React.FC = () => {
                       <div key={provider.id} className="bg-surface border border-muted p-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs text-text-main font-bold">{provider.name}</span>
-                          <span className="text-[10px] text-muted font-mono">{provider.model}</span>
+                          <span className="text-xs text-muted font-mono">{provider.model}</span>
                         </div>
                         <div className="w-full h-2 bg-background mb-2"><div className="h-full bg-primary transition-all" style={{ width: `${(tokens / maxTokens) * 100}%` }} /></div>
-                        <div className="flex items-center justify-between text-[10px] font-mono">
+                        <div className="flex items-center justify-between text-xs font-mono">
                           <span className="text-primary font-bold">{formatTokens(tokens)} tokens</span>
                           <span className="text-muted">{requests} requests</span>
                           <span className="text-muted">~{(tokens / Math.max(requests, 1)).toFixed(0)} avg</span>
@@ -427,35 +499,56 @@ const OrchestrationHub: React.FC = () => {
               <span className="material-symbols-outlined text-accent-ai">chat</span>
               Test Your AI
             </h2>
-            <p className="text-muted text-[10px] mt-0.5 font-mono">Send a message to check your connection</p>
+            <p className="text-muted text-xs mt-0.5 font-mono">
+              {providers.some(p => p.enabled && p.connectionStatus === 'verified')
+                ? 'Your AI is connected. Send a message to try it out.'
+                : providers.some(p => p.enabled)
+                  ? 'Add a provider on the left and verify it first.'
+                  : 'Set up a provider on the left to get started.'}
+            </p>
           </div>
           <div className="flex-1 p-4 flex flex-col gap-3 overflow-hidden">
-            <div className="flex-1 bg-surface/20 border border-muted p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar flex flex-col gap-1">
-              {testLog.map((log, i) => (
-                <div key={i}><span className={log.type === 'primary' ? 'text-primary' : log.type === 'ai' ? 'text-accent-ai' : log.type === 'error' ? 'text-accent-error' : 'text-muted'}>{log.msg}</span></div>
-              ))}
-              <div ref={logEndRef} />
-            </div>
-            {isBeginnerMode && !testPrompt && (
-              <div className="flex gap-2 flex-wrap">
-                {['What is TypeScript?', 'Explain what an API is', 'Write a hello world function'].map(suggestion => (
-                  <button key={suggestion} onClick={() => setTestPrompt(suggestion)}
-                    className="text-[10px] font-mono text-accent-ai border border-accent-ai/30 px-2 py-1 hover:bg-accent-ai/10 transition-colors">
-                    {suggestion}
-                  </button>
-                ))}
+            {!providers.some(p => p.enabled) ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 p-6">
+                <span className="material-symbols-outlined text-5xl text-muted/20">smart_toy</span>
+                <div>
+                  <p className="text-sm text-text-main mb-1">No AI provider connected yet</p>
+                  <p className="text-xs text-muted leading-relaxed max-w-xs">
+                    Choose a provider from the left panel to connect an AI.
+                    Once verified, you can test it here and use the copilot in the code editor.
+                  </p>
+                </div>
               </div>
+            ) : (
+              <>
+                <div className="flex-1 bg-surface/20 border border-muted p-4 font-mono text-xs overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                  {testLog.map((log, i) => (
+                    <div key={i}><span className={log.type === 'primary' ? 'text-primary' : log.type === 'ai' ? 'text-accent-ai' : log.type === 'error' ? 'text-accent-error' : 'text-muted'}>{log.msg}</span></div>
+                  ))}
+                  <div ref={logEndRef} />
+                </div>
+                {isBeginnerMode && !testPrompt && (
+                  <div className="flex gap-2 flex-wrap">
+                    {['What is TypeScript?', 'Explain what an API is', 'Write a hello world function'].map(suggestion => (
+                      <button key={suggestion} onClick={() => setTestPrompt(suggestion)}
+                        className="text-xs font-mono text-accent-ai border border-accent-ai/30 px-2 py-1 hover:bg-accent-ai/10 transition-colors">
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input value={testPrompt} onChange={(e) => setTestPrompt(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !isTesting && runTest()} disabled={isTesting}
+                    className="flex-1 bg-surface border border-muted text-text-main font-mono text-xs px-4 py-2.5 outline-none focus:border-primary placeholder-muted disabled:opacity-50"
+                    placeholder={isBeginnerMode ? 'Try asking a question...' : 'Type a test message...'} />
+                  <button onClick={runTest} disabled={isTesting || !testPrompt}
+                    className={`bg-primary text-background px-5 py-2 font-bold text-xs uppercase tracking-widest hover:bg-[#0cf1f1] transition-all ${isTesting || !testPrompt ? 'opacity-50' : ''}`}>
+                    {isTesting ? '...' : 'Send'}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="flex gap-2">
-              <input value={testPrompt} onChange={(e) => setTestPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !isTesting && runTest()} disabled={isTesting}
-                className="flex-1 bg-surface border border-muted text-text-main font-mono text-xs px-4 py-2.5 outline-none focus:border-primary placeholder-muted disabled:opacity-50"
-                placeholder={isBeginnerMode ? 'Try asking a question...' : 'Type a test message...'} />
-              <button onClick={runTest} disabled={isTesting || !testPrompt}
-                className={`bg-primary text-background px-5 py-2 font-bold text-xs uppercase tracking-widest hover:bg-[#0cf1f1] transition-all ${isTesting || !testPrompt ? 'opacity-50' : ''}`}>
-                {isTesting ? '...' : 'Send'}
-              </button>
-            </div>
           </div>
         </section>
       </div>

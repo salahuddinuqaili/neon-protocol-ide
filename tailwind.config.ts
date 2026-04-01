@@ -15,7 +15,7 @@ const config: Config = {
         "surface": "#181A20",
         "surface-hover": "#242730",
         "text-main": "#E0E6ED",
-        "muted": "#4E5666",
+        "muted": "#6B7280",
         "accent-error": "#FF007F",
         "accent-ai": "#B026FF",
       },

@@ -85,7 +85,7 @@ const FolderNode: React.FC<{
         onClick={() => onFileClick(node.path)}
         onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, node.path, false); }}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
-        className={`flex items-center gap-2 py-1 pr-2 cursor-pointer text-[11px] font-mono transition-colors
+        className={`flex items-center gap-2 py-1 pr-2 cursor-pointer text-xs font-mono transition-colors
           ${activeFile === node.path
             ? 'text-primary bg-background/50 border-l-2 border-primary'
             : 'text-muted hover:text-text-main hover:bg-surface-hover/30 border-l-2 border-transparent'}
@@ -106,7 +106,7 @@ const FolderNode: React.FC<{
         onClick={() => setExpanded(!expanded)}
         onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, node.path, true); }}
         style={{ paddingLeft: `${depth * 12 + 4}px` }}
-        className="flex items-center gap-1.5 py-1 pr-2 cursor-pointer text-[11px] font-mono text-muted hover:text-text-main transition-colors"
+        className="flex items-center gap-1.5 py-1 pr-2 cursor-pointer text-xs font-mono text-muted hover:text-text-main transition-colors"
       >
         <span className={`material-symbols-outlined text-[14px] transition-transform ${expanded ? '' : '-rotate-90'}`}>
           expand_more
@@ -297,18 +297,18 @@ const Sidebar: React.FC = () => {
         {isScanning ? (
           <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
             <span className="material-symbols-outlined text-2xl text-primary animate-spin">progress_activity</span>
-            <p className="text-[10px] text-muted uppercase tracking-wider">Scanning files...</p>
+            <p className="text-xs text-muted uppercase tracking-wider">Scanning files...</p>
           </div>
         ) : !projectPath ? (
           <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
             <span className="material-symbols-outlined text-4xl text-muted/30">folder_open</span>
             <div>
               <p className="text-xs text-text-main mb-1">No project open</p>
-              <p className="text-[10px] text-muted leading-relaxed">Open a folder from your computer to see its files here</p>
+              <p className="text-xs text-muted leading-relaxed">Open a folder from your computer to see its files here</p>
             </div>
             <button
               onClick={handleOpenFolder}
-              className="px-5 py-2.5 bg-primary text-background text-[10px] font-bold hover:bg-[#0cf1f1] transition-all uppercase tracking-widest shadow-neon"
+              className="px-5 py-2.5 bg-primary text-background text-xs font-bold hover:bg-[#0cf1f1] transition-all uppercase tracking-widest shadow-neon"
             >
               Open Folder
             </button>
@@ -318,7 +318,7 @@ const Sidebar: React.FC = () => {
             <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover/50 border-b border-muted/10">
               <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
               <span className="text-xs font-bold tracking-tight uppercase text-text-main truncate">{projectPath}</span>
-              <span className="text-[9px] text-muted ml-auto shrink-0">{files.length}</span>
+              <span className="text-[11px] text-muted ml-auto shrink-0">{files.length}</span>
               <button
                 onClick={() => {
                   setDialog({
@@ -377,7 +377,7 @@ const Sidebar: React.FC = () => {
         <button
           onClick={handleOpenFolder}
           title="Open a project folder from your computer"
-          className="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-[10px] font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest"
+          className="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-xs font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest"
         >
           <span className="material-symbols-outlined text-sm">folder_open</span>
           <span>Open Project</span>

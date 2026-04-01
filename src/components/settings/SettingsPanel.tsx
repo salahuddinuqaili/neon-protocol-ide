@@ -43,7 +43,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Font Size</p>
-                  <p className="text-[10px] text-muted">Editor font size in pixels</p>
+                  <p className="text-[11px] text-muted">Editor font size in pixels</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -68,7 +68,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Word Wrap</p>
-                  <p className="text-[10px] text-muted">Wrap long lines in the editor</p>
+                  <p className="text-[11px] text-muted">Wrap long lines in the editor</p>
                 </div>
                 <button
                   onClick={() => updateEditorSettings({ wordWrap: !editorSettings.wordWrap })}
@@ -86,7 +86,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Minimap</p>
-                  <p className="text-[10px] text-muted">Show code minimap in editor</p>
+                  <p className="text-[11px] text-muted">Show code minimap in editor</p>
                 </div>
                 <button
                   onClick={() => updateEditorSettings({ minimap: !editorSettings.minimap })}
@@ -104,7 +104,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Line Height</p>
-                  <p className="text-[10px] text-muted">Spacing between editor lines</p>
+                  <p className="text-[11px] text-muted">Spacing between editor lines</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -138,7 +138,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Learning Mode</p>
-                  <p className="text-[10px] text-muted max-w-[300px]">Beginner mode shows tooltips, guided tutorials, and learning lessons. Experienced mode hides all learning overlays.</p>
+                  <p className="text-[11px] text-muted max-w-[300px]">Beginner mode shows tooltips, guided tutorials, and learning lessons. Experienced mode hides all learning overlays.</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -168,7 +168,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Reset Progress</p>
-                  <p className="text-[10px] text-muted">Clear all learning progress and start fresh</p>
+                  <p className="text-[11px] text-muted">Clear all learning progress and start fresh</p>
                 </div>
                 <button
                   onClick={() => {
@@ -186,7 +186,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between py-2 border-b border-muted/10">
                 <div>
                   <p className="text-xs text-text-main font-mono">Welcome Tour</p>
-                  <p className="text-[10px] text-muted">Replay the introductory guided tour</p>
+                  <p className="text-[11px] text-muted">Replay the introductory guided tour</p>
                 </div>
                 <button
                   onClick={() => { startTutorial('welcome-tour'); onClose(); }}
@@ -207,14 +207,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between py-2 border-b border-muted/10">
               <div>
                 <p className="text-xs text-text-main font-mono">System RAM</p>
-                <p className="text-[10px] text-muted">Used for local AI model recommendations</p>
+                <p className="text-[11px] text-muted">Used for local AI model recommendations</p>
               </div>
               <div className="flex items-center gap-1">
                 {[8, 16, 32, 64].map(gb => (
                   <button
                     key={gb}
                     onClick={() => updateEditorSettings({ systemRamGb: gb })}
-                    className={`px-2 py-0.5 border text-[10px] font-bold transition-colors ${
+                    className={`px-2 py-0.5 border text-[11px] font-bold transition-colors ${
                       editorSettings.systemRamGb === gb
                         ? 'bg-primary text-background border-primary'
                         : 'text-muted border-muted/30 hover:border-primary'
@@ -267,7 +267,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               ].map(([key, desc]) => (
                 <div key={key} className="flex items-center justify-between py-1.5 border-b border-muted/10">
                   <span className="text-xs text-muted font-mono">{desc}</span>
-                  <span className="text-[10px] text-text-main font-mono bg-background px-2 py-0.5 border border-muted/30">{key}</span>
+                  <span className="text-[11px] text-text-main font-mono bg-background px-2 py-0.5 border border-muted/30">{key}</span>
                 </div>
               ))}
             </div>

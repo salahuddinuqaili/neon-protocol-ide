@@ -42,7 +42,7 @@ const LessonStepView: React.FC<{
         </button>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold text-text-main truncate">{lesson.title}</h3>
-          <span className="text-[9px] text-muted font-mono">Step {currentStep + 1} of {lesson.steps.length}</span>
+          <span className="text-[11px] text-muted font-mono">Step {currentStep + 1} of {lesson.steps.length}</span>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ const LessonStepView: React.FC<{
         {step.codeHighlight && (
           <button
             onClick={() => handleOpenFile(step.codeHighlight!.file)}
-            className="flex items-center gap-2 text-[10px] text-primary font-mono hover:underline mb-3"
+            className="flex items-center gap-2 text-[11px] text-primary font-mono hover:underline mb-3"
           >
             <span className="material-symbols-outlined text-[14px]">open_in_new</span>
             Open {step.codeHighlight.file.split('/').pop()} (lines {step.codeHighlight.startLine}-{step.codeHighlight.endLine})
@@ -62,7 +62,7 @@ const LessonStepView: React.FC<{
         )}
 
         {step.nodeHighlight && (
-          <div className="flex items-center gap-2 text-[10px] text-accent-ai font-mono mb-3">
+          <div className="flex items-center gap-2 text-[11px] text-accent-ai font-mono mb-3">
             <span className="material-symbols-outlined text-[14px]">hub</span>
             Look for the "{step.nodeHighlight}" node on the map
           </div>
@@ -85,13 +85,13 @@ const LessonStepView: React.FC<{
         <button
           onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
           disabled={currentStep === 0}
-          className="flex items-center gap-1 text-[10px] text-muted hover:text-text-main disabled:opacity-30 font-mono"
+          className="flex items-center gap-1 text-[11px] text-muted hover:text-text-main disabled:opacity-30 font-mono"
         >
           <span className="material-symbols-outlined text-[14px]">chevron_left</span> Back
         </button>
         <button
           onClick={handleNext}
-          className="flex items-center gap-1 px-4 py-1.5 bg-primary text-background text-[10px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all"
+          className="flex items-center gap-1 px-4 py-1.5 bg-primary text-background text-[11px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all"
         >
           {isLast ? 'Complete' : 'Next'}
           <span className="material-symbols-outlined text-[14px]">{isLast ? 'check' : 'chevron_right'}</span>
@@ -128,9 +128,9 @@ const LessonCard: React.FC<{
         </span>
         <div className="flex-1 min-w-0">
           <h4 className="text-xs font-bold text-text-main truncate">{lesson.title}</h4>
-          <p className="text-[10px] text-muted mt-0.5 leading-relaxed">{lesson.description}</p>
+          <p className="text-[11px] text-muted mt-0.5 leading-relaxed">{lesson.description}</p>
           {isLocked && missingPrereqs.length > 0 && (
-            <p className="text-[9px] text-muted/60 mt-1 font-mono">
+            <p className="text-[11px] text-muted/60 mt-1 font-mono">
               Requires: {missingPrereqs.join(', ')}
             </p>
           )}
@@ -185,7 +185,7 @@ const LearningPathPanel: React.FC = () => {
             <span className="material-symbols-outlined text-xl text-primary">school</span>
             <div>
               <h2 className="text-sm font-bold text-text-main uppercase tracking-wide">Learning Path</h2>
-              <span className="text-[10px] text-muted font-mono">{completedCount} of {totalLessons} lessons completed</span>
+              <span className="text-[11px] text-muted font-mono">{completedCount} of {totalLessons} lessons completed</span>
             </div>
           </div>
           <button onClick={() => toggleLearningPath(false)} className="text-muted hover:text-text-main p-1">
@@ -215,7 +215,7 @@ const LearningPathPanel: React.FC = () => {
                 <div key={track.category}>
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`material-symbols-outlined text-sm ${track.color}`}>{track.icon}</span>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-main">{track.label}</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-main">{track.label}</h3>
                   </div>
                   <div className="flex flex-col gap-2">
                     {track.lessons.map(lesson => (
@@ -229,7 +229,7 @@ const LearningPathPanel: React.FC = () => {
                       />
                     ))}
                     {track.lessons.length === 0 && (
-                      <p className="text-[10px] text-muted/50 font-mono">Coming soon</p>
+                      <p className="text-[11px] text-muted/50 font-mono">Coming soon</p>
                     )}
                   </div>
                 </div>

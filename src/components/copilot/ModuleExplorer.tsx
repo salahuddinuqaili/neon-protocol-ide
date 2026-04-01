@@ -85,7 +85,7 @@ const ModuleExplorer: React.FC = () => {
             <h2 className="text-sm font-bold text-text-main tracking-tight">{selectedModule || 'Select a Module'}</h2>
             <div className="flex items-center gap-2">
               <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${hasEnabledProvider ? 'bg-primary' : 'bg-accent-ai'}`}></div>
-              <span className={`text-[9px] font-mono uppercase tracking-widest ${hasEnabledProvider ? 'text-primary' : 'text-accent-ai'}`}>
+              <span className={`text-[11px] font-mono uppercase tracking-widest ${hasEnabledProvider ? 'text-primary' : 'text-accent-ai'}`}>
                 {hasEnabledProvider ? 'AI Ready' : 'No AI Connected'}
               </span>
             </div>
@@ -103,14 +103,14 @@ const ModuleExplorer: React.FC = () => {
           <div className="bg-surface-hover border border-primary/50 p-4">
             <div className="flex items-center gap-2 mb-2 text-primary">
               <span className="material-symbols-outlined text-sm">lightbulb</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest">Getting Started</span>
+              <span className="text-xs font-bold uppercase tracking-widest">Getting Started</span>
             </div>
             <p className="text-xs text-text-main leading-relaxed mb-3">
               Click any box on the <span className="text-primary font-bold">Map</span> to select it. Then you can ask the AI questions about it here.
             </p>
             <button
               onClick={() => { setView('blueprint'); toggleExplorer(false); }}
-              className="text-[10px] text-primary font-bold flex items-center gap-1 hover:underline"
+              className="text-xs text-primary font-bold flex items-center gap-1 hover:underline"
             >
               <span className="material-symbols-outlined text-[14px]">arrow_back</span>
               Go to the Map
@@ -123,12 +123,12 @@ const ModuleExplorer: React.FC = () => {
           <div className="bg-surface-hover border border-accent-ai/30 p-3">
             <div className="flex items-center gap-2 mb-2">
               <span className="material-symbols-outlined text-sm text-accent-ai">school</span>
-              <span className="text-[10px] font-bold text-accent-ai uppercase tracking-widest">{NODE_EDUCATION[selectedModule].concept}</span>
+              <span className="text-xs font-bold text-accent-ai uppercase tracking-widest">{NODE_EDUCATION[selectedModule].concept}</span>
             </div>
-            <p className="text-[11px] text-text-main leading-relaxed mb-2">{NODE_EDUCATION[selectedModule].explanation}</p>
+            <p className="text-xs text-text-main leading-relaxed mb-2">{NODE_EDUCATION[selectedModule].explanation}</p>
             <div className="bg-background/50 border border-muted/20 p-2 mt-2">
-              <span className="text-[9px] text-muted font-mono uppercase block mb-1">Real-world analogy</span>
-              <p className="text-[10px] text-muted leading-relaxed">{NODE_EDUCATION[selectedModule].realWorldAnalogy}</p>
+              <span className="text-[11px] text-muted font-mono uppercase block mb-1">Real-world analogy</span>
+              <p className="text-xs text-muted leading-relaxed">{NODE_EDUCATION[selectedModule].realWorldAnalogy}</p>
             </div>
           </div>
         )}
@@ -139,7 +139,7 @@ const ModuleExplorer: React.FC = () => {
               <span className="material-symbols-outlined text-[14px]">smart_toy</span>
             </div>
             <div className="flex flex-col gap-1 w-full">
-              <span className="text-[9px] text-muted font-mono uppercase">Architect Copilot</span>
+              <span className="text-[11px] text-muted font-mono uppercase">Architect Copilot</span>
               <div className="bg-surface-hover border-l-2 border-accent-ai p-3 text-xs text-text-main font-mono leading-relaxed">
                 I'm ready to discuss <code className="text-accent-ai">{selectedModule}</code>. Ask me about its <ConceptTooltip termId="module">architecture</ConceptTooltip>, <ConceptTooltip termId="dependency">dependencies</ConceptTooltip>, or how to improve it.
               </div>
@@ -158,7 +158,7 @@ const ModuleExplorer: React.FC = () => {
                 </span>
               </div>
               <div className={`flex flex-col gap-1 max-w-[80%] ${msg.role === 'user' ? 'items-end' : ''}`}>
-                <span className="text-[9px] text-muted font-mono uppercase">
+                <span className="text-[11px] text-muted font-mono uppercase">
                   {msg.role === 'ai' ? 'Architect Copilot' : 'User'}
                 </span>
                 <div className={`p-3 text-xs font-mono leading-relaxed ${

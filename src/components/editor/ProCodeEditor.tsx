@@ -184,7 +184,7 @@ const ProCodeEditor: React.FC = () => {
                   rules: [
                     { token: 'keyword', foreground: 'FF5C5C' },
                     { token: 'string', foreground: 'A8FF00' },
-                    { token: 'comment', foreground: '4E5666' },
+                    { token: 'comment', foreground: '6B7280' },
                     { token: 'type', foreground: '00FFD1' },
                   ],
                   colors: {
@@ -237,9 +237,9 @@ const ProCodeEditor: React.FC = () => {
           <div className="h-9 flex items-center justify-between px-3 border-b border-muted/30 bg-surface-hover">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-base text-accent-ai">smart_toy</span>
-              <span className="text-[10px] font-display font-bold tracking-widest text-text-main uppercase"><ConceptTooltip termId="copilot">COPILOT</ConceptTooltip></span>
+              <span className="text-xs font-display font-bold tracking-widest text-text-main uppercase"><ConceptTooltip termId="copilot">COPILOT</ConceptTooltip></span>
             </div>
-            <span className={`text-[8px] font-mono uppercase px-1.5 py-0.5 border ${
+            <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 border ${
               hasEnabledProvider
                 ? 'text-primary border-primary/30'
                 : 'text-accent-ai border-accent-ai/30'
@@ -250,8 +250,8 @@ const ProCodeEditor: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 text-xs custom-scrollbar">
             {copilotMessages.length === 0 && (
               <div className="border-l-2 border-accent-ai pl-3">
-                <div className="text-[10px] text-accent-ai font-bold mb-1 uppercase">AI Copilot</div>
-                <div className="text-text-main leading-snug">
+                <div className="text-xs text-accent-ai font-bold mb-1 uppercase">AI Copilot</div>
+                <div className="text-text-main leading-relaxed">
                   {currentFile ? (
                     <>
                       You're looking at <strong className="text-primary">{currentFile.name}</strong>. Try asking:
@@ -260,7 +260,7 @@ const ProCodeEditor: React.FC = () => {
                           <button
                             key={q}
                             onClick={() => { setCopilotInput(q); }}
-                            className="text-left text-[10px] text-accent-ai hover:text-text-main transition-colors px-2 py-1 bg-background/50 border border-accent-ai/20 hover:border-accent-ai/50"
+                            className="text-left text-xs text-accent-ai hover:text-text-main transition-colors px-2 py-1 bg-background/50 border border-accent-ai/20 hover:border-accent-ai/50"
                           >
                             "{q}"
                           </button>
@@ -275,15 +275,15 @@ const ProCodeEditor: React.FC = () => {
             )}
             {copilotMessages.map((msg, i) => (
               <div key={i} className={`${msg.role === 'user' ? 'border-l-2 border-primary pl-3' : 'border-l-2 border-accent-ai pl-3'}`}>
-                <div className={`text-[10px] font-bold mb-1 uppercase ${msg.role === 'user' ? 'text-primary' : 'text-accent-ai'}`}>
+                <div className={`text-xs font-bold mb-1 uppercase ${msg.role === 'user' ? 'text-primary' : 'text-accent-ai'}`}>
                   {msg.role === 'user' ? 'You' : 'Copilot'}
                 </div>
-                <div className="text-text-main leading-snug whitespace-pre-wrap">{msg.text}</div>
+                <div className="text-text-main leading-relaxed whitespace-pre-wrap">{msg.text}</div>
               </div>
             ))}
             {copilotLoading && (
               <div className="border-l-2 border-accent-ai pl-3">
-                <div className="text-[10px] text-accent-ai font-bold mb-1 uppercase">Copilot</div>
+                <div className="text-xs text-accent-ai font-bold mb-1 uppercase">Copilot</div>
                 <div className="flex items-center gap-2 text-muted">
                   <span className="w-1.5 h-1.5 bg-accent-ai animate-pulse rounded-full" />
                   Thinking...
@@ -321,7 +321,7 @@ const ProCodeEditor: React.FC = () => {
           <div className="flex items-center">
             <button
               onClick={() => setTerminalExpanded(e => !e)}
-              className="flex items-center gap-1 px-2 text-[10px] font-bold uppercase tracking-wider text-muted hover:text-text-main cursor-pointer"
+              className="flex items-center gap-1 px-2 text-xs font-bold uppercase tracking-wider text-muted hover:text-text-main cursor-pointer"
             >
               <span className={`material-symbols-outlined text-[14px] transition-transform ${terminalExpanded ? '' : '-rotate-90'}`}>expand_more</span>
               Terminal
@@ -329,16 +329,16 @@ const ProCodeEditor: React.FC = () => {
             {terminalExpanded && (
               <button
                 onClick={() => setTerminalTab(terminalTab === 'terminal' ? 'output' : 'terminal')}
-                className="px-3 text-[10px] font-medium uppercase tracking-wider text-muted hover:text-text-main cursor-pointer"
+                className="px-3 text-xs font-medium uppercase tracking-wider text-muted hover:text-text-main cursor-pointer"
               >
                 {terminalTab === 'terminal' ? 'Output' : 'Terminal'}
               </button>
             )}
           </div>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-accent-ai bg-accent-ai/10 border border-accent-ai/30 px-2 py-0.5 mr-2">Preview</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-accent-ai bg-accent-ai/10 border border-accent-ai/30 px-2 py-0.5 mr-2">Preview</span>
         </div>
         {terminalExpanded && (
-          <div className="flex-1 overflow-auto p-3 font-mono text-[11px] text-muted">
+          <div className="flex-1 overflow-auto p-3 font-mono text-xs text-muted">
             {terminalTab === 'terminal' ? (
               <>
                 <div className="mb-1"><span className="text-primary">neon@ide</span><span className="text-text-main">:</span><span className="text-blue-400">~/{projectPath || 'project'}</span>$ npm run dev</div>

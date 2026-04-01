@@ -19,7 +19,7 @@
                         "surface": "#181A20",
                         "surface-hover": "#242730",
                         "text-main": "#E0E6ED",
-                        "muted": "#4E5666",
+                        "muted": "#6B7280",
                         "accent-error": "#FF007F",
                         "accent-ai": "#B026FF",
                     },
@@ -99,15 +99,15 @@
                             <span class="font-bold">llm_gateway</span>
                         </div>
                         <div class="pl-8 flex flex-col gap-0.5 mt-0.5">
-                             <div onclick="switchView('code')" class="flex items-center gap-2 px-3 py-1 text-primary bg-background/50 border-l-2 border-primary cursor-pointer text-[11px] font-mono">
+                             <div onclick="switchView('code')" class="flex items-center gap-2 px-3 py-1 text-primary bg-background/50 border-l-2 border-primary cursor-pointer text-xs font-mono">
                                 <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
                                 <span>router.ts</span>
                              </div>
-                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-[11px] font-mono transition-colors">
+                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-xs font-mono transition-colors">
                                 <span class="material-symbols-outlined text-[14px] text-blue-400">code</span>
                                 <span>types.ts</span>
                              </div>
-                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-[11px] font-mono transition-colors">
+                             <div class="flex items-center gap-2 px-3 py-1 text-muted hover:text-text-main cursor-pointer text-xs font-mono transition-colors">
                                 <span class="material-symbols-outlined text-[14px] text-yellow-500">description</span>
                                 <span>config.yml</span>
                              </div>
@@ -123,7 +123,7 @@
             </nav>
             <!-- Bottom Action -->
             <div class="p-3 border-t border-muted/10 bg-surface">
-                <button class="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-[10px] font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest">
+                <button class="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-xs font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest">
                     <span class="material-symbols-outlined text-sm">rocket_launch</span>
                     <span>Deploy System</span>
                 </button>
@@ -146,14 +146,14 @@
                         </filter>
                     </defs>
                     <!-- Connection 1: Client -> Gateway -->
-                    <path d="M 300 340 C 425 340, 425 340, 550 340" fill="none" stroke="#4E5666" stroke-width="2"></path>
+                    <path d="M 300 340 C 425 340, 425 340, 550 340" fill="none" stroke="#6B7280" stroke-width="2"></path>
                     <path class="flow-line" d="M 300 340 C 425 340, 425 340, 550 340" fill="none" filter="url(#glow)" stroke="#00FFD1" stroke-width="2" style="stroke-dasharray: 8 4; animation: flow 1s linear infinite;"></path>
 
                     <!-- Connection 2: Gateway -> Database -->
-                    <path d="M 730 320 C 815 320, 815 190, 900 190" fill="none" stroke="#4E5666" stroke-width="1.5"></path>
+                    <path d="M 730 320 C 815 320, 815 190, 900 190" fill="none" stroke="#6B7280" stroke-width="1.5"></path>
                     
                     <!-- Connection 3: Gateway -> OpenAI -->
-                    <path d="M 730 360 C 815 360, 815 490, 900 490" fill="none" stroke="#4E5666" stroke-width="1.5"></path>
+                    <path d="M 730 360 C 815 360, 815 490, 900 490" fill="none" stroke="#6B7280" stroke-width="1.5"></path>
                 </svg>
 
                 <!-- Nodes Container -->
@@ -161,7 +161,7 @@
                     <!-- Node 1: Client Application -->
                     <div onclick="openModuleExplorer('React Client')" class="node-card absolute top-[300px] left-[120px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-primary hover:shadow-neon transition-all">
                         <div class="flex items-center justify-between w-full mb-1">
-                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Frontend</span>
+                            <span class="text-xs font-mono text-muted uppercase tracking-wider">Frontend</span>
                             <div class="w-2 h-2 bg-primary rounded-full shadow-neon"></div>
                         </div>
                         <h3 class="text-text-main font-bold text-sm truncate">React Client</h3>
@@ -172,7 +172,7 @@
                     <div onclick="openModuleExplorer('LLM Gateway')" class="node-card absolute top-[300px] left-[550px] w-[180px] h-[80px] bg-surface border-primary shadow-neon-active flex flex-col justify-center px-4 cursor-pointer group z-30">
                         <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-primary"></div>
                         <div class="flex items-center justify-between w-full mb-1">
-                            <span class="text-[10px] font-mono text-primary uppercase tracking-wider">Router</span>
+                            <span class="text-xs font-mono text-primary uppercase tracking-wider">Router</span>
                             <span class="material-symbols-outlined text-[14px] text-primary">route</span>
                         </div>
                         <h3 class="text-text-main font-bold text-sm truncate">LLM Gateway</h3>
@@ -184,7 +184,7 @@
                     <div onclick="openModuleExplorer('Vector Store')" class="node-card absolute top-[150px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-error hover:shadow-neon transition-all">
                         <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-error transition-colors"></div>
                         <div class="flex items-center justify-between w-full mb-1">
-                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Storage</span>
+                            <span class="text-xs font-mono text-muted uppercase tracking-wider">Storage</span>
                             <span class="material-symbols-outlined text-[14px] text-accent-error">database</span>
                         </div>
                         <h3 class="text-text-main font-bold text-sm truncate">Vector Store</h3>
@@ -194,7 +194,7 @@
                     <div onclick="openModuleExplorer('OpenAI API')" class="node-card absolute top-[450px] left-[900px] w-[180px] h-[80px] bg-surface border border-muted flex flex-col justify-center px-4 cursor-pointer group hover:border-accent-ai hover:shadow-neon transition-all">
                         <div class="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-4 bg-muted group-hover:bg-accent-ai transition-colors"></div>
                         <div class="flex items-center justify-between w-full mb-1">
-                            <span class="text-[10px] font-mono text-muted uppercase tracking-wider">Service</span>
+                            <span class="text-xs font-mono text-muted uppercase tracking-wider">Service</span>
                             <span class="material-symbols-outlined text-[14px] text-accent-ai">cloud</span>
                         </div>
                         <h3 class="text-text-main font-bold text-sm truncate">OpenAI API</h3>
@@ -206,7 +206,7 @@
                     <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-r border-muted transition-colors">
                         <span class="material-symbols-outlined text-[20px]">remove</span>
                     </button>
-                    <div class="px-4 text-[10px] font-mono text-text-main select-none">100%</div>
+                    <div class="px-4 text-xs font-mono text-text-main select-none">100%</div>
                     <button class="h-full px-3 text-muted hover:text-primary hover:bg-surface-hover border-l border-muted transition-colors">
                         <span class="material-symbols-outlined text-[20px]">add</span>
                     </button>
@@ -225,7 +225,7 @@
                             <h2 id="explorer-title" class="text-sm font-bold text-text-main tracking-tight">LLM Gateway</h2>
                             <div class="flex items-center gap-2">
                                 <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-                                <span class="text-[9px] text-primary font-mono uppercase tracking-widest">Active</span>
+                                <span class="text-[11px] text-primary font-mono uppercase tracking-widest">Active</span>
                             </div>
                         </div>
                     </div>
@@ -242,7 +242,7 @@
                             <span class="material-symbols-outlined text-[14px]">smart_toy</span>
                         </div>
                         <div class="flex flex-col gap-1 w-full">
-                            <span class="text-[9px] text-muted font-mono uppercase">Architect Copilot</span>
+                            <span class="text-[11px] text-muted font-mono uppercase">Architect Copilot</span>
                             <div class="bg-surface-hover border-l-2 border-accent-ai p-3 text-xs text-text-main font-mono leading-relaxed">
                                 I'm analyzing the <code id="explorer-node-name">LLM Gateway</code>. This component handles token-based routing between Ollama and Cloud providers.
                             </div>
@@ -291,7 +291,7 @@
                     </div>
 
                 <!-- Line Numbers -->
-                <div class="w-10 bg-background border-r border-muted/10 flex flex-col pt-12 pb-4 font-mono text-[10px] text-muted text-right pr-2 select-none shrink-0">
+                <div class="w-10 bg-background border-r border-muted/10 flex flex-col pt-12 pb-4 font-mono text-xs text-muted text-right pr-2 select-none shrink-0">
                     <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div class="text-text-main bg-surface-hover">7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div>
                 </div>
 
@@ -302,10 +302,10 @@
 
 <span class="text-muted">// Primary routing logic for incoming LLM requests</span>
 <span class="text-accent-error">export async function</span> <span class="text-primary relative inline-block cursor-pointer group/func">routeRequest<div class="absolute bottom-full mb-2 left-0 w-64 p-3 bg-surface border border-accent-ai shadow-neon-ai hidden group-hover/func:block z-50 pointer-events-none">
-    <div class="flex items-center gap-2 mb-1 text-accent-ai font-display text-[10px] font-bold uppercase">
+    <div class="flex items-center gap-2 mb-1 text-accent-ai font-display text-xs font-bold uppercase">
         <span class="material-symbols-outlined text-sm">psychology</span> Copilot Insight
     </div>
-    <div class="text-[10px] text-text-main font-display leading-tight whitespace-normal">
+    <div class="text-xs text-text-main font-display leading-tight whitespace-normal">
         This function determines whether to use the local Ollama instance or fallback to OpenAI based on token complexity.
     </div>
 </div></span>(<span class="text-text-main">prompt</span>: <span class="text-accent-error">string</span>, <span class="text-text-main">config</span>: <span class="text-text-main">RouteConfig</span>) {
@@ -331,16 +331,16 @@
                     <div class="h-9 flex items-center justify-between px-3 border-b border-muted/30 bg-surface-hover">
                         <div class="flex items-center gap-2 text-accent-ai">
                             <span class="material-symbols-outlined text-base">smart_toy</span>
-                            <span class="text-[10px] font-display font-bold tracking-widest text-text-main uppercase">Copilot</span>
+                            <span class="text-xs font-display font-bold tracking-widest text-text-main uppercase">Copilot</span>
                         </div>
                     </div>
                     <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3 text-xs font-display">
                         <div class="border-l-2 border-accent-ai pl-3">
-                            <div class="text-[10px] text-accent-ai font-bold mb-1">Architect AI</div>
+                            <div class="text-xs text-accent-ai font-bold mb-1">Architect AI</div>
                             <div class="text-text-main leading-snug">
                                 I noticed you're working on the routing logic. Would you like to implement a retry mechanism?
                             </div>
-                            <button class="mt-2 px-3 py-1 bg-background border border-accent-ai/50 text-accent-ai text-[10px] font-bold hover:bg-accent-ai hover:text-background transition-colors">
+                            <button class="mt-2 px-3 py-1 bg-background border border-accent-ai/50 text-accent-ai text-xs font-bold hover:bg-accent-ai hover:text-background transition-colors">
                                 Generate Code
                             </button>
                         </div>
@@ -359,14 +359,14 @@
             <!-- Terminal Area -->
             <div class="h-40 bg-background border-t border-muted/30 flex flex-col shrink-0">
                 <div class="h-7 flex bg-surface border-b border-muted/30 px-2">
-                    <div class="flex items-center px-4 border-b-2 border-primary text-text-main text-[10px] font-display font-bold uppercase tracking-wider cursor-pointer">
+                    <div class="flex items-center px-4 border-b-2 border-primary text-text-main text-xs font-display font-bold uppercase tracking-wider cursor-pointer">
                         Terminal
                     </div>
-                    <div class="flex items-center px-4 text-muted hover:text-text-main text-[10px] font-display font-medium uppercase tracking-wider cursor-pointer">
+                    <div class="flex items-center px-4 text-muted hover:text-text-main text-xs font-display font-medium uppercase tracking-wider cursor-pointer">
                         Output
                     </div>
                 </div>
-                <div class="flex-1 overflow-auto p-3 font-mono text-[11px] text-muted">
+                <div class="flex-1 overflow-auto p-3 font-mono text-xs text-muted">
                     <div class="mb-1"><span class="text-primary">nexus@dev</span><span class="text-text-main">:</span><span class="text-blue-400">~/projects/blueprint</span>$ npm run dev</div>
                     <div class="mb-1 text-text-main">&gt; nexus-core@1.0.0 dev</div>
                     <div class="mb-1 text-accent-ai">[Watcher] Starting in watch mode...</div>
@@ -386,7 +386,7 @@
                             <span class="material-symbols-outlined text-primary">route</span>
                             LLM Routing & Fallback Chain
                         </h1>
-                        <p class="text-muted text-[10px] mt-1 font-mono uppercase tracking-wider">Redundancy Configuration</p>
+                        <p class="text-muted text-xs mt-1 font-mono uppercase tracking-wider">Redundancy Configuration</p>
                     </div>
                     <div id="fallback-chain" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
                         <!-- Primary Provider -->
@@ -398,7 +398,7 @@
                                 <span class="text-muted">gpt-4-turbo</span>
                             </div>
                             <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                                <span class="text-[9px] text-primary font-bold uppercase tracking-widest">Primary</span>
+                                <span class="text-[11px] text-primary font-bold uppercase tracking-widest">Primary</span>
                             </div>
                         </div>
                         <div class="flex justify-center -my-2 relative"><div class="h-6 w-px bg-muted"></div></div>
@@ -410,7 +410,7 @@
                                 <span class="text-muted">claude-3-sonnet</span>
                             </div>
                             <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                                <span class="text-[9px] text-accent-ai font-bold uppercase tracking-widest">Fallback</span>
+                                <span class="text-[11px] text-accent-ai font-bold uppercase tracking-widest">Fallback</span>
                             </div>
                         </div>
                         <div class="flex justify-center -my-2 relative"><div class="h-6 w-px bg-muted"></div></div>
@@ -422,7 +422,7 @@
                                 <span class="text-muted">llama3:8b</span>
                             </div>
                             <div class="px-4 flex items-center gap-2 border-l border-muted/30 h-full">
-                                <span class="text-[9px] text-muted font-bold uppercase tracking-widest">Offline</span>
+                                <span class="text-[11px] text-muted font-bold uppercase tracking-widest">Offline</span>
                             </div>
                         </div>
                     </div>
@@ -438,7 +438,7 @@
                     <div class="flex-1 p-6 flex flex-col gap-4">
                         <textarea id="test-prompt" class="w-full h-32 bg-surface border border-muted text-text-main font-mono text-xs p-4 outline-none focus:border-primary placeholder-muted" placeholder="Type test prompt here..."></textarea>
                         <button onclick="runTest()" class="bg-primary text-background px-6 py-2 font-bold text-xs shadow-neon self-start uppercase tracking-widest hover:bg-[#0cf1f1] transition-all">Run Test</button>
-                        <div id="test-output" class="flex-1 bg-surface/20 border border-muted p-4 font-mono text-[11px] text-muted overflow-y-auto">
+                        <div id="test-output" class="flex-1 bg-surface/20 border border-muted p-4 font-mono text-xs text-muted overflow-y-auto">
                             <span class="text-primary">> System ready.</span><br>
                             Click "Run Test" to analyze routing.
                         </div>
@@ -450,7 +450,7 @@
     </main>
 
     <!-- Global Footer -->
-    <footer class="h-6 bg-primary flex items-center justify-between px-3 text-background text-[10px] font-mono font-bold shrink-0 z-50">
+    <footer class="h-6 bg-primary flex items-center justify-between px-3 text-background text-xs font-mono font-bold shrink-0 z-50">
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-[12px]">account_tree</span>
@@ -459,8 +459,8 @@
         </div>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-[12px]">cloud_done</span>
-                <span>Ollama: Active</span>
+                <span class="material-symbols-outlined text-[12px]">cloud_off</span>
+                <span>AI: Not Connected</span>
             </div>
             <span>UTF-8</span>
         </div>
@@ -518,7 +518,7 @@
                     <span class="material-symbols-outlined text-[14px]">${icon}</span>
                 </div>
                 <div class="flex flex-col gap-1 w-full">
-                    <span class="text-[9px] text-muted font-mono uppercase">${label}</span>
+                    <span class="text-[11px] text-muted font-mono uppercase">${label}</span>
                     <div class="bg-surface-hover border-l-2 border-${color} p-3 text-xs text-text-main font-mono leading-relaxed">
                         ${text}
                     </div>
