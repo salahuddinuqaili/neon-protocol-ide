@@ -1,6 +1,6 @@
 {
   "name": "neon-protocol-ide",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Neon Protocol IDE - Agentic Architectural Blueprint IDE",
   "main": "index.js",
   "scripts": {
@@ -86,6 +86,7 @@
     },
     "dmg": {
       "title": "Neon Protocol IDE",
+      "background": null,
       "contents": [
         {
           "x": 130,
