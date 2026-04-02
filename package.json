@@ -86,7 +86,6 @@
     },
     "dmg": {
       "title": "Neon Protocol IDE",
-      "backgroundColor": "rgb(11, 12, 16)",
       "contents": [
         {
           "x": 130,
