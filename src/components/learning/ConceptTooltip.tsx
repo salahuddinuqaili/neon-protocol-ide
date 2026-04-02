@@ -33,10 +33,22 @@ const ConceptTooltip: React.FC<ConceptTooltipProps> = ({ termId, children }) => 
     hoverTimeoutRef.current = setTimeout(() => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
-        setTooltipPos({
-          top: rect.bottom + 6,
-          left: rect.left + rect.width / 2,
-        });
+        const TOOLTIP_H = 80; // estimated tooltip height
+        const TOOLTIP_W = 320; // max-w-xs ≈ 320px
+        const GAP = 6;
+
+        // Flip above if not enough room below
+        const fitsBelow = rect.bottom + GAP + TOOLTIP_H < window.innerHeight;
+        const top = fitsBelow
+          ? rect.bottom + GAP
+          : rect.top - GAP - TOOLTIP_H;
+
+        // Clamp horizontal center so tooltip stays within viewport
+        const centerX = rect.left + rect.width / 2;
+        const halfW = TOOLTIP_W / 2;
+        const clampedLeft = Math.max(halfW + 8, Math.min(centerX, window.innerWidth - halfW - 8));
+
+        setTooltipPos({ top: Math.max(8, top), left: clampedLeft });
       }
       setShowTooltip(true);
     }, 300);

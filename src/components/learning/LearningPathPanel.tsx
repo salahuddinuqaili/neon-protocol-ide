@@ -178,7 +178,7 @@ const LearningPathPanel: React.FC = () => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => toggleLearningPath(false)} />
-      <div className="relative z-10 w-full max-w-3xl max-h-[80vh] bg-surface border border-primary shadow-neon flex flex-col">
+      <div className="relative z-10 w-full max-w-3xl max-h-[80vh] mx-4 bg-surface border border-primary shadow-neon flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-muted/30 shrink-0">
           <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ const LearningPathPanel: React.FC = () => {
               onBack={() => setActiveLesson(null)}
             />
           ) : (
-            <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {tracks.map(track => (
                 <div key={track.category}>
                   <div className="flex items-center gap-2 mb-3">

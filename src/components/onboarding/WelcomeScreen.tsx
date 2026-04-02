@@ -20,24 +20,16 @@ const WelcomeScreen: React.FC = () => {
     setOnboardingComplete();
   };
 
-  const handleTryDemo = () => {
-    setLearningMode('beginner');
-    setProject('demo-project', DEMO_FILES);
-    setOnboardingComplete();
-    setView('blueprint');
-    startTutorial('welcome-tour');
-  };
-
   const handleSkip = () => {
     setOnboardingComplete();
   };
 
   return (
-    <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center">
-      <div className="max-w-2xl w-full px-8">
+    <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center overflow-y-auto">
+      <div className="max-w-xl w-full px-8 py-10 my-auto">
         {/* Logo & Title */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <span className="material-symbols-outlined text-4xl text-primary">architecture</span>
             <h1 className="text-3xl font-display font-bold text-text-main tracking-wide uppercase">
               Neon Protocol IDE
@@ -48,34 +40,73 @@ const WelcomeScreen: React.FC = () => {
           </p>
         </div>
 
-        {/* Feature Cards — beginner-friendly language */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
-          <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
-            <span className="material-symbols-outlined text-2xl text-primary mb-3 block">map</span>
-            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">Visual Map</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              See your project as a visual diagram. Click any box to learn what it does and how it connects to other parts.
-            </p>
+        {/* What's inside — informational, clearly non-interactive */}
+        <div className="flex items-center justify-center gap-6 mb-10 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <span className="material-symbols-outlined text-lg text-muted">map</span>
+            <span className="text-[11px] text-muted font-mono">Visual Map</span>
           </div>
-          <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
-            <span className="material-symbols-outlined text-2xl text-primary mb-3 block">code</span>
-            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">Code Editor</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Read and edit the actual code files. Changes are highlighted so you always know what you've modified.
-            </p>
+          <span className="text-muted/30">+</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="material-symbols-outlined text-lg text-muted">code</span>
+            <span className="text-[11px] text-muted font-mono">Code Editor</span>
           </div>
-          <div className="bg-surface border border-muted/30 p-5 hover:border-primary hover:shadow-neon transition-all">
-            <span className="material-symbols-outlined text-2xl text-accent-ai mb-3 block">smart_toy</span>
-            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">AI Assistant</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Ask questions about your code in plain English. The AI explains what things do and helps you make changes.
-            </p>
+          <span className="text-muted/30">+</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="material-symbols-outlined text-lg text-accent-ai">smart_toy</span>
+            <span className="text-[11px] text-muted font-mono">AI Assistant</span>
           </div>
+        </div>
+
+        {/* Primary choice — the main decision */}
+        <h2 className="text-[11px] text-muted uppercase tracking-widest font-bold text-center mb-4">
+          How would you like to start?
+        </h2>
+
+        <div className="flex flex-col gap-3 mb-8">
+          {/* Beginner — recommended path */}
+          <button
+            onClick={handleBeginner}
+            className="w-full flex items-center gap-4 p-4 bg-surface border-2 border-primary/60 text-left hover:border-primary hover:shadow-neon transition-all group"
+          >
+            <span className="material-symbols-outlined text-2xl text-primary shrink-0 group-hover:scale-110 transition-transform">
+              school
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-text-main">I'm New to Coding</h3>
+                <span className="text-[10px] font-mono text-background bg-primary/80 px-1.5 py-0.5 uppercase tracking-wider">
+                  Recommended
+                </span>
+              </div>
+              <p className="text-xs text-muted leading-relaxed mt-1">
+                Guided tour + demo project with step-by-step lessons
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-sm text-primary shrink-0">arrow_forward</span>
+          </button>
+
+          {/* Experienced */}
+          <button
+            onClick={handleExperienced}
+            className="w-full flex items-center gap-4 p-4 bg-surface border border-muted/30 text-left hover:border-muted hover:bg-surface-hover transition-all group"
+          >
+            <span className="material-symbols-outlined text-2xl text-muted shrink-0 group-hover:text-text-main transition-colors">
+              code
+            </span>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-text-main">I Have Experience</h3>
+              <p className="text-xs text-muted leading-relaxed mt-1">
+                Jump straight in — open your own project and start building
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-sm text-muted shrink-0">arrow_forward</span>
+          </button>
         </div>
 
         {/* Recent Projects */}
         {recentProjects.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <h3 className="text-[11px] text-muted uppercase tracking-widest font-bold text-center mb-3">Recent Projects</h3>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {recentProjects.map(name => (
@@ -89,58 +120,17 @@ const WelcomeScreen: React.FC = () => {
                 </button>
               ))}
             </div>
-            <p className="text-center text-[11px] text-muted/50 mt-2 font-mono">Re-open from the sidebar file explorer</p>
           </div>
         )}
 
-        {/* Learning Mode Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <button
-            onClick={handleBeginner}
-            className="bg-surface border border-muted/30 p-5 text-left hover:border-primary hover:shadow-neon transition-all group"
-          >
-            <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">school</span>
-            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I'm New to Coding</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Start with a guided tour and a demo project with step-by-step lessons. Perfect for absolute beginners.
-            </p>
-          </button>
-          <button
-            onClick={handleExperienced}
-            className="bg-surface border border-muted/30 p-5 text-left hover:border-primary hover:shadow-neon transition-all group"
-          >
-            <span className="material-symbols-outlined text-2xl text-primary mb-3 block group-hover:scale-110 transition-transform">code</span>
-            <h3 className="text-sm font-bold text-text-main mb-2 uppercase tracking-wide">I Have Experience</h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Jump straight into the IDE. Open your own project and start building with the AI copilot right away.
-            </p>
-          </button>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col items-center gap-4">
-          <button
-            onClick={handleTryDemo}
-            className="px-8 py-3 bg-primary text-background font-bold text-xs uppercase tracking-widest shadow-neon hover:bg-[#0cf1f1] transition-all"
-          >
-            Explore a Demo Project
-          </button>
+        {/* Tertiary skip */}
+        <p className="text-center">
           <button
             onClick={handleSkip}
-            className="px-6 py-2 text-muted text-xs font-mono hover:text-text-main transition-colors"
+            className="text-[11px] text-muted/60 font-mono hover:text-muted transition-colors"
           >
-            Skip — I'll open my own project
+            Skip setup
           </button>
-          <button
-            onClick={handleTryDemo}
-            className="text-[11px] text-primary/70 font-mono hover:text-primary transition-colors underline underline-offset-2"
-          >
-            Take the guided tour
-          </button>
-        </div>
-
-        <p className="text-center text-[11px] text-muted/30 mt-8 font-mono">
-          Works best in Chrome or Edge
         </p>
       </div>
     </div>

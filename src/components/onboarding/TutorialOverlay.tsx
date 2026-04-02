@@ -81,30 +81,51 @@ const TutorialOverlay: React.FC = () => {
   const totalSteps = steps.length;
 
   // Determine card position: below target if in top half, above if in bottom half
+  // Clamp both axes so the card never leaves the viewport
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
   const targetInTopHalf = spotlightRect ? spotlightRect.top + spotlightRect.height / 2 < windowHeight / 2 : true;
+  const CARD_MAX_W = 380;
+  const CARD_EST_H = 200; // estimated card height for clamping
+  const EDGE_PAD = 16;
 
-  const cardStyle: React.CSSProperties = spotlightRect
-    ? targetInTopHalf
-      ? {
-          position: 'fixed',
-          top: spotlightRect.top + spotlightRect.height + 16,
-          left: Math.max(16, Math.min(spotlightRect.left, window.innerWidth - 400)),
-          maxWidth: 380,
-        }
-      : {
-          position: 'fixed',
-          bottom: windowHeight - spotlightRect.top + 16,
-          left: Math.max(16, Math.min(spotlightRect.left, window.innerWidth - 400)),
-          maxWidth: 380,
-        }
-    : {
+  const getCardStyle = (): React.CSSProperties => {
+    if (!spotlightRect) {
+      return {
         position: 'fixed',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
         maxWidth: 420,
       };
+    }
+
+    const clampedLeft = Math.max(EDGE_PAD, Math.min(spotlightRect.left, windowWidth - CARD_MAX_W - EDGE_PAD));
+
+    if (targetInTopHalf) {
+      // Place below the spotlight, but clamp so it doesn't overflow the bottom
+      const idealTop = spotlightRect.top + spotlightRect.height + EDGE_PAD;
+      const clampedTop = Math.min(idealTop, windowHeight - CARD_EST_H - EDGE_PAD);
+      return {
+        position: 'fixed',
+        top: Math.max(EDGE_PAD, clampedTop),
+        left: clampedLeft,
+        maxWidth: CARD_MAX_W,
+      };
+    } else {
+      // Place above the spotlight, but clamp so it doesn't overflow the top
+      const idealBottom = windowHeight - spotlightRect.top + EDGE_PAD;
+      const clampedBottom = Math.min(idealBottom, windowHeight - CARD_EST_H - EDGE_PAD);
+      return {
+        position: 'fixed',
+        bottom: Math.max(EDGE_PAD, clampedBottom),
+        left: clampedLeft,
+        maxWidth: CARD_MAX_W,
+      };
+    }
+  };
+
+  const cardStyle = getCardStyle();
 
   const handleNext = () => {
     if (isLastStep) {

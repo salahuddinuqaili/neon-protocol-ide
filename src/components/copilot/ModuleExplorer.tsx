@@ -71,7 +71,7 @@ const ModuleExplorer: React.FC = () => {
   return (
     <div
       data-tutorial="module-explorer"
-      className={`absolute right-0 top-0 h-full w-[450px] bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-50 transform transition-transform duration-300 ease-in-out ${
+      className={`absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-50 transform transition-transform duration-300 ease-in-out ${
         isExplorerOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
