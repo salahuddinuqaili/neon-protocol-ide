@@ -56,7 +56,7 @@ jobs:
       - name: Build macOS installers
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npx electron-builder --mac --publish never
+        run: npx electron-builder --mac --publish never || npx electron-builder --mac --publish never
 
       - name: Remove quarantine attributes
         run: |
