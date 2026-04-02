@@ -1,18 +1,31 @@
 # Neon Protocol IDE
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.1.8-green.svg)](package.json)
+[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-brightgreen.svg)](https://nodejs.org/)
+
 An agentic integrated development environment (IDE) that bridges the gap between high-level architectural design and low-level code implementation.
 
 ![Cybernetic Blueprint Theme](design_reference/design/global_architecture_map/screen.png)
 
 ## Core Philosophy: "Blueprint-First Development"
 
-The Neon Protocol IDE is built on the premise that complex software should be understood visually and architecturally before diving into syntax. It provides three primary lenses:
+The Neon Protocol IDE is built on the premise that complex software should be understood visually and architecturally before diving into syntax. It provides several primary lenses:
 
 1.  **Global Architecture Map:** A dynamic ReactFlow canvas to visualize system-wide nodes, services, and data flows.
 2.  **Pro Code Editor:** A Monaco-powered editor for professional-grade development, linked directly to the visual map.
 3.  **LLM Orchestration Hub:** A central hub for managing AI routing between local (Ollama) and cloud (OpenAI/Anthropic) models.
 4.  **Local Project Explorer:** Direct local file system integration via the **File System Access API**, allowing you to open, edit, and save files on your disk.
 5.  **Dynamic Architecture Discovery:** Automatically scan and categorize your codebase into high-level architectural nodes on the visual map.
+
+## Key Features
+
+-   **Visual Mapping (ReactFlow):** Drag, drop, and connect architectural nodes (services, databases, APIs) dynamically.
+-   **Pro Code Engine (Monaco):** Full-featured editor with IntelliSense, syntax highlighting, and multi-file tab management.
+-   **Multi-Provider AI Routing:** Manage and route prompts between local (**Ollama**) and cloud (**OpenAI/Anthropic**) models.
+-   **Local File System Access:** Direct integration via the **File System Access API**, allowing you to work on your local files securely.
+-   **Dynamic Architecture Discovery:** Automatically scan and categorize your codebase into high-level architectural nodes.
+-   **Cross-Platform Desktop App:** Available as a standalone application for Windows, macOS, and Linux via Electron.
 
 ## Tech Stack
 
@@ -61,6 +74,30 @@ The Neon Protocol IDE includes a automated setup script that will check for Node
    npm run dev
    ```
 
+## Building the Desktop App
+
+To package the Neon Protocol IDE as a standalone desktop application:
+
+1.  **Build for current OS:**
+    ```bash
+    npm run electron-build
+    ```
+2.  **Platform-specific builds:**
+    ```bash
+    npm run electron-build:win   # Windows
+    npm run electron-build:mac   # macOS
+    npm run electron-build:all   # Windows & macOS
+    ```
+
+## Roadmap
+
+We are continuously evolving! Key milestones on our roadmap include:
+
+-   [ ] **Real-time Architectural Linting:** Flag inconsistencies between code and the architectural blueprint.
+-   [ ] **Contextual AI Copilot:** Enhance the copilot to ingest the entire architectural schema for design-aware suggestions.
+-   [ ] **Plugin Architecture:** Enable community-contributed node types, themes, and LLM connectors.
+-   [ ] **Automated GitHub Actions:** CI/CD pipelines for automated testing and binary distribution.
+
 ## Repository Structure
 
 ```text
@@ -84,3 +121,10 @@ We welcome contributions to the Neon Protocol! Please see our [CONTRIBUTING.md](
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Credits
+
+This app was created using:
+- **Google Stitch**
+- **Junie**
+- **Claude Code**

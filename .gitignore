@@ -51,6 +51,12 @@ lerna-debug.log*
 coverage/
 .nyc_output
 
+# Build cache
+tsconfig.tsbuildinfo
+
+# Claude Code
+.claude/
+
 # Miscellaneous
 .DS_Store
 *.seed
