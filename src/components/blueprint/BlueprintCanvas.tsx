@@ -69,7 +69,7 @@ CustomNode.displayName = 'CustomNode';
 
 const nodeTypes = { custom: CustomNode };
 
-// Removed module-level counter — use Date.now() for stable unique IDs
+// ─── Demo / default nodes (used when no project is loaded, or for the demo) ───
 
 function generateDefaultNodes(): Node[] {
   return [
@@ -80,7 +80,208 @@ function generateDefaultNodes(): Node[] {
   ];
 }
 
+const DEMO_EDGE_LABELS: Record<string, string> = {
+  'e1-2': 'Sends user requests',
+  'e2-3': 'Stores & retrieves data',
+  'e3-4': 'Provides AI responses',
+  'e2-4': 'Routes to AI provider',
+};
+
+function generateDemoEdges(nodes: Node[], isBeginnerMode: boolean): Edge[] {
+  const edges: Edge[] = [];
+  if (nodes.length > 1) {
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const edgeId = `e${nodes[i].id}-${nodes[i + 1].id}`;
+      edges.push({
+        id: edgeId,
+        source: nodes[i].id,
+        target: nodes[i + 1].id,
+        animated: true,
+        style: { stroke: 'var(--color-primary)', strokeWidth: 2 },
+        type: ConnectionLineType.SmoothStep,
+        ...(isBeginnerMode && DEMO_EDGE_LABELS[edgeId]
+          ? {
+              label: DEMO_EDGE_LABELS[edgeId],
+              labelStyle: { fill: '#6B7280', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+              labelBgStyle: { fill: '#181A20', stroke: '#6B7280', strokeWidth: 0.5 },
+              labelBgPadding: [4, 2] as [number, number],
+            }
+          : {}),
+      });
+    }
+  }
+  return edges;
+}
+
+// ─── Directory-based grouping for real projects ───
+
+const SPLIT_THRESHOLD = 8;
+const MAX_NODES = 12;
+
+const DIR_ICON_MAP: { pattern: RegExp; icon: string; color?: string }[] = [
+  { pattern: /^api$/i, icon: 'api' },
+  { pattern: /^(component|widget|ui)s?$/i, icon: 'widgets' },
+  { pattern: /^(page|app|route)s?$/i, icon: 'web' },
+  { pattern: /^layout$/i, icon: 'dashboard' },
+  { pattern: /^(store|state|redux|zustand)$/i, icon: 'database', color: 'accent-error' },
+  { pattern: /^(data|model|schema|migration)s?$/i, icon: 'table_chart' },
+  { pattern: /^(lib|util|helper|tool)s?$/i, icon: 'handyman' },
+  { pattern: /^(type|interface)s?$/i, icon: 'description' },
+  { pattern: /^(test|spec|__test)s?$/i, icon: 'bug_report' },
+  { pattern: /^(config|setting)s?$/i, icon: 'tune' },
+  { pattern: /^(style|css|theme)s?$/i, icon: 'palette' },
+  { pattern: /^hooks?$/i, icon: 'link' },
+  { pattern: /^(service|provider|client)s?$/i, icon: 'cloud', color: 'accent-ai' },
+  { pattern: /^(auth|login|session)$/i, icon: 'lock' },
+  { pattern: /^(learn|education|tutorial)$/i, icon: 'school' },
+  { pattern: /^onboarding$/i, icon: 'waving_hand' },
+  { pattern: /^search$/i, icon: 'search' },
+  { pattern: /^notification(s?)$/i, icon: 'notifications' },
+  { pattern: /^(copilot|ai|llm|chat)$/i, icon: 'smart_toy', color: 'accent-ai' },
+  { pattern: /^(editor|code|monaco)$/i, icon: 'code' },
+  { pattern: /^(blueprint|canvas|graph|map)$/i, icon: 'map' },
+  { pattern: /^(electron|desktop)$/i, icon: 'desktop_windows' },
+  { pattern: /^(server|backend)$/i, icon: 'dns' },
+  { pattern: /^middleware$/i, icon: 'filter_alt' },
+  { pattern: /^(public|static|asset|image)s?$/i, icon: 'image' },
+  { pattern: /^(script|build|ci|workflow|github)s?$/i, icon: 'terminal' },
+  { pattern: /^(doc|readme)s?$/i, icon: 'article' },
+  { pattern: /^orchestrat/i, icon: 'route' },
+  { pattern: /^(error|exception)s?$/i, icon: 'error' },
+];
+
+function getIconForDir(dirName: string): { icon: string; color?: string } {
+  for (const entry of DIR_ICON_MAP) {
+    if (entry.pattern.test(dirName)) return { icon: entry.icon, color: entry.color };
+  }
+  return { icon: 'folder' };
+}
+
+const LABEL_OVERRIDES: Record<string, string> = {
+  lib: 'Library',
+  llm: 'LLM',
+  ai: 'AI',
+  api: 'API',
+  ui: 'UI',
+  db: 'Database',
+  utils: 'Utilities',
+};
+
+function formatLabel(dirName: string): string {
+  const lower = dirName.toLowerCase();
+  if (LABEL_OVERRIDES[lower]) return LABEL_OVERRIDES[lower];
+  return dirName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/** Describe a group by listing a few representative file names */
+function describeGroup(files: FileEntry[]): string {
+  const names = files.slice(0, 3).map(f => f.name);
+  const suffix = files.length > 3 ? `, +${files.length - 3} more` : '';
+  return names.join(', ') + suffix;
+}
+
 function generateFileNodes(files: FileEntry[]): Node[] {
+  // Step 1 — find the common project-name prefix
+  const prefix = files[0].path.split('/')[0];
+
+  // Step 2 — group files by their directory at depth 2 (relative to project root)
+  const groups = new Map<string, FileEntry[]>();
+  for (const file of files) {
+    const rel = file.path.slice(prefix.length + 1); // strip "project-name/"
+    const parts = rel.split('/');
+    parts.pop(); // remove filename
+    const depth = Math.min(2, parts.length);
+    const key = depth > 0 ? parts.slice(0, depth).join('/') : '__root__';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(file);
+  }
+
+  // Step 3 — split large groups one level deeper
+  const refined = new Map<string, FileEntry[]>();
+  for (const [key, gFiles] of groups) {
+    if (gFiles.length > SPLIT_THRESHOLD && key !== '__root__') {
+      const subGroups = new Map<string, FileEntry[]>();
+      for (const file of gFiles) {
+        const rel = file.path.slice(prefix.length + 1);
+        const parts = rel.split('/');
+        parts.pop();
+        const depth = Math.min(key.split('/').length + 1, parts.length);
+        const subKey = parts.slice(0, depth).join('/') || key;
+        if (!subGroups.has(subKey)) subGroups.set(subKey, []);
+        subGroups.get(subKey)!.push(file);
+      }
+      // Only split if it actually produced multiple groups
+      if (subGroups.size > 1) {
+        for (const [sk, sf] of subGroups) refined.set(sk, sf);
+      } else {
+        refined.set(key, gFiles);
+      }
+    } else {
+      refined.set(key, gFiles);
+    }
+  }
+
+  // Step 4 — if we have too many groups, merge the smallest into "Other"
+  const sorted = [...refined.entries()].sort((a, b) => a[1].length - b[1].length);
+  const final = new Map<string, FileEntry[]>();
+  const overflow: FileEntry[] = [];
+
+  if (sorted.length > MAX_NODES) {
+    const toMerge = sorted.length - MAX_NODES + 1; // +1 for the "Other" node we'll add
+    for (let i = 0; i < sorted.length; i++) {
+      if (i < toMerge && sorted[i][0] !== '__root__') {
+        overflow.push(...sorted[i][1]);
+      } else {
+        final.set(sorted[i][0], sorted[i][1]);
+      }
+    }
+    if (overflow.length > 0) {
+      final.set('__other__', overflow);
+    }
+  } else {
+    for (const [k, v] of sorted) final.set(k, v);
+  }
+
+  // Fallback — if we ended up with ≤1 group, the project is flat;
+  // use simple category-based grouping instead
+  if (final.size <= 1) {
+    return generateCategoryNodes(files);
+  }
+
+  // Step 5 — create nodes with icons and grid positions
+  const nodes: Node[] = [];
+  const cols = Math.min(4, Math.ceil(Math.sqrt(final.size)));
+  let index = 0;
+
+  for (const [key, gFiles] of final) {
+    const dirName = key === '__root__' ? 'config' : key === '__other__' ? 'other' : key.split('/').pop()!;
+    const label = key === '__other__' ? 'Other' : key === '__root__' ? 'Config' : formatLabel(dirName);
+    const { icon, color } = getIconForDir(dirName);
+
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+
+    nodes.push({
+      id: key,
+      type: 'custom',
+      position: { x: 100 + col * 280, y: 100 + row * 180 },
+      data: {
+        label,
+        type: dirName.toLowerCase(),
+        icon,
+        color,
+        count: gFiles.length,
+        description: describeGroup(gFiles),
+      },
+    });
+    index++;
+  }
+
+  return nodes;
+}
+
+/** Fallback for flat projects with no meaningful directory structure */
+function generateCategoryNodes(files: FileEntry[]): Node[] {
   const categories = {
     api: { label: 'API Endpoints', icon: 'api', description: 'Handles requests from the outside world', files: [] as FileEntry[] },
     ui: { label: 'Pages & Components', icon: 'widgets', description: 'What users see on screen', files: [] as FileEntry[] },
@@ -102,49 +303,107 @@ function generateFileNodes(files: FileEntry[]): Node[] {
         id: key,
         type: 'custom',
         position: { x: 100 + index * 300, y: 200 + (index % 2) * 150 },
-        data: { label: cat.label, type: key, icon: cat.icon, count: cat.files.length, description: `${cat.files.length} files — ${cat.description}` }
+        data: { label: cat.label, type: key, icon: cat.icon, count: cat.files.length, description: `${cat.files.length} files — ${cat.description}` },
       });
     }
   });
   return nodes;
 }
 
-// Educational labels for default demo edges (shown in beginner mode)
-const EDGE_LABELS: Record<string, string> = {
-  'e1-2': 'Sends user requests',
-  'e2-3': 'Stores & retrieves data',
-  'e3-4': 'Provides AI responses',
-  'e2-4': 'Routes to AI provider',
-};
+// ─── Import-based edges for real projects ───
 
-function generateEdges(nodes: Node[], isBeginnerMode?: boolean): Edge[] {
-  const edges: Edge[] = [];
-  if (nodes.length > 1) {
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const edgeId = `e${nodes[i].id}-${nodes[i+1].id}`;
-      edges.push({
-        id: edgeId,
-        source: nodes[i].id,
-        target: nodes[i+1].id,
-        animated: true,
-        style: { stroke: 'var(--color-primary)', strokeWidth: 2 },
-        type: ConnectionLineType.SmoothStep,
-        ...(isBeginnerMode && EDGE_LABELS[edgeId] ? { label: EDGE_LABELS[edgeId], labelStyle: { fill: '#6B7280', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }, labelBgStyle: { fill: '#181A20', stroke: '#6B7280', strokeWidth: 0.5 }, labelBgPadding: [4, 2] as [number, number] } : {}),
-      });
+function generateImportEdges(nodes: Node[], files: FileEntry[]): Edge[] {
+  if (nodes.length < 2) return [];
+
+  // Build lookup: file path → node id
+  const prefix = files[0].path.split('/')[0];
+  const fileToNode = new Map<string, string>();
+  for (const node of nodes) {
+    // Re-derive which files belong to this node by matching paths
+    for (const file of files) {
+      const rel = file.path.slice(prefix.length + 1);
+      const parts = rel.split('/');
+      parts.pop();
+      // Check if this file's directory path starts with the node's directory key
+      const dirPath = parts.join('/');
+      if (node.id === '__root__' && parts.length === 0) {
+        fileToNode.set(file.path, node.id);
+      } else if (node.id === '__other__') {
+        // "Other" files are handled by absence from other groups
+      } else if (dirPath.startsWith(node.id)) {
+        fileToNode.set(file.path, node.id);
+      }
     }
   }
+
+  // Build lookup: last directory segment → node id (for matching import paths)
+  const segToNode = new Map<string, string>();
+  for (const node of nodes) {
+    if (node.id === '__root__' || node.id === '__other__') continue;
+    const seg = node.id.split('/').pop()!;
+    segToNode.set(seg, node.id);
+  }
+
+  // Scan files for imports and create edges
+  const edgeSet = new Set<string>();
+  const edges: Edge[] = [];
+  const importRe = /from\s+['"]([^'"]+)['"]/g;
+
+  for (const file of files) {
+    const sourceId = fileToNode.get(file.path);
+    if (!sourceId) continue;
+
+    let match;
+    importRe.lastIndex = 0;
+    while ((match = importRe.exec(file.content)) !== null) {
+      const importPath = match[1];
+      if (!importPath.startsWith('.')) continue; // skip bare specifiers (node_modules)
+
+      const segments = importPath.split('/').filter(s => s !== '.' && s !== '..');
+      for (const seg of segments) {
+        const targetId = segToNode.get(seg);
+        if (targetId && targetId !== sourceId) {
+          // Deduplicate with sorted key so A→B and B→A collapse
+          const edgeKey = [sourceId, targetId].sort().join('::');
+          if (!edgeSet.has(edgeKey)) {
+            edgeSet.add(edgeKey);
+            edges.push({
+              id: `e-${sourceId}-${targetId}`,
+              source: sourceId,
+              target: targetId,
+              animated: true,
+              style: { stroke: 'var(--color-primary)', strokeWidth: 1.5, opacity: 0.6 },
+              type: ConnectionLineType.SmoothStep,
+            });
+          }
+          break;
+        }
+      }
+    }
+  }
+
   return edges;
 }
 
+// ─── Canvas component ───
+
 const BlueprintCanvasInner: React.FC = () => {
-  const { selectModule, files, addToast, learningMode } = useIDEStore();
+  const { selectModule, files, projectPath, addToast, learningMode } = useIDEStore();
   const reactFlow = useReactFlow();
   const [hasUserEdited, setHasUserEdited] = useState(false);
   const [initialFitDone, setInitialFitDone] = useState(false);
 
-  const seedNodes = useMemo(() => files.length === 0 ? generateDefaultNodes() : generateFileNodes(files), [files]);
+  const isDemo = projectPath === 'demo-project' || files.length === 0;
   const isBeginnerMode = learningMode === 'beginner';
-  const seedEdges = useMemo(() => generateEdges(seedNodes, isBeginnerMode), [seedNodes, isBeginnerMode]);
+
+  const seedNodes = useMemo(
+    () => (isDemo ? generateDefaultNodes() : generateFileNodes(files)),
+    [files, isDemo],
+  );
+  const seedEdges = useMemo(
+    () => (isDemo ? generateDemoEdges(seedNodes, isBeginnerMode) : generateImportEdges(seedNodes, files)),
+    [seedNodes, files, isDemo, isBeginnerMode],
+  );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(seedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(seedEdges);
