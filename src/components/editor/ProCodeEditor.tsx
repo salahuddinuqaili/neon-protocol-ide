@@ -38,7 +38,25 @@ const ProCodeEditor: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!currentFile) return;
+    if (!currentFile || !activeFile) return;
+    
+    const api = (window as any).electronAPI;
+    
+    if (api?.isElectron) {
+      try {
+        const success = await api.writeFile(activeFile, currentFile.content);
+        if (success) {
+          markFileSaved(activeFile);
+          addToast(`Saved ${currentFile.name}`, 'success');
+        } else {
+          addToast(`Failed to save ${currentFile.name}`, 'error');
+        }
+      } catch (err) {
+        addToast(`Error saving ${currentFile.name}`, 'error');
+      }
+      return;
+    }
+
     if (currentFile.handle) {
       try {
         const writable = await currentFile.handle.createWritable();

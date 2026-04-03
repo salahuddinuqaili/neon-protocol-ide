@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const { execSync } = require('child_process');
+const { execSync, execFile, spawn } = require('child_process');
 const isDev = !app.isPackaged;
 
 // MIME types for serving static files
@@ -35,6 +35,14 @@ function startStaticServer(outDir) {
 
       // Map URL to file path
       let filePath = path.join(outDir, urlPath);
+
+      // Path traversal check - ensure we don't serve files outside outDir
+      const relative = path.relative(outDir, filePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
 
       // Directory -> index.html
       if (urlPath === '/' || urlPath === '') {
@@ -107,6 +115,22 @@ async function createWindow() {
 
 // --- IPC Handlers for native file system operations ---
 
+/**
+ * Safer alternative to execSync for simple git commands.
+ * Uses execFile to avoid shell injection.
+ */
+function gitExec(args, dirPath, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    execFile('git', args, { cwd: dirPath, encoding: 'utf-8', timeout }, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stdout);
+    });
+  });
+}
+
 ipcMain.handle('fs:openDirectory', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory'],
@@ -138,6 +162,9 @@ ipcMain.handle('fs:readFile', async (_event, filePath) => {
 
 ipcMain.handle('fs:writeFile', async (_event, filePath, content) => {
   try {
+    // Basic path validation - ensure it's not trying to escape a known allowed root if we had one
+    // For now, Electron is the user's local tool, so we trust the path provided by the frontend
+    // but we should still be careful.
     fs.writeFileSync(filePath, content, 'utf-8');
     return true;
   } catch {
@@ -163,14 +190,58 @@ ipcMain.handle('fs:renameFile', async (_event, oldPath, newPath) => {
   }
 });
 
+ipcMain.handle('fs:scanProject', async (_event, dirPath) => {
+  const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+  const IGNORE = ['node_modules', '.git', 'package-lock.json', '.next', 'dist', 'out'];
+  const EXTENSIONS = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java|yaml|yml|toml|sh|bat|sql|graphql|proto|xml|svg)$/i;
+
+  const results = [];
+  
+  function scan(currentDir, relativePath) {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (IGNORE.includes(entry.name) || entry.name.startsWith('.')) continue;
+      
+      const fullPath = path.join(currentDir, entry.name);
+      const relPath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+      
+      if (entry.isFile()) {
+        if (EXTENSIONS.test(entry.name)) {
+          try {
+            const stats = fs.statSync(fullPath);
+            if (stats.size <= MAX_FILE_SIZE) {
+              const content = fs.readFileSync(fullPath, 'utf-8');
+              results.push({
+                name: entry.name,
+                path: fullPath.replace(/\\/g, '/'),
+                content,
+                // Language mapping will be handled by the frontend config
+              });
+            }
+          } catch (e) {
+            console.warn(`Failed to read ${fullPath}:`, e.message);
+          }
+        }
+      } else if (entry.isDirectory()) {
+        scan(fullPath, relPath);
+      }
+    }
+  }
+
+  try {
+    const dirName = path.basename(dirPath);
+    scan(dirPath, dirName);
+    return results;
+  } catch (e) {
+    console.error('Scan failed:', e);
+    return [];
+  }
+});
+
 ipcMain.handle('git:getBranch', async (_event, dirPath) => {
   try {
-    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
-      cwd: dirPath,
-      encoding: 'utf-8',
-      timeout: 3000,
-    }).trim();
-    return branch;
+    const branch = await gitExec(['rev-parse', '--abbrev-ref', 'HEAD'], dirPath, 3000);
+    return branch.trim();
   } catch {
     return null;
   }
@@ -178,12 +249,8 @@ ipcMain.handle('git:getBranch', async (_event, dirPath) => {
 
 ipcMain.handle('git:getStatus', async (_event, dirPath) => {
   try {
-    const status = execSync('git status --porcelain', {
-      cwd: dirPath,
-      encoding: 'utf-8',
-      timeout: 5000,
-    }).trim();
-    return status.split('\n').filter(Boolean).length;
+    const status = await gitExec(['status', '--porcelain'], dirPath, 5000);
+    return status.trim().split('\n').filter(Boolean).length;
   } catch {
     return null;
   }
@@ -191,16 +258,17 @@ ipcMain.handle('git:getStatus', async (_event, dirPath) => {
 
 ipcMain.handle('git:isRepo', async (_event, dirPath) => {
   try {
-    execSync('git rev-parse --git-dir', { cwd: dirPath, encoding: 'utf-8', timeout: 2000 });
+    await gitExec(['rev-parse', '--git-dir'], dirPath, 2000);
     return true;
   } catch { return false; }
 });
 
 ipcMain.handle('git:statusFiles', async (_event, dirPath) => {
   try {
-    const raw = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
-    if (!raw) return [];
-    return raw.split('\n').filter(Boolean).map(line => {
+    const raw = await gitExec(['status', '--porcelain'], dirPath, 5000);
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    return trimmed.split('\n').filter(Boolean).map(line => {
       const indexStatus = line[0];
       const workTreeStatus = line[1];
       const relativePath = line.slice(3).trim();
@@ -218,7 +286,7 @@ ipcMain.handle('git:statusFiles', async (_event, dirPath) => {
 ipcMain.handle('git:stage', async (_event, dirPath, filePaths) => {
   try {
     const files = Array.isArray(filePaths) ? filePaths : [filePaths];
-    execSync(`git add -- ${files.map(f => `"${f}"`).join(' ')}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    await gitExec(['add', '--', ...files], dirPath, 5000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
@@ -226,50 +294,63 @@ ipcMain.handle('git:stage', async (_event, dirPath, filePaths) => {
 ipcMain.handle('git:unstage', async (_event, dirPath, filePaths) => {
   try {
     const files = Array.isArray(filePaths) ? filePaths : [filePaths];
-    execSync(`git reset HEAD -- ${files.map(f => `"${f}"`).join(' ')}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    await gitExec(['reset', 'HEAD', '--', ...files], dirPath, 5000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:commit', async (_event, dirPath, message) => {
   try {
-    execSync('git commit -F -', { cwd: dirPath, encoding: 'utf-8', timeout: 10000, input: message });
-    return { success: true };
+    // Using spawn for commit with message via stdin to handle large messages and special characters safely
+    return new Promise((resolve) => {
+      const child = spawn('git', ['commit', '-F', '-'], { cwd: dirPath });
+      child.stdin.write(message);
+      child.stdin.end();
+
+      let stderr = '';
+      child.stderr.on('data', (data) => { stderr += data; });
+
+      child.on('close', (code) => {
+        if (code === 0) resolve({ success: true });
+        else resolve({ success: false, error: stderr || `Exit code ${code}` });
+      });
+    });
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:diff', async (_event, dirPath, filePath, staged) => {
   try {
-    const cmd = staged ? `git diff --cached -- "${filePath}"` : `git diff -- "${filePath}"`;
-    return execSync(cmd, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    const args = staged ? ['diff', '--cached', '--', filePath] : ['diff', '--', filePath];
+    return await gitExec(args, dirPath, 5000);
   } catch { return null; }
 });
 
 ipcMain.handle('git:fileContent', async (_event, dirPath, filePath) => {
   try {
-    return execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    return await gitExec(['show', `HEAD:${filePath}`], dirPath, 5000);
   } catch { return null; }
 });
 
 ipcMain.handle('git:push', async (_event, dirPath) => {
   try {
-    execSync('git push', { cwd: dirPath, encoding: 'utf-8', timeout: 30000 });
+    await gitExec(['push'], dirPath, 30000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:pull', async (_event, dirPath) => {
   try {
-    execSync('git pull', { cwd: dirPath, encoding: 'utf-8', timeout: 30000 });
+    await gitExec(['pull'], dirPath, 30000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:branchList', async (_event, dirPath) => {
   try {
-    const raw = execSync('git branch -a --no-color', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
-    if (!raw) return [];
-    return raw.split('\n').filter(Boolean).map(line => {
+    const raw = await gitExec(['branch', '-a', '--no-color'], dirPath, 5000);
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    return trimmed.split('\n').filter(Boolean).map(line => {
       const isCurrent = line.startsWith('* ');
       const name = line.replace(/^\*?\s+/, '').trim();
       const isRemote = name.startsWith('remotes/');
@@ -280,22 +361,22 @@ ipcMain.handle('git:branchList', async (_event, dirPath) => {
 
 ipcMain.handle('git:checkout', async (_event, dirPath, branch) => {
   try {
-    execSync(`git checkout "${branch}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    await gitExec(['checkout', branch], dirPath, 10000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:createBranch', async (_event, dirPath, name) => {
   try {
-    execSync(`git checkout -b "${name}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    await gitExec(['checkout', '-b', name], dirPath, 5000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:remoteStatus', async (_event, dirPath) => {
   try {
-    const raw = execSync('git rev-list --left-right --count HEAD...@{upstream}', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
-    const parts = raw.split(/\s+/).map(Number);
+    const raw = await gitExec(['rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], dirPath, 5000);
+    const parts = raw.trim().split(/\s+/).map(Number);
     return { ahead: parts[0] || 0, behind: parts[1] || 0 };
   } catch { return { ahead: 0, behind: 0 }; }
 });
@@ -303,9 +384,10 @@ ipcMain.handle('git:remoteStatus', async (_event, dirPath) => {
 ipcMain.handle('git:log', async (_event, dirPath, count) => {
   try {
     const n = count || 30;
-    const raw = execSync(`git log --oneline --no-decorate -n ${n}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
-    if (!raw) return [];
-    return raw.split('\n').filter(Boolean).map(line => {
+    const raw = await gitExec(['log', '--oneline', '--no-decorate', '-n', String(n)], dirPath, 5000);
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    return trimmed.split('\n').filter(Boolean).map(line => {
       const spaceIdx = line.indexOf(' ');
       return { hash: line.slice(0, spaceIdx), message: line.slice(spaceIdx + 1) };
     });
@@ -314,24 +396,72 @@ ipcMain.handle('git:log', async (_event, dirPath, count) => {
 
 ipcMain.handle('git:stash', async (_event, dirPath) => {
   try {
-    execSync('git stash', { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    await gitExec(['stash'], dirPath, 10000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:stashPop', async (_event, dirPath) => {
   try {
-    execSync('git stash pop', { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    await gitExec(['stash', 'pop'], dirPath, 10000);
     return { success: true };
   } catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('git:stashList', async (_event, dirPath) => {
   try {
-    const raw = execSync('git stash list --oneline', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
-    if (!raw) return [];
-    return raw.split('\n').filter(Boolean);
+    const raw = await gitExec(['stash', 'list', '--oneline'], dirPath, 5000);
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    return trimmed.split('\n').filter(Boolean);
   } catch { return []; }
+});
+
+// --- Terminal IPC ---
+
+const activeProcesses = new Map();
+
+ipcMain.handle('terminal:execute', async (event, command, dirPath) => {
+  const id = Math.random().toString(36).substring(7);
+  
+  try {
+    const shell = process.platform === 'win32' ? 'powershell.exe' : 'bash';
+    const shellArgs = process.platform === 'win32' ? ['-NoProfile', '-Command', command] : ['-c', command];
+    
+    const child = spawn(shell, shellArgs, {
+      cwd: dirPath || process.cwd(),
+      env: { ...process.env, TERM: 'xterm-256color' },
+    });
+
+    activeProcesses.set(id, child);
+
+    child.stdout.on('data', (data) => {
+      event.sender.send(`terminal:data:${id}`, data.toString());
+    });
+
+    child.stderr.on('data', (data) => {
+      event.sender.send(`terminal:data:${id}`, data.toString());
+    });
+
+    child.on('close', (code) => {
+      event.sender.send(`terminal:exit:${id}`, code);
+      activeProcesses.delete(id);
+    });
+
+    return { id };
+  } catch (e) {
+    return { error: e.message };
+  }
+});
+
+ipcMain.handle('terminal:kill', async (_event, id) => {
+  const child = activeProcesses.get(id);
+  if (child) {
+    child.kill();
+    activeProcesses.delete(id);
+    return true;
+  }
+  return false;
 });
 
 // --- LLM Chat Proxy (keeps API keys out of renderer) ---
@@ -428,4 +558,21 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Cleanup terminal processes on exit
+app.on('will-quit', () => {
+  for (const child of activeProcesses.values()) {
+    try {
+      if (process.platform === 'win32') {
+        // Use taskkill on Windows to ensure the entire process tree is killed
+        execSync(`taskkill /pid ${child.pid} /T /F`);
+      } else {
+        child.kill('SIGTERM');
+      }
+    } catch {
+      child.kill(); // Fallback to basic kill
+    }
+  }
+  activeProcesses.clear();
 });

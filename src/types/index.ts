@@ -1,4 +1,4 @@
-export type IDEView = 'blueprint' | 'code' | 'orchestrator';
+export type IDEView = 'blueprint' | 'code' | 'orchestrator' | 'terminal';
 
 export type OllamaStatus = 'active' | 'offline' | 'checking';
 

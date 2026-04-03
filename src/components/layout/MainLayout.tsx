@@ -20,6 +20,7 @@ import { useIDEStore } from '../../store/useIDEStore';
 const BlueprintCanvas = lazy(() => import('../blueprint/BlueprintCanvas'));
 const ProCodeEditor = lazy(() => import('../editor/ProCodeEditor'));
 const OrchestrationHub = lazy(() => import('../orchestrator/OrchestrationHub'));
+const TerminalPanel = lazy(() => import('../terminal/TerminalPanel'));
 
 const ViewLoader: React.FC = () => (
   <div className="flex-1 flex items-center justify-center bg-background">
@@ -71,6 +72,7 @@ const MainLayout: React.FC = () => {
       if (e.ctrlKey && e.key === '1') { e.preventDefault(); setView('blueprint'); }
       if (e.ctrlKey && e.key === '2') { e.preventDefault(); setView('code'); }
       if (e.ctrlKey && e.key === '3') { e.preventDefault(); setView('orchestrator'); }
+    if (e.ctrlKey && e.key === '4') { e.preventDefault(); setView('terminal'); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -149,6 +151,13 @@ const MainLayout: React.FC = () => {
             <ErrorBoundary fallbackTitle="AI view crashed">
               <Suspense fallback={<ViewLoader />}>
                 <OrchestrationHub />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+          <div className={`absolute inset-0 ${currentView === 'terminal' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
+            <ErrorBoundary fallbackTitle="terminal view crashed">
+              <Suspense fallback={<ViewLoader />}>
+                <TerminalPanel />
               </Suspense>
             </ErrorBoundary>
           </div>

@@ -27,6 +27,9 @@ Interactive ReactFlow canvas that auto-discovers your project structure. Files a
 ### Code Editor
 Monaco Editor with syntax highlighting, IntelliSense, multi-tab editing, and an AI copilot panel that reads your current file and answers questions in context.
 
+### Integrated Terminal
+Run command-line tools directly in your project folder. Install dependencies, run tests, or use git commands that aren't available in the UI. Supports keyboard shortcuts and process management.
+
 ### AI Orchestration
 Connect local or cloud AI providers. Configure multiple providers with priority ordering — if the first fails, the system automatically falls back to the next. Track token usage per provider.
 
@@ -103,6 +106,7 @@ src/
     editor/          Monaco code editor + copilot panel
     orchestrator/    AI provider configuration + test console
     git/             Source control panel, diff viewer, branch switcher
+    terminal/        Integrated terminal view
     layout/          Header, sidebar, footer, main layout
     learning/        Learning path, glossary, concept tooltips
     onboarding/      Welcome screen, tutorials, view hints

@@ -26,7 +26,7 @@ const WelcomeScreen: React.FC = () => {
 
   return (
     <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center overflow-y-auto">
-      <div className="max-w-xl w-full px-8 py-10 my-auto">
+      <div className="max-w-xl w-full px-4 sm:px-8 py-6 sm:py-10 my-auto">
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
@@ -41,7 +41,7 @@ const WelcomeScreen: React.FC = () => {
         </div>
 
         {/* What's inside — informational, clearly non-interactive */}
-        <div className="flex items-center justify-center gap-6 mb-10 text-center">
+        <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-10 text-center">
           <div className="flex flex-col items-center gap-1">
             <span className="material-symbols-outlined text-lg text-muted">map</span>
             <span className="text-[11px] text-muted font-mono">Visual Map</span>

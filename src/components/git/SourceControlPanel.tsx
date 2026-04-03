@@ -94,7 +94,13 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
       addToast('Changes committed', 'success');
       onRefresh();
     } else {
-      addToast(`Commit failed: ${result.error}`, 'error');
+      // Improve error message display for commits
+      const errorMsg = result.error || 'Unknown error';
+      if (errorMsg.includes('nothing to commit')) {
+        addToast('Nothing to commit', 'info');
+      } else {
+        addToast(`Commit failed: ${errorMsg}`, 'error');
+      }
     }
   };
 
@@ -103,8 +109,19 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     setIsPushing(true);
     const result = await api.gitPush(projectPath);
     setIsPushing(false);
-    if (result.success) { addToast('Pushed to remote', 'success'); onRefresh(); }
-    else addToast(`Push failed: ${result.error}`, 'error');
+    if (result.success) { 
+      addToast('Pushed to remote', 'success'); 
+      onRefresh(); 
+    } else {
+      const errorMsg = result.error || 'Unknown error';
+      if (errorMsg.includes('no upstream branch')) {
+        addToast('No upstream branch. Use terminal to set upstream.', 'error');
+      } else if (errorMsg.includes('rejected')) {
+        addToast('Push rejected. Try pulling first.', 'error');
+      } else {
+        addToast(`Push failed: ${errorMsg}`, 'error');
+      }
+    }
   };
 
   const handlePull = async () => {
@@ -112,8 +129,20 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     setIsPulling(true);
     const result = await api.gitPull(projectPath);
     setIsPulling(false);
-    if (result.success) { addToast('Pulled from remote', 'success'); onRefresh(); }
-    else addToast(`Pull failed: ${result.error}`, 'error');
+    if (result.success) { 
+      addToast('Pulled from remote', 'success'); 
+      onRefresh(); 
+    } else {
+      const errorMsg = result.error || 'Unknown error';
+      if (errorMsg.includes('diverged')) {
+        addToast('Branches have diverged. Use terminal to merge or rebase.', 'error');
+      } else if (errorMsg.includes('conflict')) {
+        addToast('Merge conflicts detected.', 'error');
+        onRefresh();
+      } else {
+        addToast(`Pull failed: ${errorMsg}`, 'error');
+      }
+    }
   };
 
   const handleStash = async () => {
@@ -156,7 +185,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
             {gitState.ahead > 0 && `↑${gitState.ahead}`}{gitState.behind > 0 && `↓${gitState.behind}`}
           </span>
         )}
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-0.5 flex-wrap">
           <button onClick={onRefresh} className="text-muted hover:text-text-main transition-colors" title="Refresh">
             <span className="material-symbols-outlined text-[14px]">refresh</span>
           </button>

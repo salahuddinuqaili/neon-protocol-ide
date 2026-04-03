@@ -84,7 +84,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[10vh] bg-black/30" onClick={onClose}>
       <div
-        className="w-[600px] bg-surface border border-muted shadow-lg shadow-black/50"
+        className="w-[600px] max-w-[92vw] bg-surface border border-muted shadow-lg shadow-black/50"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center border-b border-muted/30 px-3 gap-2">

@@ -183,9 +183,9 @@ const OrchestrationHub: React.FC = () => {
     <div className="flex-1 h-full flex flex-col bg-background overflow-hidden relative">
       <ViewHint id="hint-orchestrator" icon="smart_toy" title="Connect an AI Assistant"
         description="Add an AI provider to power the copilot. Click 'Add' to get started. Each provider needs to be verified before it works." />
-      <div className="flex h-full">
+      <div className="flex flex-col lg:flex-row h-full">
         {/* Left */}
-        <section className="w-1/2 flex flex-col border-r border-muted/30 bg-background">
+        <section className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-muted/30 bg-background">
           <div className="flex border-b border-muted/30 bg-surface/50">
             {([['providers', 'smart_toy', 'Providers'], ['usage', 'bar_chart', 'Usage']] as [Tab, string, string][]).map(([tab, icon, label]) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
@@ -255,7 +255,7 @@ const OrchestrationHub: React.FC = () => {
                 {/* Add menu dropdown */}
                 {showAddMenu && (<>
                   <div className="fixed inset-0 z-[99]" onClick={() => setShowAddMenu(false)} />
-                  <div className="fixed top-1/2 left-1/4 -translate-y-1/2 z-[100] w-80 bg-surface border border-muted shadow-lg">
+                  <div className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-[100] w-80 max-w-[85vw] bg-surface border border-muted shadow-lg">
                     <div className="px-4 py-2 text-xs font-bold text-muted uppercase tracking-wider bg-background/50 border-b border-muted/10">
                       Choose provider type
                     </div>
@@ -327,7 +327,7 @@ const OrchestrationHub: React.FC = () => {
         </section>
 
         {/* Right: Test */}
-        <section className="w-1/2 flex flex-col bg-background">
+        <section className="w-full lg:w-1/2 flex flex-col bg-background">
           <div className="p-5 border-b border-muted/30 bg-surface/30">
             <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
               <span className="material-symbols-outlined text-accent-ai">chat</span>

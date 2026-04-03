@@ -98,7 +98,7 @@ const TutorialOverlay: React.FC = () => {
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
   const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
   const targetInTopHalf = spotlightRect ? spotlightRect.top + spotlightRect.height / 2 < windowHeight / 2 : true;
-  const CARD_MAX_W = 380;
+  const CARD_MAX_W = Math.min(380, windowWidth - 32);
   const CARD_EST_H = 200; // estimated card height for clamping
   const EDGE_PAD = 16;
 

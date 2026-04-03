@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // File system operations
   openDirectory: () => ipcRenderer.invoke('fs:openDirectory'),
   readDirectory: (dirPath) => ipcRenderer.invoke('fs:readDirectory', dirPath),
+  scanProject: (dirPath) => ipcRenderer.invoke('fs:scanProject', dirPath),
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   writeFile: (filePath, content) => ipcRenderer.invoke('fs:writeFile', filePath, content),
   deleteFile: (filePath) => ipcRenderer.invoke('fs:deleteFile', filePath),
@@ -34,6 +35,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitStash: (dirPath) => ipcRenderer.invoke('git:stash', dirPath),
   gitStashPop: (dirPath) => ipcRenderer.invoke('git:stashPop', dirPath),
   gitStashList: (dirPath) => ipcRenderer.invoke('git:stashList', dirPath),
+
+  // Terminal operations
+  terminalExecute: (command, dirPath) => ipcRenderer.invoke('terminal:execute', command, dirPath),
+  terminalKill: (id) => ipcRenderer.invoke('terminal:kill', id),
+  onTerminalData: (id, callback) => {
+    const channel = `terminal:data:${id}`;
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
+  onTerminalExit: (id, callback) => {
+    const channel = `terminal:exit:${id}`;
+    const listener = (_event, code) => callback(code);
+    ipcRenderer.once(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
 
   // LLM chat proxy (API keys stay in main process)
   llmChat: (config, messages) => ipcRenderer.invoke('llm:chat', config, messages),

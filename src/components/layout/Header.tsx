@@ -94,6 +94,20 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
               {learningMode === 'beginner' && <span className="text-[10px] font-mono font-normal opacity-70">connect AI</span>}
             </span>
           </button>
+          <button
+            onClick={() => setView('terminal')}
+            title="Integrated terminal (Ctrl+4)"
+            aria-label="Switch to terminal"
+            className={`flex items-center gap-1.5 px-4 py-1 text-sm font-display font-bold transition-all ${
+              currentView === 'terminal' ? 'bg-primary text-background shadow-neon' : 'text-muted hover:text-text-main'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">terminal</span>
+            <span className="flex flex-col items-start leading-none">
+              <span>{learningMode === 'beginner' ? 'Terminal' : 'TERM'}</span>
+              {learningMode === 'beginner' && <span className="text-[10px] font-mono font-normal opacity-70">run commands</span>}
+            </span>
+          </button>
         </div>
         <div className="flex items-center gap-3 border-l border-muted/30 pl-4">
           <button
@@ -144,7 +158,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
             {helpOpen && help && (
               <>
                 <div className="fixed inset-0 z-[100]" onClick={() => setHelpOpen(false)} />
-                <div className="absolute right-0 top-10 z-[101] w-72 bg-surface border border-primary shadow-neon p-4">
+                <div className="absolute right-0 top-10 z-[101] w-72 max-w-[90vw] bg-surface border border-primary shadow-neon p-4">
                   <h4 className="text-sm font-bold text-primary mb-2">{help.title}</h4>
                   <p className="text-xs text-text-main leading-relaxed">{help.body}</p>
                   <button

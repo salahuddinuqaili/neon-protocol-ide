@@ -32,20 +32,26 @@ interface TreeNode {
 }
 
 function buildTree(files: FileEntry[], rootPath: string): TreeNode[] {
-  const root: TreeNode = { name: rootPath, path: rootPath, isFolder: true, children: [] };
+  const rootName = rootPath.includes('/') ? rootPath.split('/').pop() || rootPath : rootPath;
+  const root: TreeNode = { name: rootName, path: rootPath, isFolder: true, children: [] };
 
   for (const file of files) {
-    const parts = file.path.split('/').slice(1); // skip root folder name
+    const relPath = file.path.startsWith(rootPath)
+      ? file.path.substring(rootPath.length).replace(/^[\\\/]/, '')
+      : file.path;
+    const parts = relPath.split('/');
     let current = root;
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
+      if (!part) continue;
       const isLast = i === parts.length - 1;
       if (isLast) {
         current.children.push({ name: part, path: file.path, isFolder: false, children: [], file });
       } else {
         let folder = current.children.find(c => c.isFolder && c.name === part);
         if (!folder) {
-          folder = { name: part, path: parts.slice(0, i + 1).join('/'), isFolder: true, children: [] };
+          const folderPath = rootPath + '/' + parts.slice(0, i + 1).join('/');
+          folder = { name: part, path: folderPath, isFolder: true, children: [] };
           current.children.push(folder);
         }
         current = folder;
@@ -243,35 +249,29 @@ const Sidebar: React.FC = () => {
         if (!dirPath) return;
         setIsScanning(true);
 
-        const loadedFiles: FileEntry[] = [];
-        async function scanIPC(currentDir: string, relativePath: string) {
-          const entries = await api.readDirectory(currentDir);
-          for (const entry of entries) {
-            if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') continue;
-            const fullPath = `${currentDir}/${entry.name}`.replace(/\\/g, '/');
-            const relPath = `${relativePath}/${entry.name}`;
+        try {
+          const results = await api.scanProject(dirPath);
+          const dirName = dirPath.replace(/\\/g, '/').split('/').pop() || dirPath;
+          
+          // Map extensions to languages on the client side
+          const loadedFiles = results.map((f: any) => {
+            const ext = f.name.split('.').pop() || 'text';
+            return {
+              ...f,
+              language: LANGUAGE_MAP[ext] || 'text'
+            };
+          });
 
-            if (entry.isFile) {
-              const isCodeFile = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java|yaml|yml|toml|sh|bat|sql|graphql|proto|xml|svg)$/i.test(entry.name);
-              if (isCodeFile) {
-                const content = await api.readFile(fullPath);
-                if (content !== null && content.length <= MAX_FILE_SIZE) {
-                  const ext = entry.name.split('.').pop() || 'text';
-                  loadedFiles.push({ name: entry.name, path: relPath, content, language: LANGUAGE_MAP[ext] || 'text' });
-                }
-              }
-            } else if (entry.isDirectory) {
-              await scanIPC(fullPath, relPath);
-            }
-          }
+          setProject(dirPath.replace(/\\/g, '/'), loadedFiles);
+          addRecentProject(dirName);
+          addToast(`Loaded ${loadedFiles.length} files from ${dirName}`, 'success');
+          setView('blueprint');
+        } catch (err) {
+          console.error('Scan failed:', err);
+          addToast('Failed to open folder', 'error');
+        } finally {
+          setIsScanning(false);
         }
-
-        const dirName = dirPath.replace(/\\/g, '/').split('/').pop() || dirPath;
-        await scanIPC(dirPath, dirName);
-        setProject(dirPath.replace(/\\/g, '/'), loadedFiles);
-        addRecentProject(dirName);
-        addToast(`Loaded ${loadedFiles.length} files from ${dirName}`, 'success');
-        setView('blueprint');
         return;
       }
 

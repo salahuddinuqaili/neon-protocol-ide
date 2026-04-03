@@ -54,7 +54,12 @@ export function useGitPolling() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(() => {
+      // Only poll if the window is focused to save resources
+      if (document.hasFocus()) {
+        refresh();
+      }
+    }, 5000);
     return () => clearInterval(interval);
   }, [refresh]);
 

@@ -57,7 +57,7 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] bg-black/30" onClick={onClose}>
       <div
-        className="w-[500px] bg-surface border border-muted shadow-lg shadow-black/50"
+        className="w-[500px] max-w-[90vw] bg-surface border border-muted shadow-lg shadow-black/50"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center border-b border-muted/30 px-3">

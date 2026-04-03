@@ -79,7 +79,7 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
               fontSize: 13,
               lineHeight: 1.6,
               minimap: { enabled: false },
-              renderSideBySide: true,
+              renderSideBySide: typeof window !== 'undefined' ? window.innerWidth > 1024 : true,
               scrollBeyondLastLine: false,
               padding: { top: 8 },
             }}

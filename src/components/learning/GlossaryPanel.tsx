@@ -64,7 +64,7 @@ const GlossaryPanel: React.FC = () => {
 
   return (
     <div
-      className={`absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted z-[60] transform transition-transform duration-300 ease-in-out shadow-[-10px_0_30px_rgba(0,0,0,0.5)] ${
+      className={`absolute right-0 top-0 h-full w-[450px] max-w-[95vw] bg-surface border-l border-muted z-[60] transform transition-transform duration-300 ease-in-out shadow-[-10px_0_30px_rgba(0,0,0,0.5)] ${
         isGlossaryOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >

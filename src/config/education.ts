@@ -13,6 +13,10 @@ export const HELP_TEXT: Record<string, { title: string; body: string }> = {
     title: 'AI Settings',
     body: 'Connect AI models to power the copilot assistant. You can use a local provider that runs on your machine, or a cloud service by entering your API endpoint and key.',
   },
+  terminal: {
+    title: 'Integrated Terminal',
+    body: 'Run command-line tools directly in your project folder. You can install dependencies, run tests, or use git commands that aren\'t available in the UI. Type "clear" to empty the screen.',
+  },
 };
 
 export const BEGINNER_EXPLAINER = [
