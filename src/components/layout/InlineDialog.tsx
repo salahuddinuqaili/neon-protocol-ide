@@ -52,7 +52,7 @@ const InlineDialog: React.FC<DialogConfig> = (props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-start justify-center pt-[20vh] bg-black/40" onClick={props.onClose}>
+    <div className="fixed inset-0 z-[300] flex items-start justify-center pt-[20vh] bg-black/40" onClick={props.onClose} role="dialog" aria-modal="true" aria-label={props.title}>
       <div
         className="w-[400px] bg-surface border border-muted shadow-lg shadow-black/50"
         onClick={e => e.stopPropagation()}

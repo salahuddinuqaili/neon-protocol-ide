@@ -45,10 +45,10 @@ const ProviderCard: React.FC<{
           <span className="text-xs text-text-main font-bold truncate">{provider.name}</span>
           <span className={`text-[10px] px-1.5 py-0.5 border shrink-0 ${statusDisplay.color}`}>{statusDisplay.label}</span>
         </div>
-        <button onClick={() => onUpdate(provider.id, { enabled: !provider.enabled })} className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${provider.enabled ? 'bg-primary' : 'bg-muted/30'}`}>
+        <button onClick={() => onUpdate(provider.id, { enabled: !provider.enabled })} role="switch" aria-checked={provider.enabled} aria-label={`${provider.enabled ? 'Disable' : 'Enable'} ${provider.name}`} className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${provider.enabled ? 'bg-primary' : 'bg-muted/30'}`}>
           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-background transition-all ${provider.enabled ? 'left-[18px]' : 'left-0.5'}`} />
         </button>
-        <button onClick={() => onRemove(provider.id)} className="text-muted hover:text-accent-error shrink-0"><span className="material-symbols-outlined text-[14px]">close</span></button>
+        <button onClick={() => onRemove(provider.id)} aria-label={`Remove ${provider.name}`} className="text-muted hover:text-accent-error shrink-0"><span className="material-symbols-outlined text-[14px]" aria-hidden="true">close</span></button>
       </div>
       {provider.enabled && (
         <div className="px-3 pb-3 pt-1 border-t border-muted/10 flex flex-col gap-2">

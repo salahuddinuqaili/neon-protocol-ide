@@ -19,6 +19,13 @@ export async function chatWithProvider(
   config: LLMProviderConfig,
   messages: LLMMessage[]
 ): Promise<LLMResponse> {
+  // In Electron, route through the main process to keep API keys secure
+  const api = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
+  if (api?.llmChat) {
+    return api.llmChat(config, messages);
+  }
+
+  // Browser fallback — direct fetch (API keys visible in devtools)
   switch (config.type) {
     case 'ollama':
       return chatWithOllama(config, messages);

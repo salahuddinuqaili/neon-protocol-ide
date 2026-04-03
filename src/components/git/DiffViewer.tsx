@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { DiffEditor } from '@monaco-editor/react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface DiffViewerProps {
   filePath: string;
@@ -42,8 +43,10 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
     load();
   }, [filePath, projectPath, staged]);
 
+  const trapRef = useFocusTrap<HTMLDivElement>(onClose);
+
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-background">
+    <div ref={trapRef} className="fixed inset-0 z-[200] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label={`Diff: ${fileName}`}>
       {/* Header */}
       <div className="flex items-center justify-between h-10 px-4 bg-surface border-b border-muted/30 shrink-0">
         <div className="flex items-center gap-2">

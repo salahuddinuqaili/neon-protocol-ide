@@ -35,6 +35,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitStashPop: (dirPath) => ipcRenderer.invoke('git:stashPop', dirPath),
   gitStashList: (dirPath) => ipcRenderer.invoke('git:stashList', dirPath),
 
+  // LLM chat proxy (API keys stay in main process)
+  llmChat: (config, messages) => ipcRenderer.invoke('llm:chat', config, messages),
+
   // System info
   isElectron: true,
   platform: process.platform,

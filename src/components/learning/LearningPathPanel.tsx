@@ -6,6 +6,7 @@ import { LESSONS } from '../../data/lessons';
 import { DEMO_FILES } from '../../data/demoProject';
 import { Lesson, LessonCategory } from '../../types';
 import { TRACK_INFO } from '../../config/education';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 /** Extract lines from a demo file for inline display */
 function getCodeSnippet(filePath: string, startLine: number, endLine: number): string | null {
@@ -232,10 +233,12 @@ const LearningPathPanel: React.FC = () => {
     lessons: LESSONS.filter(l => l.category === category),
   }));
 
+  const trapRef = useFocusTrap<HTMLDivElement>(handleClose);
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Learning Path">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-3xl max-h-[80vh] mx-4 bg-surface border border-primary shadow-neon flex flex-col">
+      <div ref={trapRef} className="relative z-10 w-full max-w-3xl max-h-[80vh] mx-4 bg-surface border border-primary shadow-neon flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-muted/30 shrink-0">
           <div className="flex items-center gap-3">

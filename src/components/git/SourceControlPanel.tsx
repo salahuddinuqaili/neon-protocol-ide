@@ -18,7 +18,7 @@ const GitFileRow: React.FC<{
 
   return (
     <div className="flex items-center gap-1.5 py-1 px-3 text-xs font-mono hover:bg-surface-hover/30 transition-colors group">
-      <span className={`font-bold w-3 text-center shrink-0 ${GIT_STATUS_COLORS[displayStatus] || 'text-muted'}`}>
+      <span className={`font-bold w-3 text-center shrink-0 ${GIT_STATUS_COLORS[displayStatus] || 'text-muted'}`} aria-label={displayStatus === 'M' ? 'Modified' : displayStatus === 'A' ? 'Added' : displayStatus === 'D' ? 'Deleted' : displayStatus === 'R' ? 'Renamed' : displayStatus === '?' ? 'Untracked' : 'Unknown'}>
         {displayStatus === '?' ? 'U' : displayStatus}
       </span>
       <button onClick={onViewDiff} className="truncate text-text-main hover:text-primary transition-colors text-left" title={`Diff: ${file.path}`}>

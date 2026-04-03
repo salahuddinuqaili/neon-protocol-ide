@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -10,12 +11,14 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { editorSettings, updateEditorSettings, setView, learningMode, setLearningMode, resetLearningProgress, startTutorial } = useIDEStore();
+  const trapRef = useFocusTrap<HTMLDivElement>(onClose);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40" onClick={onClose} role="dialog" aria-modal="true" aria-label="Settings">
       <div
+        ref={trapRef}
         className="w-[600px] max-h-[70vh] bg-surface border border-muted shadow-lg shadow-black/50 flex flex-col"
         onClick={e => e.stopPropagation()}
       >
