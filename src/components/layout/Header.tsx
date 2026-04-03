@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { LESSONS } from '../../data/lessons';
 
 interface HeaderProps {
   onOpenSettings?: () => void;
@@ -22,9 +23,17 @@ const HELP_TEXT: Record<string, { title: string; body: string }> = {
   },
 };
 
+const RING_R = 11;
+const RING_CIRC = 2 * Math.PI * RING_R;
+
 const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
   const { currentView, setView, projectPath, activeFile, learningMode, toggleGlossary, toggleLearningPath, learningProgress } = useIDEStore();
   const [helpOpen, setHelpOpen] = React.useState(false);
+
+  const totalLessons = LESSONS.length;
+  const completedCount = learningProgress.completedLessons.length;
+  const progress = totalLessons > 0 ? completedCount / totalLessons : 0;
+  const allDone = completedCount >= totalLessons && totalLessons > 0;
 
   const activeFileName = activeFile?.split('/').pop();
   const help = HELP_TEXT[currentView];
@@ -101,30 +110,41 @@ const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
           </button>
         </div>
         <div className="flex items-center gap-3 border-l border-muted/30 pl-4">
+          <button
+            onClick={() => toggleLearningPath()}
+            className="relative w-7 h-7 flex items-center justify-center group"
+            title={allDone ? 'Learning Path — All lessons complete!' : `Learning Path — ${completedCount}/${totalLessons} lessons`}
+            aria-label="Open learning path"
+          >
+            <svg className="absolute inset-0" width="28" height="28" viewBox="0 0 28 28">
+              <circle cx="14" cy="14" r={RING_R} fill="none" strokeWidth="2" className="stroke-muted/20" />
+              {progress > 0 && (
+                <circle cx="14" cy="14" r={RING_R} fill="none" strokeWidth="2.5"
+                  className="stroke-primary"
+                  strokeDasharray={RING_CIRC}
+                  strokeDashoffset={RING_CIRC * (1 - progress)}
+                  strokeLinecap="round"
+                  transform="rotate(-90 14 14)"
+                  style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                />
+              )}
+            </svg>
+            <span className={`material-symbols-outlined text-[18px] transition-colors ${allDone ? 'text-primary' : 'text-muted group-hover:text-text-main'}`}>
+              {allDone ? 'check_circle' : 'school'}
+            </span>
+            {learningMode === 'beginner' && completedCount === 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full animate-pulse" />
+            )}
+          </button>
           {learningMode === 'beginner' && (
-            <>
-              <button
-                onClick={() => toggleLearningPath()}
-                className="text-muted hover:text-text-main transition-colors relative"
-                title="Learning Path"
-                aria-label="Open learning path"
-              >
-                <span className="material-symbols-outlined text-xl">school</span>
-                {learningProgress.completedLessons.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-background text-xs font-bold w-3.5 h-3.5 flex items-center justify-center">
-                    {learningProgress.completedLessons.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => toggleGlossary()}
-                className="text-muted hover:text-text-main transition-colors"
-                title="Glossary"
-                aria-label="Open glossary"
-              >
-                <span className="material-symbols-outlined text-xl">menu_book</span>
-              </button>
-            </>
+            <button
+              onClick={() => toggleGlossary()}
+              className="text-muted hover:text-text-main transition-colors"
+              title="Glossary"
+              aria-label="Open glossary"
+            >
+              <span className="material-symbols-outlined text-xl">menu_book</span>
+            </button>
           )}
           <div className="relative">
             <button

@@ -143,6 +143,7 @@ const LessonCard: React.FC<{
 const LearningPathPanel: React.FC = () => {
   const { isLearningPathOpen, toggleLearningPath, learningProgress, completeLesson, addToast } = useIDEStore();
   const [activeLesson, setActiveLesson] = useState<string | null>(null);
+  const [justCompleted, setJustCompleted] = useState<string | null>(null);
 
   if (!isLearningPathOpen) return null;
 
@@ -160,14 +161,35 @@ const LearningPathPanel: React.FC = () => {
       .map(id => LESSONS.find(l => l.id === id)?.title || id);
   };
 
+  const getNextLesson = (): Lesson | null => {
+    return LESSONS.find(l => !completedSet.has(l.id) && !isLessonLocked(l)) || null;
+  };
+
+  const getNewlyUnlocked = (completedId: string): Lesson[] => {
+    return LESSONS.filter(l =>
+      !completedSet.has(l.id) &&
+      l.id !== completedId &&
+      l.prerequisiteLessons.includes(completedId) &&
+      l.prerequisiteLessons.every(id => completedSet.has(id))
+    );
+  };
+
   const handleCompleteLesson = (lessonId: string) => {
     completeLesson(lessonId);
     const lesson = LESSONS.find(l => l.id === lessonId);
     addToast(`Lesson completed: ${lesson?.title}`, 'success');
     setActiveLesson(null);
+    setJustCompleted(lessonId);
+  };
+
+  const handleClose = () => {
+    toggleLearningPath(false);
+    setJustCompleted(null);
+    setActiveLesson(null);
   };
 
   const activeLessonData = activeLesson ? LESSONS.find(l => l.id === activeLesson) : null;
+  const justCompletedData = justCompleted ? LESSONS.find(l => l.id === justCompleted) : null;
 
   const tracks = Object.entries(TRACK_INFO).map(([category, info]) => ({
     category: category as LessonCategory,
@@ -177,7 +199,7 @@ const LearningPathPanel: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => toggleLearningPath(false)} />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative z-10 w-full max-w-3xl max-h-[80vh] mx-4 bg-surface border border-primary shadow-neon flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-muted/30 shrink-0">
@@ -188,7 +210,7 @@ const LearningPathPanel: React.FC = () => {
               <span className="text-[11px] text-muted font-mono">{completedCount} of {totalLessons} lessons completed</span>
             </div>
           </div>
-          <button onClick={() => toggleLearningPath(false)} className="text-muted hover:text-text-main p-1">
+          <button onClick={handleClose} className="text-muted hover:text-text-main p-1">
             <span className="material-symbols-outlined text-sm">close</span>
           </button>
         </div>
@@ -203,37 +225,135 @@ const LearningPathPanel: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {activeLessonData ? (
+          {justCompletedData ? (
+            /* --- Completion screen --- */
+            (() => {
+              const unlocked = getNewlyUnlocked(justCompletedData.id);
+              const next = getNextLesson();
+              const allDone = completedCount >= totalLessons;
+              return (
+                <div className="flex flex-col items-center text-center gap-5 py-10 px-6">
+                  <span className="material-symbols-outlined text-5xl text-primary">celebration</span>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-main mb-1">Lesson Complete!</h3>
+                    <p className="text-xs text-muted font-mono">{justCompletedData.title}</p>
+                  </div>
+
+                  {unlocked.length > 0 && (
+                    <div className="bg-background border border-primary/20 p-3 w-full max-w-sm">
+                      <p className="text-[11px] text-primary font-bold uppercase tracking-wider mb-2">
+                        <span className="material-symbols-outlined text-[14px] align-middle mr-1">lock_open</span>
+                        Unlocked {unlocked.length} new {unlocked.length === 1 ? 'lesson' : 'lessons'}
+                      </p>
+                      {unlocked.map(l => (
+                        <button key={l.id} onClick={() => { setJustCompleted(null); setActiveLesson(l.id); }}
+                          className="w-full text-left flex items-center gap-2 text-xs text-text-main py-1.5 hover:text-primary transition-colors">
+                          <span className="material-symbols-outlined text-[14px] text-primary">play_circle</span>
+                          {l.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {allDone ? (
+                    <div className="flex flex-col items-center gap-2 mt-2">
+                      <span className="material-symbols-outlined text-3xl text-primary">emoji_events</span>
+                      <p className="text-sm font-bold text-primary">All lessons complete!</p>
+                      <p className="text-xs text-muted">You've finished every lesson. Well done.</p>
+                    </div>
+                  ) : next ? (
+                    <button onClick={() => { setJustCompleted(null); setActiveLesson(next.id); }}
+                      className="flex items-center gap-2 px-5 py-2 bg-primary text-background text-xs font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all mt-2">
+                      Next: {next.title}
+                      <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                    </button>
+                  ) : null}
+
+                  <button onClick={() => setJustCompleted(null)}
+                    className="text-[11px] text-muted hover:text-text-main font-mono mt-2">
+                    Back to Learning Path
+                  </button>
+                </div>
+              );
+            })()
+          ) : activeLessonData ? (
             <LessonStepView
               lesson={activeLessonData}
               onComplete={() => handleCompleteLesson(activeLessonData.id)}
               onBack={() => setActiveLesson(null)}
             />
           ) : (
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tracks.map(track => (
-                <div key={track.category}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`material-symbols-outlined text-sm ${track.color}`}>{track.icon}</span>
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-main">{track.label}</h3>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {track.lessons.map(lesson => (
-                      <LessonCard
-                        key={lesson.id}
-                        lesson={lesson}
-                        isCompleted={completedSet.has(lesson.id)}
-                        isLocked={isLessonLocked(lesson)}
-                        missingPrereqs={getMissingPrereqs(lesson)}
-                        onClick={() => setActiveLesson(lesson.id)}
-                      />
-                    ))}
-                    {track.lessons.length === 0 && (
-                      <p className="text-[11px] text-muted/50 font-mono">Coming soon</p>
-                    )}
-                  </div>
+            <div className="p-4 flex flex-col gap-4">
+              {/* Continue / Start banner */}
+              {(() => {
+                const next = getNextLesson();
+                if (!next || completedCount >= totalLessons) return null;
+                const trackInfo = TRACK_INFO[next.category];
+                return (
+                  <button onClick={() => setActiveLesson(next.id)}
+                    className="w-full bg-surface border border-primary/30 p-4 text-left hover:shadow-neon transition-all group">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className={`material-symbols-outlined text-lg ${trackInfo.color}`}>{trackInfo.icon}</span>
+                        <div>
+                          <p className="text-[11px] text-primary font-bold uppercase tracking-wider mb-0.5">
+                            {completedCount === 0 ? 'Start Learning' : 'Continue Learning'}
+                          </p>
+                          <h3 className="text-sm font-bold text-text-main">{next.title}</h3>
+                          <p className="text-[11px] text-muted mt-0.5">{next.description}</p>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-xl text-primary opacity-50 group-hover:opacity-100 transition-opacity">
+                        play_circle
+                      </span>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* All-complete banner */}
+              {completedCount >= totalLessons && totalLessons > 0 && (
+                <div className="w-full bg-primary/5 border border-primary/30 p-4 text-center">
+                  <span className="material-symbols-outlined text-2xl text-primary">emoji_events</span>
+                  <p className="text-sm font-bold text-primary mt-1">All lessons complete!</p>
+                  <p className="text-xs text-muted mt-1">You've mastered all the concepts. Review any lesson below.</p>
                 </div>
-              ))}
+              )}
+
+              {/* Track grid with per-track progress */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tracks.map(track => {
+                  const trackCompleted = track.lessons.filter(l => completedSet.has(l.id)).length;
+                  const trackTotal = track.lessons.length;
+                  return (
+                    <div key={track.category}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`material-symbols-outlined text-sm ${track.color}`}>{track.icon}</span>
+                        <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-main">{track.label}</h3>
+                        <span className="text-[11px] text-muted font-mono ml-auto">{trackCompleted}/{trackTotal}</span>
+                      </div>
+                      <div className="h-1 bg-background mb-3">
+                        <div className="h-full bg-primary/60 transition-all duration-500" style={{ width: `${trackTotal > 0 ? (trackCompleted / trackTotal) * 100 : 0}%` }} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {track.lessons.map(lesson => (
+                          <LessonCard
+                            key={lesson.id}
+                            lesson={lesson}
+                            isCompleted={completedSet.has(lesson.id)}
+                            isLocked={isLessonLocked(lesson)}
+                            missingPrereqs={getMissingPrereqs(lesson)}
+                            onClick={() => setActiveLesson(lesson.id)}
+                          />
+                        ))}
+                        {track.lessons.length === 0 && (
+                          <p className="text-[11px] text-muted/50 font-mono">Coming soon</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

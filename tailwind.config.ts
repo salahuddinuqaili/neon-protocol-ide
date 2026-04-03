@@ -17,6 +17,7 @@ const config: Config = {
         "text-main": "#E0E6ED",
         "muted": "#6B7280",
         "accent-error": "#FF007F",
+        "accent-warning": "#FF8800",
         "accent-ai": "#B026FF",
       },
       fontFamily: {
@@ -27,6 +28,7 @@ const config: Config = {
         "neon": "0 0 10px rgba(0, 255, 209, 0.3)",
         "neon-active": "0 0 15px rgba(0, 255, 209, 0.6)",
         "neon-ai": "0 0 10px rgba(176, 38, 255, 0.3)",
+        "neon-warning": "0 0 10px rgba(255, 136, 0, 0.3)",
       },
       borderRadius: {
         "DEFAULT": "0px"

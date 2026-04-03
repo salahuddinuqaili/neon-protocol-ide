@@ -11,46 +11,11 @@ import ConceptTooltip from '../learning/ConceptTooltip';
 type LogEntry = { msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
 type Tab = 'providers' | 'usage';
 
-// --- Popular models by provider type ---
-const POPULAR_MODELS: Record<string, { id: string; name: string; minRam?: number }[]> = {
-  ollama: [
-    { id: 'gemma2:2b', name: 'Gemma 2 2B (fast, small)', minRam: 4 },
-    { id: 'phi3:mini', name: 'Phi-3 Mini 3.8B', minRam: 4 },
-    { id: 'llama3.2:3b', name: 'Llama 3.2 3B', minRam: 4 },
-    { id: 'mistral:7b', name: 'Mistral 7B', minRam: 6 },
-    { id: 'llama3:8b', name: 'Llama 3 8B (recommended)', minRam: 8 },
-    { id: 'codellama:7b', name: 'Code Llama 7B', minRam: 6 },
-    { id: 'deepseek-coder:6.7b', name: 'DeepSeek Coder 6.7B', minRam: 6 },
-    { id: 'qwen2:7b', name: 'Qwen 2 7B', minRam: 8 },
-    { id: 'llama3:70b', name: 'Llama 3 70B (needs 48GB+)', minRam: 48 },
-    { id: 'mixtral:8x7b', name: 'Mixtral 8x7B', minRam: 32 },
-    { id: 'command-r:35b', name: 'Command R 35B', minRam: 24 },
-  ],
-  openai: [
-    { id: 'gpt-4o', name: 'GPT-4o (latest, multimodal)' },
-    { id: 'gpt-4o-mini', name: 'GPT-4o Mini (fast, cheap)' },
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo (cheapest)' },
-    { id: 'o1-preview', name: 'o1 Preview (reasoning)' },
-    { id: 'o1-mini', name: 'o1 Mini (reasoning, cheaper)' },
-  ],
-  anthropic: [
-    { id: 'claude-opus-4-20250514', name: 'Claude Opus 4 (most capable)' },
-    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4 (balanced)' },
-    { id: 'claude-haiku-4-20250514', name: 'Claude Haiku 4 (fastest)' },
-  ],
-  'openai-compatible': [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (Groq)' },
-    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B (Groq)' },
-    { id: 'meta-llama/Llama-3-70b-chat-hf', name: 'Llama 3 70B (Together)' },
-    { id: 'mistralai/Mistral-7B-Instruct-v0.2', name: 'Mistral 7B (HuggingFace)' },
-    { id: 'google/gemma-7b-it', name: 'Gemma 7B (HuggingFace)' },
-    { id: 'NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO', name: 'Nous Hermes 2 Mixtral' },
-    { id: 'deepseek-ai/deepseek-coder-33b-instruct', name: 'DeepSeek Coder 33B' },
-    { id: 'codellama/CodeLlama-34b-Instruct-hf', name: 'Code Llama 34B' },
-    { id: 'Qwen/Qwen2-72B-Instruct', name: 'Qwen 2 72B' },
-    { id: 'microsoft/Phi-3-medium-128k-instruct', name: 'Phi-3 Medium 128K' },
-  ],
+const MODEL_PLACEHOLDERS: Record<string, string> = {
+  ollama: 'e.g. llama3:8b, mistral:7b, codellama:7b',
+  openai: 'e.g. gpt-4o, gpt-4o-mini, o1-mini',
+  anthropic: 'e.g. claude-sonnet-4-20250514',
+  'openai-compatible': 'e.g. llama-3.3-70b-versatile',
 };
 
 interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; model: string; group: 'free-local' | 'free-cloud' | 'paid-cloud' | 'custom'; badge?: string }
@@ -84,17 +49,15 @@ const ProviderCard: React.FC<{
   provider: LLMProviderConfig;
   index: number;
   total: number;
-  systemRam: number;
   ollamaStatus: string;
   onMove: (index: number, dir: 'up' | 'down') => void;
   onVerify: (p: LLMProviderConfig) => void;
   onUpdate: (id: string, updates: Partial<LLMProviderConfig>) => void;
   onRemove: (id: string) => void;
-}> = ({ provider, index, total, systemRam, ollamaStatus, onMove, onVerify, onUpdate, onRemove }) => {
-  const [showModels, setShowModels] = useState(false);
+}> = ({ provider, index, total, ollamaStatus, onMove, onVerify, onUpdate, onRemove }) => {
   const status = provider.connectionStatus || 'untested';
   const statusDisplay = STATUS_DISPLAY[status];
-  const models = POPULAR_MODELS[provider.type] || POPULAR_MODELS['openai-compatible'] || [];
+  const modelPlaceholder = MODEL_PLACEHOLDERS[provider.type] || MODEL_PLACEHOLDERS['openai-compatible'];
 
   return (
     <div className={`bg-surface border transition-all ${status === 'verified' ? 'border-primary/30 shadow-neon' : 'border-muted'}`}>
@@ -114,28 +77,10 @@ const ProviderCard: React.FC<{
       </div>
       {provider.enabled && (
         <div className="px-3 pb-3 pt-1 border-t border-muted/10 flex flex-col gap-2">
-          <div className="flex items-center gap-2 relative">
+          <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted font-mono uppercase shrink-0 w-12">Model:</span>
             <input value={provider.model} onChange={(e) => onUpdate(provider.id, { model: e.target.value, connectionStatus: 'untested' })}
-              onFocus={() => setShowModels(true)}
-              className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder="model name" />
-            <button onClick={() => setShowModels(s => !s)} className="text-muted hover:text-primary"><span className="material-symbols-outlined text-[14px]">expand_more</span></button>
-            {showModels && models.length > 0 && (<>
-              <div className="fixed inset-0 z-[98]" onClick={() => setShowModels(false)} />
-              <div className="absolute left-12 top-8 z-[99] w-72 bg-surface border border-muted shadow-lg max-h-48 overflow-y-auto custom-scrollbar">
-                {models.filter(m => !m.minRam || m.minRam <= systemRam).map(m => (
-                  <button key={m.id} onClick={() => { onUpdate(provider.id, { model: m.id, connectionStatus: 'untested' }); setShowModels(false); }}
-                    className="w-full text-left px-3 py-1.5 text-xs font-mono text-text-main hover:bg-surface-hover">
-                    {m.name}
-                  </button>
-                ))}
-                {models.some(m => m.minRam && m.minRam > systemRam) && (
-                  <div className="px-3 py-1 text-[11px] text-muted border-t border-muted/10">
-                    {models.filter(m => m.minRam && m.minRam > systemRam).length} models hidden (need more RAM)
-                  </div>
-                )}
-              </div>
-            </>)}
+              className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder={modelPlaceholder} />
           </div>
           {(provider.type === 'openai-compatible' || provider.type === 'ollama') && (
             <div className="flex items-center gap-2">
@@ -199,8 +144,7 @@ const BEGINNER_EXPLAINER = [
 ];
 
 const OrchestrationHub: React.FC = () => {
-  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, editorSettings, updateEditorSettings, learningMode, dismissedHints, dismissHint } = useIDEStore();
-  const systemRam = editorSettings.systemRamGb;
+  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint } = useIDEStore();
   const [activeTab, setActiveTab] = useState<Tab>('providers');
   const [testPrompt, setTestPrompt] = useState('');
   const isBeginnerMode = learningMode === 'beginner';
@@ -212,24 +156,11 @@ const OrchestrationHub: React.FC = () => {
   const [isTesting, setIsTesting] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [dialog, setDialog] = useState<DialogConfig | null>(null);
-  const [ramInput, setRamInput] = useState(String(systemRam));
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [testLog]);
-
-  useEffect(() => {
-    setRamInput(String(systemRam));
-  }, [systemRam]);
-
-  const handleRamChange = (val: string) => {
-    setRamInput(val);
-    const num = parseInt(val, 10);
-    if (num > 0 && num <= 1024) {
-      updateEditorSettings({ systemRamGb: num });
-    }
-  };
 
   const verifyProvider = async (provider: LLMProviderConfig) => {
     updateProvider(provider.id, { connectionStatus: 'testing', connectionError: '' });
@@ -395,17 +326,6 @@ const OrchestrationHub: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* RAM input — only shown when there's an Ollama provider */}
-                    {providers.some(p => p.type === 'ollama') && (
-                      <div className="flex items-center gap-3 bg-surface border border-muted/30 p-2.5">
-                        <span className="material-symbols-outlined text-primary text-sm">memory</span>
-                        <span className="text-xs text-muted font-mono">System RAM:</span>
-                        <input value={ramInput} onChange={(e) => handleRamChange(e.target.value)}
-                          className="w-16 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 text-center focus:outline-none focus:border-primary" type="number" min="1" max="1024" />
-                        <span className="text-xs text-muted font-mono">GB</span>
-                        <span className="text-xs text-muted ml-auto">Filters model recommendations</span>
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -439,7 +359,6 @@ const OrchestrationHub: React.FC = () => {
                     provider={provider}
                     index={index}
                     total={providers.length}
-                    systemRam={systemRam}
                     ollamaStatus={ollamaStatus}
                     onMove={moveProvider}
                     onVerify={verifyProvider}
