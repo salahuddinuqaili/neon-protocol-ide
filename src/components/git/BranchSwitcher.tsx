@@ -14,7 +14,7 @@ const BranchSwitcher: React.FC<BranchSwitcherProps> = ({ onRefresh }) => {
   const [newBranchName, setNewBranchName] = useState('');
   const [filter, setFilter] = useState('');
 
-  const api = (window as any).electronAPI;
+  const api = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
 
   const localBranches = gitState.branches.filter(b => !b.isRemote);
   const remoteBranches = gitState.branches.filter(b => b.isRemote && !localBranches.some(l => b.name.endsWith('/' + l.name)));

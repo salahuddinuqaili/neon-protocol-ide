@@ -17,7 +17,7 @@ const TerminalPanel: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentProcessId, setCurrentProcessId] = useState<string | null>(null);
 
-  const api = (window as any).electronAPI;
+  const api = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
 
   useEffect(() => {
     if (scrollRef.current) {

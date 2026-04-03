@@ -51,7 +51,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
   const [activeTab, setActiveTab] = useState<SCTab>('changes');
   const [diffFile, setDiffFile] = useState<{ path: string; staged: boolean } | null>(null);
 
-  const api = (window as any).electronAPI;
+  const api = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
 
   const staged = gitState.files.filter(f => f.isStaged);
   const unstaged = gitState.files.filter(f => !f.isStaged);
