@@ -180,6 +180,11 @@ const LearningPathPanel: React.FC = () => {
   const { isLearningPathOpen, toggleLearningPath, learningProgress, completeLesson, addToast } = useIDEStore();
   const [activeLesson, setActiveLesson] = useState<string | null>(null);
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(() => {
+    toggleLearningPath(false);
+    setJustCompleted(null);
+    setActiveLesson(null);
+  });
 
   if (!isLearningPathOpen) return null;
 
@@ -232,8 +237,6 @@ const LearningPathPanel: React.FC = () => {
     ...info,
     lessons: LESSONS.filter(l => l.category === category),
   }));
-
-  const trapRef = useFocusTrap<HTMLDivElement>(handleClose);
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Learning Path">
