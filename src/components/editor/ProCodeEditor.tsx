@@ -91,7 +91,7 @@ const ProCodeEditor: React.FC = () => {
     } else {
       setCopilotMessages(prev => [...prev, {
         role: 'ai',
-        text: `No AI provider connected. Click "AI" in the top bar to set one up — Ollama is free and runs on your computer.`
+        text: `No AI provider connected. Click "AI" in the top bar to add a local or cloud provider.`
       }]);
     }
   };

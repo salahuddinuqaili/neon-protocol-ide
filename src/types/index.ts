@@ -49,6 +49,42 @@ export interface LLMProviderConfig {
   connectionError?: string;
 }
 
+// --- Git Types ---
+
+export type GitFileStatus = 'M' | 'A' | 'D' | 'R' | 'C' | 'U' | '?' | '!' | ' ';
+
+export interface GitFileChange {
+  path: string;
+  indexStatus: GitFileStatus;
+  workTreeStatus: GitFileStatus;
+  isStaged: boolean;
+}
+
+export interface GitBranch {
+  name: string;
+  isCurrent: boolean;
+  isRemote: boolean;
+}
+
+export interface GitLogEntry {
+  hash: string;
+  message: string;
+}
+
+export interface GitState {
+  isGitRepo: boolean;
+  branch: string | null;
+  changedFileCount: number;
+  files: GitFileChange[];
+  branches: GitBranch[];
+  log: GitLogEntry[];
+  ahead: number;
+  behind: number;
+  stashCount: number;
+  isLoading: boolean;
+  lastError: string | null;
+}
+
 // --- Learning System Types ---
 
 export type LearningMode = 'beginner' | 'experienced';
@@ -128,6 +164,9 @@ export interface IDEState {
   dismissedHints: string[];
   providers: LLMProviderConfig[];
 
+  // Git
+  gitState: GitState;
+
   // Learning system
   learningMode: LearningMode;
   learningProgress: LearningProgress;
@@ -161,6 +200,7 @@ export interface IDEState {
   closeProject: () => void;
   dismissHint: (hintId: string) => void;
   ensureFiles: (files: FileEntry[]) => void;
+  setGitState: (partial: Partial<GitState>) => void;
   updateProvider: (id: string, updates: Partial<LLMProviderConfig>) => void;
   reorderProviders: (providers: LLMProviderConfig[]) => void;
   addProvider: (provider: LLMProviderConfig) => void;

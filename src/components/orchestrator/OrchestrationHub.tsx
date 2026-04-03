@@ -12,31 +12,19 @@ type LogEntry = { msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
 type Tab = 'providers' | 'usage';
 
 const MODEL_PLACEHOLDERS: Record<string, string> = {
-  ollama: 'e.g. llama3:8b, mistral:7b, codellama:7b',
-  openai: 'e.g. gpt-4o, gpt-4o-mini, o1-mini',
-  anthropic: 'e.g. claude-sonnet-4-20250514',
-  'openai-compatible': 'e.g. llama-3.3-70b-versatile',
+  ollama: 'e.g. llama3:8b, mistral:7b',
+  openai: 'model name',
+  anthropic: 'model name',
+  'openai-compatible': 'model name or ID',
 };
 
-interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; model: string; group: 'free-local' | 'free-cloud' | 'paid-cloud' | 'custom'; badge?: string }
+interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; model: string; description?: string }
 
 const PROVIDER_PRESETS: ProviderPreset[] = [
-  { label: 'Ollama', type: 'ollama', baseUrl: 'http://localhost:11434', model: 'llama3:8b', group: 'free-local', badge: 'Free, runs on your PC' },
-  { label: 'Groq', type: 'openai-compatible', baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', group: 'free-cloud', badge: 'Free tier, fast' },
-  { label: 'OpenAI', type: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', group: 'paid-cloud' },
-  { label: 'Anthropic', type: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514', group: 'paid-cloud' },
-  { label: 'Together AI', type: 'openai-compatible', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3-70b-chat-hf', group: 'paid-cloud' },
-  { label: 'OpenRouter', type: 'openai-compatible', baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4-turbo', group: 'paid-cloud' },
-  { label: 'HuggingFace Inference', type: 'openai-compatible', baseUrl: 'https://api-inference.huggingface.co/models', model: 'mistralai/Mistral-7B-Instruct-v0.2', group: 'paid-cloud' },
-  { label: 'Custom (OpenAI-compatible)', type: 'openai-compatible', baseUrl: '', model: '', group: 'custom' },
+  { label: 'Local (Ollama)', type: 'ollama', baseUrl: 'http://localhost:11434', model: '', description: 'Runs models on your machine' },
+  { label: 'OpenAI-compatible API', type: 'openai-compatible', baseUrl: '', model: '', description: 'Works with most cloud providers' },
+  { label: 'Anthropic-compatible API', type: 'anthropic', baseUrl: '', model: '', description: 'For Anthropic-format endpoints' },
 ];
-
-const PRESET_GROUP_LABELS: Record<string, string> = {
-  'free-local': 'Free & Local',
-  'free-cloud': 'Free Cloud Tier',
-  'paid-cloud': 'Cloud (API key required)',
-  'custom': 'Advanced',
-};
 
 function formatTokens(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -136,11 +124,11 @@ const STATUS_DISPLAY: Record<ConnectionStatus, { label: string; color: string }>
 };
 
 const BEGINNER_EXPLAINER = [
-  { icon: 'smart_toy', q: 'What is an AI Provider?', a: 'A provider is a service that runs AI models. Think of it like choosing a restaurant: Ollama is cooking at home (free, on your computer), OpenAI and Anthropic are restaurants (cloud services that charge per use).' },
+  { icon: 'smart_toy', q: 'What is an AI Provider?', a: 'A provider is a service that runs AI models. Local providers run on your computer (free, private). Cloud providers run on remote servers (may require an API key and charge per use).' },
   { icon: 'psychology', q: 'What is a Model?', a: 'A model is a specific AI "brain." Smaller models (2B-7B) are fast but less capable. Larger models (70B+) are smarter but slower and need more memory. It\'s like choosing between a quick snack and a gourmet meal.' },
   { icon: 'token', q: 'What are Tokens?', a: 'Tokens are how AI measures text -- roughly 1 token per word. When the AI reads your question and writes a response, it counts tokens. Cloud providers charge by token usage.' },
-  { icon: 'key', q: 'What is an API Key?', a: 'An API key is like a membership card for cloud AI services. You sign up on their website, get a unique key, and paste it here. Keep it secret! Local providers like Ollama don\'t need one.' },
-  { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice (e.g., Ollama) fails, the system automatically tries the next one (e.g., Groq). Use the arrows to set the order.' },
+  { icon: 'key', q: 'What is an API Key?', a: 'An API key is like a membership card for cloud AI services. You sign up on their website, get a unique key, and paste it here. Keep it secret! Local providers don\'t need one.' },
+  { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice fails, the system automatically tries the next one. Use the arrows to set the order.' },
 ];
 
 const OrchestrationHub: React.FC = () => {
@@ -185,20 +173,20 @@ const OrchestrationHub: React.FC = () => {
 
   const handleAddPreset = (preset: ProviderPreset) => {
     const id = `provider-${Date.now()}`;
-    if (preset.type === 'openai-compatible' && !preset.baseUrl) {
+    if (!preset.baseUrl) {
       setDialog({
         isOpen: true, type: 'prompt', title: 'Provider Name', placeholder: 'My AI Service',
         onConfirm: (name) => {
-          addProvider({ id, name, type: 'openai-compatible', model: '', baseUrl: '', apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' });
-          addToast(`Added ${name}`, 'success');
+          addProvider({ id, name: name || preset.label, type: preset.type, model: '', baseUrl: '', apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' });
+          addToast(`Added ${name || preset.label}`, 'success');
         },
         onClose: () => setDialog(null),
       });
     } else {
       const existing = providers.find(p => p.type === preset.type && p.baseUrl === preset.baseUrl);
       if (existing) { addToast(`${preset.label} already added`, 'info'); return; }
-      addProvider({ id, name: preset.label.split(' (')[0], type: preset.type, model: preset.model, baseUrl: preset.baseUrl, apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' });
-      addToast(`Added ${preset.label.split(' (')[0]}`, 'success');
+      addProvider({ id, name: preset.label, type: preset.type, model: preset.model, baseUrl: preset.baseUrl, apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' });
+      addToast(`Added ${preset.label}`, 'success');
     }
     setShowAddMenu(false);
   };
@@ -260,55 +248,17 @@ const OrchestrationHub: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step-by-step guide when no providers */}
+                {/* Empty state */}
                 {providers.length === 0 ? (
-                  <div className="flex flex-col gap-4">
-                    <div className="bg-surface border border-primary/30 p-4">
-                      <h3 className="text-sm font-bold text-text-main mb-1">Get started in 3 steps</h3>
-                      <p className="text-xs text-muted leading-relaxed">Choose an AI provider below, configure it, then verify the connection.</p>
+                  <div className="flex flex-col items-center text-center gap-4 py-8 px-4">
+                    <span className="material-symbols-outlined text-4xl text-muted/30">smart_toy</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-text-main mb-1">No AI providers configured</h3>
+                      <p className="text-xs text-muted leading-relaxed max-w-xs">Add a local or cloud AI provider to power the copilot. Configure it, then verify the connection.</p>
                     </div>
-
-                    {/* Quick-start cards */}
-                    <button
-                      onClick={() => handleAddPreset(PROVIDER_PRESETS.find(p => p.type === 'ollama')!)}
-                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="material-symbols-outlined text-xl text-primary">computer</span>
-                        <div>
-                          <div className="text-sm font-bold text-text-main">Ollama</div>
-                          <div className="text-xs text-primary font-bold">Free &middot; Runs locally on your computer</div>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted leading-relaxed">Best for privacy. No account needed. Requires downloading Ollama from ollama.com first.</p>
-                    </button>
-
-                    <button
-                      onClick={() => handleAddPreset(PROVIDER_PRESETS.find(p => p.label === 'Groq')!)}
-                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="material-symbols-outlined text-xl text-accent-ai">bolt</span>
-                        <div>
-                          <div className="text-sm font-bold text-text-main">Groq</div>
-                          <div className="text-xs text-accent-ai font-bold">Free tier &middot; Very fast cloud AI</div>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted leading-relaxed">Easiest way to start. Sign up at groq.com for a free API key, paste it here, and you're ready.</p>
-                    </button>
-
-                    <button
-                      onClick={() => setShowAddMenu(true)}
-                      className="bg-surface border border-muted p-4 text-left hover:border-primary hover:shadow-neon transition-all group"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="material-symbols-outlined text-xl text-muted">cloud</span>
-                        <div>
-                          <div className="text-sm font-bold text-text-main">OpenAI, Anthropic, or others</div>
-                          <div className="text-xs text-muted font-bold">Paid cloud &middot; Most capable models</div>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted leading-relaxed">Use GPT-4, Claude, or other premium models. Requires an API key from the provider.</p>
+                    <button onClick={() => setShowAddMenu(true)}
+                      className="flex items-center gap-1.5 px-5 py-2 bg-primary text-background text-xs font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all">
+                      <span className="material-symbols-outlined text-[14px]">add</span> Add Provider
                     </button>
                   </div>
                 ) : (
@@ -329,27 +279,19 @@ const OrchestrationHub: React.FC = () => {
                   </>
                 )}
 
-                {/* Add menu dropdown (shared between empty state card and header button) */}
+                {/* Add menu dropdown */}
                 {showAddMenu && (<>
                   <div className="fixed inset-0 z-[99]" onClick={() => setShowAddMenu(false)} />
-                  <div className="fixed top-1/2 left-1/4 -translate-y-1/2 z-[100] w-80 bg-surface border border-muted shadow-lg max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    {(['free-local', 'free-cloud', 'paid-cloud', 'custom'] as const).map(group => {
-                      const items = PROVIDER_PRESETS.filter(p => p.group === group);
-                      if (items.length === 0) return null;
-                      return (
-                        <div key={group}>
-                          <div className="px-4 py-2 text-xs font-bold text-muted uppercase tracking-wider bg-background/50 border-b border-muted/10">
-                            {PRESET_GROUP_LABELS[group]}
-                          </div>
-                          {items.map((preset, i) => (
-                            <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-2.5 text-xs font-mono text-text-main hover:bg-surface-hover flex justify-between items-center border-b border-muted/5">
-                              <span>{preset.label}</span>
-                              {preset.badge && <span className="text-xs text-primary">{preset.badge}</span>}
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })}
+                  <div className="fixed top-1/2 left-1/4 -translate-y-1/2 z-[100] w-80 bg-surface border border-muted shadow-lg">
+                    <div className="px-4 py-2 text-xs font-bold text-muted uppercase tracking-wider bg-background/50 border-b border-muted/10">
+                      Choose provider type
+                    </div>
+                    {PROVIDER_PRESETS.map((preset, i) => (
+                      <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-3 text-text-main hover:bg-surface-hover flex flex-col border-b border-muted/5">
+                        <span className="text-xs font-bold">{preset.label}</span>
+                        {preset.description && <span className="text-[11px] text-muted mt-0.5">{preset.description}</span>}
+                      </button>
+                    ))}
                   </div>
                 </>)}
 

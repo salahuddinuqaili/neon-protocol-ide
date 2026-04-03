@@ -13,6 +13,8 @@ import ToastContainer from '../notifications/ToastContainer';
 import TutorialOverlay from '../onboarding/TutorialOverlay';
 import LearningPathPanel from '../learning/LearningPathPanel';
 import ErrorBoundary from '../ErrorBoundary';
+import BranchSwitcher from '../git/BranchSwitcher';
+import { useGitPolling } from '../../hooks/useGitPolling';
 import { useIDEStore } from '../../store/useIDEStore';
 
 const BlueprintCanvas = lazy(() => import('../blueprint/BlueprintCanvas'));
@@ -29,7 +31,8 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers } = useIDEStore();
+  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers } = useIDEStore();
+  const { refresh: refreshGit } = useGitPolling();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -175,10 +178,14 @@ const MainLayout: React.FC = () => {
           >
             <span className="material-symbols-outlined text-[12px]">school</span>
           </button>
-          <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px]">account_tree</span>
-            <span>{gitBranch || 'no repo'}</span>
-          </div>
+          {gitState.isGitRepo ? (
+            <BranchSwitcher onRefresh={refreshGit} />
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px]">account_tree</span>
+              <span>{gitBranch || 'no repo'}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <button

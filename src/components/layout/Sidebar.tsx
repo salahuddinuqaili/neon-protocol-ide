@@ -5,6 +5,8 @@ import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
 import ContextMenu from './ContextMenu';
 import InlineDialog, { DialogConfig } from './InlineDialog';
+import SourceControlPanel from '../git/SourceControlPanel';
+import { useGitPolling } from '../../hooks/useGitPolling';
 
 const LANGUAGE_MAP: Record<string, string> = {
   'ts': 'typescript', 'tsx': 'typescript',
@@ -16,6 +18,14 @@ const LANGUAGE_MAP: Record<string, string> = {
 };
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+
+const GIT_STATUS_COLORS: Record<string, string> = {
+  M: 'text-accent-warning',
+  A: 'text-primary',
+  D: 'text-accent-error',
+  R: 'text-accent-ai',
+  '?': 'text-muted',
+};
 
 function getFileIcon(name: string): string {
   if (name.endsWith('.json')) return 'settings_ethernet';
@@ -58,7 +68,6 @@ function buildTree(files: FileEntry[], rootPath: string): TreeNode[] {
     }
   }
 
-  // Sort: folders first, then alphabetical
   function sortTree(nodes: TreeNode[]): TreeNode[] {
     return nodes.sort((a, b) => {
       if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
@@ -73,12 +82,14 @@ const FolderNode: React.FC<{
   node: TreeNode;
   depth: number;
   activeFile: string | null;
+  gitStatusMap: Record<string, string>;
   onFileClick: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, path: string, isFolder: boolean) => void;
-}> = ({ node, depth, activeFile, onFileClick, onContextMenu }) => {
+}> = ({ node, depth, activeFile, gitStatusMap, onFileClick, onContextMenu }) => {
   const [expanded, setExpanded] = useState(depth < 2);
 
   if (!node.isFolder) {
+    const gitStatus = gitStatusMap[node.name];
     return (
       <div
         title={node.path}
@@ -95,7 +106,12 @@ const FolderNode: React.FC<{
           {getFileIcon(node.name)}
         </span>
         <span className="truncate">{node.name}</span>
-        {node.file?.isDirty && <span className="w-1.5 h-1.5 rounded-full bg-accent-error shrink-0 ml-auto" />}
+        {gitStatus && (
+          <span className={`text-[10px] font-mono font-bold ml-auto shrink-0 ${GIT_STATUS_COLORS[gitStatus] || 'text-muted'}`}>
+            {gitStatus === '?' ? 'U' : gitStatus}
+          </span>
+        )}
+        {!gitStatus && node.file?.isDirty && <span className="w-1.5 h-1.5 rounded-full bg-accent-error shrink-0 ml-auto" />}
       </div>
     );
   }
@@ -122,6 +138,7 @@ const FolderNode: React.FC<{
           node={child}
           depth={depth + 1}
           activeFile={activeFile}
+          gitStatusMap={gitStatusMap}
           onFileClick={onFileClick}
           onContextMenu={onContextMenu}
         />
@@ -130,18 +147,33 @@ const FolderNode: React.FC<{
   );
 };
 
+type SidebarTab = 'files' | 'git';
+
 const Sidebar: React.FC = () => {
   const {
-    projectPath, files, activeFile, openFile, setProject, setView,
+    projectPath, files, activeFile, openFile, setProject, setView, gitState,
     isScanning, setIsScanning, addToast, createFile, renameFile, deleteFile, addRecentProject, closeProject
   } = useIDEStore();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string; isFolder: boolean } | null>(null);
   const [dialog, setDialog] = useState<DialogConfig | null>(null);
+  const [activeTab, setActiveTab] = useState<SidebarTab>('files');
+  const { refresh: refreshGit } = useGitPolling();
 
   const tree = useMemo(() => {
     if (!projectPath || files.length === 0) return [];
     return buildTree(files, projectPath);
   }, [files, projectPath]);
+
+  // Build a map of filename -> git status for file tree indicators
+  const gitStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const f of gitState.files) {
+      const fileName = f.path.split('/').pop() || f.path;
+      const status = f.isStaged ? f.indexStatus : (f.workTreeStatus !== ' ' ? f.workTreeStatus : f.indexStatus);
+      if (status && status !== ' ') map[fileName] = status;
+    }
+    return map;
+  }, [gitState.files]);
 
   const handleFileClick = (path: string) => {
     openFile(path);
@@ -218,6 +250,47 @@ const Sidebar: React.FC = () => {
     try {
       if (typeof window === 'undefined') return;
 
+      const api = (window as any).electronAPI;
+
+      // Electron path: use IPC to get real filesystem path
+      if (api?.isElectron) {
+        const dirPath = await api.openDirectory();
+        if (!dirPath) return;
+        setIsScanning(true);
+
+        const loadedFiles: FileEntry[] = [];
+        async function scanIPC(currentDir: string, relativePath: string) {
+          const entries = await api.readDirectory(currentDir);
+          for (const entry of entries) {
+            if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') continue;
+            const fullPath = `${currentDir}/${entry.name}`.replace(/\\/g, '/');
+            const relPath = `${relativePath}/${entry.name}`;
+
+            if (entry.isFile) {
+              const isCodeFile = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java|yaml|yml|toml|sh|bat|sql|graphql|proto|xml|svg)$/i.test(entry.name);
+              if (isCodeFile) {
+                const content = await api.readFile(fullPath);
+                if (content !== null && content.length <= MAX_FILE_SIZE) {
+                  const ext = entry.name.split('.').pop() || 'text';
+                  loadedFiles.push({ name: entry.name, path: relPath, content, language: LANGUAGE_MAP[ext] || 'text' });
+                }
+              }
+            } else if (entry.isDirectory) {
+              await scanIPC(fullPath, relPath);
+            }
+          }
+        }
+
+        const dirName = dirPath.replace(/\\/g, '/').split('/').pop() || dirPath;
+        await scanIPC(dirPath, dirName);
+        setProject(dirPath.replace(/\\/g, '/'), loadedFiles);
+        addRecentProject(dirName);
+        addToast(`Loaded ${loadedFiles.length} files from ${dirName}`, 'success');
+        setView('blueprint');
+        return;
+      }
+
+      // Browser fallback
       if (!('showDirectoryPicker' in window)) {
         addToast('File System Access API requires Chrome or Edge', 'error');
         return;
@@ -235,31 +308,16 @@ const Sidebar: React.FC = () => {
       async function scan(handle: any, path: string) {
         for await (const entry of handle.values()) {
           const currentPath = `${path}/${entry.name}`;
-
-          if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') {
-            continue;
-          }
+          if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') continue;
 
           if (entry.kind === 'file') {
             const isCodeFile = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java|yaml|yml|toml|sh|bat|sql|graphql|proto|xml|svg)$/i.test(entry.name);
             if (isCodeFile) {
               const file = await entry.getFile();
-
-              if (file.size > MAX_FILE_SIZE) {
-                console.warn(`Skipping large file: ${currentPath} (${(file.size / 1024).toFixed(0)}KB)`);
-                continue;
-              }
-
+              if (file.size > MAX_FILE_SIZE) continue;
               const content = await file.text();
               const extension = entry.name.split('.').pop() || 'text';
-
-              loadedFiles.push({
-                name: entry.name,
-                path: currentPath,
-                content,
-                language: LANGUAGE_MAP[extension] || 'text',
-                handle: entry,
-              });
+              loadedFiles.push({ name: entry.name, path: currentPath, content, language: LANGUAGE_MAP[extension] || 'text', handle: entry });
             }
           } else if (entry.kind === 'directory') {
             await scan(entry, currentPath);
@@ -283,7 +341,7 @@ const Sidebar: React.FC = () => {
   return (
     <aside data-tutorial="sidebar" className="w-[240px] flex-shrink-0 h-full bg-surface border-r border-muted/30 flex flex-col z-40 transition-all overflow-hidden">
       <div className="p-4 border-b border-muted/10 bg-surface-hover/30 flex items-center justify-between">
-        <h3 className="text-xs font-bold text-muted uppercase tracking-widest">Your Files</h3>
+        <h3 className="text-xs font-bold text-muted uppercase tracking-widest">Explorer</h3>
         <button
           onClick={handleOpenFolder}
           className="material-symbols-outlined text-muted text-xs cursor-pointer hover:text-text-main transition-colors"
@@ -293,96 +351,130 @@ const Sidebar: React.FC = () => {
           file_open
         </button>
       </div>
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        {isScanning ? (
-          <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
-            <span className="material-symbols-outlined text-2xl text-primary animate-spin">progress_activity</span>
-            <p className="text-xs text-muted uppercase tracking-wider">Scanning files...</p>
-          </div>
-        ) : !projectPath ? (
-          <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
-            <span className="material-symbols-outlined text-4xl text-muted/30">folder_open</span>
-            <div>
-              <p className="text-xs text-text-main mb-1">No project open</p>
-              <p className="text-xs text-muted leading-relaxed">Open a folder from your computer to see its files here</p>
-            </div>
+
+      {/* Tab bar */}
+      {projectPath && (
+        <div className="flex border-b border-muted/10 bg-surface/50 shrink-0">
+          <button
+            onClick={() => setActiveTab('files')}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 ${
+              activeTab === 'files' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-text-main'
+            }`}
+          >
+            Files
+          </button>
+          <button
+            onClick={() => setActiveTab('git')}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 ${
+              activeTab === 'git' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-text-main'
+            }`}
+          >
+            Git
+            {gitState.changedFileCount > 0 && (
+              <span className="text-[10px] text-accent-warning font-mono">{gitState.changedFileCount}</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Content */}
+      {activeTab === 'git' && projectPath ? (
+        <SourceControlPanel onRefresh={refreshGit} />
+      ) : (
+        <>
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            {isScanning ? (
+              <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
+                <span className="material-symbols-outlined text-2xl text-primary animate-spin">progress_activity</span>
+                <p className="text-xs text-muted uppercase tracking-wider">Scanning files...</p>
+              </div>
+            ) : !projectPath ? (
+              <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
+                <span className="material-symbols-outlined text-4xl text-muted/30">folder_open</span>
+                <div>
+                  <p className="text-xs text-text-main mb-1">No project open</p>
+                  <p className="text-xs text-muted leading-relaxed">Open a folder from your computer to see its files here</p>
+                </div>
+                <button
+                  onClick={handleOpenFolder}
+                  className="px-5 py-2.5 bg-primary text-background text-xs font-bold hover:bg-[#0cf1f1] transition-all uppercase tracking-widest shadow-neon"
+                >
+                  Open Folder
+                </button>
+              </div>
+            ) : (
+              <div className="py-1">
+                <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover/50 border-b border-muted/10">
+                  <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
+                  <span className="text-xs font-bold tracking-tight uppercase text-text-main truncate">{projectPath.split('/').pop() || projectPath}</span>
+                  <span className="text-[11px] text-muted ml-auto shrink-0">{files.length}</span>
+                  <button
+                    onClick={() => {
+                      setDialog({
+                        isOpen: true, type: 'prompt', title: 'New File', placeholder: 'filename.ts',
+                        onConfirm: (name) => {
+                          createFile(name, projectPath || '');
+                          setView('code');
+                          addToast(`Created ${name}`, 'success');
+                        },
+                        onClose: () => setDialog(null),
+                      });
+                    }}
+                    className="material-symbols-outlined text-[14px] text-muted hover:text-primary transition-colors"
+                    title="New file"
+                  >
+                    note_add
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDialog({
+                        isOpen: true, type: 'confirm', title: 'Close Project',
+                        message: `Close "${projectPath.split('/').pop() || projectPath}"? Unsaved changes will be lost.`,
+                        confirmLabel: 'Close', danger: true,
+                        onConfirm: () => { closeProject(); addToast('Project closed', 'info'); },
+                        onClose: () => setDialog(null),
+                      });
+                    }}
+                    className="material-symbols-outlined text-[14px] text-muted hover:text-accent-error transition-colors"
+                    title="Close project"
+                  >
+                    close
+                  </button>
+                </div>
+                {tree.map(node => (
+                  <FolderNode
+                    key={node.path}
+                    node={node}
+                    depth={0}
+                    activeFile={activeFile}
+                    gitStatusMap={gitStatusMap}
+                    onFileClick={handleFileClick}
+                    onContextMenu={handleContextMenu}
+                  />
+                ))}
+                {contextMenu && (
+                  <ContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    items={getContextMenuItems()}
+                    onClose={() => setContextMenu(null)}
+                  />
+                )}
+              </div>
+            )}
+          </nav>
+          <div className="p-3 border-t border-muted/10 bg-surface">
             <button
               onClick={handleOpenFolder}
-              className="px-5 py-2.5 bg-primary text-background text-xs font-bold hover:bg-[#0cf1f1] transition-all uppercase tracking-widest shadow-neon"
+              title="Open a project folder from your computer"
+              className="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-xs font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest"
             >
-              Open Folder
+              <span className="material-symbols-outlined text-sm">folder_open</span>
+              <span>Open Project</span>
             </button>
           </div>
-        ) : (
-          <div className="py-1">
-            <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover/50 border-b border-muted/10">
-              <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
-              <span className="text-xs font-bold tracking-tight uppercase text-text-main truncate">{projectPath}</span>
-              <span className="text-[11px] text-muted ml-auto shrink-0">{files.length}</span>
-              <button
-                onClick={() => {
-                  setDialog({
-                    isOpen: true, type: 'prompt', title: 'New File', placeholder: 'filename.ts',
-                    onConfirm: (name) => {
-                      createFile(name, projectPath || '');
-                      setView('code');
-                      addToast(`Created ${name}`, 'success');
-                    },
-                    onClose: () => setDialog(null),
-                  });
-                }}
-                className="material-symbols-outlined text-[14px] text-muted hover:text-primary transition-colors"
-                title="New file"
-              >
-                note_add
-              </button>
-              <button
-                onClick={() => {
-                  setDialog({
-                    isOpen: true, type: 'confirm', title: 'Close Project',
-                    message: `Close "${projectPath}"? Unsaved changes will be lost.`,
-                    confirmLabel: 'Close', danger: true,
-                    onConfirm: () => { closeProject(); addToast('Project closed', 'info'); },
-                    onClose: () => setDialog(null),
-                  });
-                }}
-                className="material-symbols-outlined text-[14px] text-muted hover:text-accent-error transition-colors"
-                title="Close project"
-              >
-                close
-              </button>
-            </div>
-            {tree.map(node => (
-              <FolderNode
-                key={node.path}
-                node={node}
-                depth={0}
-                activeFile={activeFile}
-                onFileClick={handleFileClick}
-                onContextMenu={handleContextMenu}
-              />
-            ))}
-            {contextMenu && (
-              <ContextMenu
-                x={contextMenu.x}
-                y={contextMenu.y}
-                items={getContextMenuItems()}
-                onClose={() => setContextMenu(null)}
-              />
-            )}
-          </div>
-        )}
-      </nav>
-      <div className="p-3 border-t border-muted/10 bg-surface">
-        <button
-          onClick={handleOpenFolder}
-          title="Open a project folder from your computer"
-          className="w-full flex items-center justify-center gap-2 h-9 bg-surface-hover border border-muted text-text-main text-xs font-bold hover:bg-primary hover:text-background transition-all uppercase tracking-widest"
-        >
-          <span className="material-symbols-outlined text-sm">folder_open</span>
-          <span>Open Project</span>
-        </button>
-      </div>
+        </>
+      )}
       {dialog && <InlineDialog {...dialog} />}
     </aside>
   );

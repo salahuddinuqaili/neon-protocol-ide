@@ -189,6 +189,151 @@ ipcMain.handle('git:getStatus', async (_event, dirPath) => {
   }
 });
 
+ipcMain.handle('git:isRepo', async (_event, dirPath) => {
+  try {
+    execSync('git rev-parse --git-dir', { cwd: dirPath, encoding: 'utf-8', timeout: 2000 });
+    return true;
+  } catch { return false; }
+});
+
+ipcMain.handle('git:statusFiles', async (_event, dirPath) => {
+  try {
+    const raw = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
+    if (!raw) return [];
+    return raw.split('\n').filter(Boolean).map(line => {
+      const indexStatus = line[0];
+      const workTreeStatus = line[1];
+      const relativePath = line.slice(3).trim();
+      const actualPath = relativePath.includes(' -> ') ? relativePath.split(' -> ')[1] : relativePath;
+      return {
+        path: actualPath.replace(/\\/g, '/'),
+        indexStatus,
+        workTreeStatus,
+        isStaged: indexStatus !== ' ' && indexStatus !== '?',
+      };
+    });
+  } catch { return null; }
+});
+
+ipcMain.handle('git:stage', async (_event, dirPath, filePaths) => {
+  try {
+    const files = Array.isArray(filePaths) ? filePaths : [filePaths];
+    execSync(`git add -- ${files.map(f => `"${f}"`).join(' ')}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:unstage', async (_event, dirPath, filePaths) => {
+  try {
+    const files = Array.isArray(filePaths) ? filePaths : [filePaths];
+    execSync(`git reset HEAD -- ${files.map(f => `"${f}"`).join(' ')}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:commit', async (_event, dirPath, message) => {
+  try {
+    execSync('git commit -F -', { cwd: dirPath, encoding: 'utf-8', timeout: 10000, input: message });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:diff', async (_event, dirPath, filePath, staged) => {
+  try {
+    const cmd = staged ? `git diff --cached -- "${filePath}"` : `git diff -- "${filePath}"`;
+    return execSync(cmd, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+  } catch { return null; }
+});
+
+ipcMain.handle('git:fileContent', async (_event, dirPath, filePath) => {
+  try {
+    return execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+  } catch { return null; }
+});
+
+ipcMain.handle('git:push', async (_event, dirPath) => {
+  try {
+    execSync('git push', { cwd: dirPath, encoding: 'utf-8', timeout: 30000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:pull', async (_event, dirPath) => {
+  try {
+    execSync('git pull', { cwd: dirPath, encoding: 'utf-8', timeout: 30000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:branchList', async (_event, dirPath) => {
+  try {
+    const raw = execSync('git branch -a --no-color', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
+    if (!raw) return [];
+    return raw.split('\n').filter(Boolean).map(line => {
+      const isCurrent = line.startsWith('* ');
+      const name = line.replace(/^\*?\s+/, '').trim();
+      const isRemote = name.startsWith('remotes/');
+      return { name: isRemote ? name.replace('remotes/', '') : name, isCurrent, isRemote };
+    });
+  } catch { return []; }
+});
+
+ipcMain.handle('git:checkout', async (_event, dirPath, branch) => {
+  try {
+    execSync(`git checkout "${branch}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:createBranch', async (_event, dirPath, name) => {
+  try {
+    execSync(`git checkout -b "${name}"`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:remoteStatus', async (_event, dirPath) => {
+  try {
+    const raw = execSync('git rev-list --left-right --count HEAD...@{upstream}', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
+    const parts = raw.split(/\s+/).map(Number);
+    return { ahead: parts[0] || 0, behind: parts[1] || 0 };
+  } catch { return { ahead: 0, behind: 0 }; }
+});
+
+ipcMain.handle('git:log', async (_event, dirPath, count) => {
+  try {
+    const n = count || 30;
+    const raw = execSync(`git log --oneline --no-decorate -n ${n}`, { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
+    if (!raw) return [];
+    return raw.split('\n').filter(Boolean).map(line => {
+      const spaceIdx = line.indexOf(' ');
+      return { hash: line.slice(0, spaceIdx), message: line.slice(spaceIdx + 1) };
+    });
+  } catch { return []; }
+});
+
+ipcMain.handle('git:stash', async (_event, dirPath) => {
+  try {
+    execSync('git stash', { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:stashPop', async (_event, dirPath) => {
+  try {
+    execSync('git stash pop', { cwd: dirPath, encoding: 'utf-8', timeout: 10000 });
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('git:stashList', async (_event, dirPath) => {
+  try {
+    const raw = execSync('git stash list --oneline', { cwd: dirPath, encoding: 'utf-8', timeout: 5000 }).trim();
+    if (!raw) return [];
+    return raw.split('\n').filter(Boolean);
+  } catch { return []; }
+});
+
 // --- App lifecycle ---
 
 app.whenReady().then(async () => {

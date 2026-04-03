@@ -19,7 +19,7 @@ const HELP_TEXT: Record<string, { title: string; body: string }> = {
   },
   orchestrator: {
     title: 'AI Settings',
-    body: 'Connect AI models to power the copilot assistant. Ollama is free and runs on your computer — install it from ollama.com. You can also use cloud services like OpenAI or Anthropic by entering an API key.',
+    body: 'Connect AI models to power the copilot assistant. You can use a local provider that runs on your machine, or a cloud service by entering your API endpoint and key.',
   },
 };
 

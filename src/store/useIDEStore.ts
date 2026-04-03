@@ -1,8 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig, LearningMode, LearningProgress } from '../types';
+import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig, LearningMode, LearningProgress, GitState } from '../types';
 
 let toastCounter = 0;
+
+const DEFAULT_GIT_STATE: GitState = {
+  isGitRepo: false,
+  branch: null,
+  changedFileCount: 0,
+  files: [],
+  branches: [],
+  log: [],
+  ahead: 0,
+  behind: 0,
+  stashCount: 0,
+  isLoading: false,
+  lastError: null,
+};
 
 const DEFAULT_LEARNING_PROGRESS: LearningProgress = {
   completedSteps: [],
@@ -11,11 +25,7 @@ const DEFAULT_LEARNING_PROGRESS: LearningProgress = {
   activeTutorialId: null,
 };
 
-const DEFAULT_PROVIDERS: LLMProviderConfig[] = [
-  { id: 'ollama', name: 'Ollama', type: 'ollama', model: 'llama3:8b', baseUrl: 'http://localhost:11434', enabled: true, priority: 1 },
-  { id: 'openai', name: 'OpenAI', type: 'openai', model: 'gpt-4-turbo', baseUrl: 'https://api.openai.com/v1', apiKey: '', enabled: false, priority: 2 },
-  { id: 'anthropic', name: 'Anthropic', type: 'anthropic', model: 'claude-sonnet-4-20250514', baseUrl: 'https://api.anthropic.com/v1', apiKey: '', enabled: false, priority: 3 },
-];
+const DEFAULT_PROVIDERS: LLMProviderConfig[] = [];
 
 const LANG_MAP: Record<string, string> = {
   'ts': 'typescript', 'tsx': 'typescript', 'js': 'javascript', 'jsx': 'javascript',
@@ -44,6 +54,9 @@ export const useIDEStore = create<IDEState>()(
       recentProjects: [],
       dismissedHints: [],
       providers: DEFAULT_PROVIDERS,
+
+      // Git
+      gitState: DEFAULT_GIT_STATE,
 
       // Learning system
       learningMode: 'beginner',
@@ -183,6 +196,10 @@ export const useIDEStore = create<IDEState>()(
         activeFile: null,
         chatMessages: [],
       }),
+
+      setGitState: (partial: Partial<GitState>) => set((state) => ({
+        gitState: { ...state.gitState, ...partial },
+      })),
 
       ensureFiles: (incoming: FileEntry[]) => set((state) => {
         const existingPaths = new Set(state.files.map(f => f.path));

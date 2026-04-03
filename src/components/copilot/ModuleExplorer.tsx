@@ -63,7 +63,7 @@ const ModuleExplorer: React.FC = () => {
     } else {
       addChatMessage({
         role: 'ai',
-        text: `No AI provider is connected yet. Click the "AI" button in the top bar to set one up — Ollama is free and runs on your computer.`
+        text: `No AI provider is connected yet. Click the "AI" button in the top bar to add a local or cloud provider.`
       });
     }
   };
