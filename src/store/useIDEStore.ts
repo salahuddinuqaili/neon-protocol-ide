@@ -184,6 +184,13 @@ export const useIDEStore = create<IDEState>()(
         chatMessages: [],
       }),
 
+      ensureFiles: (incoming: FileEntry[]) => set((state) => {
+        const existingPaths = new Set(state.files.map(f => f.path));
+        const newFiles = incoming.filter(f => !existingPaths.has(f.path));
+        if (newFiles.length === 0) return state;
+        return { files: [...state.files, ...newFiles] };
+      }),
+
       updateProvider: (id: string, updates: Partial<LLMProviderConfig>) => set((state) => ({
         providers: state.providers.map(p => p.id === id ? { ...p, ...updates } : p),
       })),

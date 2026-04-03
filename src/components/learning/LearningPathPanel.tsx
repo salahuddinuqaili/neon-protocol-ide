@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { LESSONS } from '../../data/lessons';
+import { DEMO_FILES } from '../../data/demoProject';
 import { Lesson, LessonCategory } from '../../types';
 
 const TRACK_INFO: Record<LessonCategory, { label: string; icon: string; color: string }> = {
@@ -11,15 +12,27 @@ const TRACK_INFO: Record<LessonCategory, { label: string; icon: string; color: s
   'llm-orchestration': { label: 'LLM Orchestration', icon: 'smart_toy', color: 'text-accent-ai' },
 };
 
+/** Extract lines from a demo file for inline display */
+function getCodeSnippet(filePath: string, startLine: number, endLine: number): string | null {
+  const file = DEMO_FILES.find(f => f.path === filePath);
+  if (!file) return null;
+  const lines = file.content.split('\n');
+  return lines.slice(startLine - 1, endLine).join('\n');
+}
+
 const LessonStepView: React.FC<{
   lesson: Lesson;
   onComplete: () => void;
   onBack: () => void;
 }> = ({ lesson, onComplete, onBack }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const { setView, openFile } = useIDEStore();
+  const { setView, openFile, ensureFiles } = useIDEStore();
   const step = lesson.steps[currentStep];
   const isLast = currentStep === lesson.steps.length - 1;
+
+  const snippet = step.codeHighlight
+    ? getCodeSnippet(step.codeHighlight.file, step.codeHighlight.startLine, step.codeHighlight.endLine)
+    : null;
 
   const handleNext = () => {
     if (isLast) {
@@ -29,9 +42,14 @@ const LessonStepView: React.FC<{
     }
   };
 
-  const handleOpenFile = (file: string) => {
+  const handleOpenFile = (filePath: string) => {
+    // Ensure the demo file exists in the store before trying to open it
+    const demoFile = DEMO_FILES.find(f => f.path === filePath);
+    if (demoFile) {
+      ensureFiles([demoFile]);
+    }
     setView('code');
-    openFile(file);
+    openFile(filePath);
   };
 
   return (
@@ -51,7 +69,29 @@ const LessonStepView: React.FC<{
           <p className="text-xs text-text-main leading-relaxed font-mono">{step.instruction}</p>
         </div>
 
-        {step.codeHighlight && (
+        {/* Inline code snippet */}
+        {snippet && step.codeHighlight && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between bg-background border border-muted/30 border-b-0 px-3 py-1.5">
+              <span className="text-[11px] text-muted font-mono">
+                {step.codeHighlight.file.split('/').pop()} · lines {step.codeHighlight.startLine}-{step.codeHighlight.endLine}
+              </span>
+              <button
+                onClick={() => handleOpenFile(step.codeHighlight!.file)}
+                className="flex items-center gap-1 text-[11px] text-primary font-mono hover:underline"
+              >
+                <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                Open in editor
+              </button>
+            </div>
+            <pre className="bg-background border border-muted/30 p-3 overflow-x-auto custom-scrollbar">
+              <code className="text-[11px] text-text-main font-mono leading-relaxed whitespace-pre">{snippet}</code>
+            </pre>
+          </div>
+        )}
+
+        {/* Open file button when there's a code highlight but no snippet (file not in demo data) */}
+        {step.codeHighlight && !snippet && (
           <button
             onClick={() => handleOpenFile(step.codeHighlight!.file)}
             className="flex items-center gap-2 text-[11px] text-primary font-mono hover:underline mb-3"

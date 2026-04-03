@@ -160,6 +160,7 @@ export interface IDEState {
   addRecentProject: (name: string) => void;
   closeProject: () => void;
   dismissHint: (hintId: string) => void;
+  ensureFiles: (files: FileEntry[]) => void;
   updateProvider: (id: string, updates: Partial<LLMProviderConfig>) => void;
   reorderProviders: (providers: LLMProviderConfig[]) => void;
   addProvider: (provider: LLMProviderConfig) => void;
