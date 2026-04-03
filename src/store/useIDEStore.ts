@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { IDEState, IDEView, FileEntry, OllamaStatus, ChatMessage, EditorSettings, Toast, LLMProviderConfig, LearningMode, LearningProgress, GitState } from '../types';
+import { getLanguageForExtension } from '../config/languages';
 
 let toastCounter = 0;
 
@@ -27,11 +28,6 @@ const DEFAULT_LEARNING_PROGRESS: LearningProgress = {
 
 const DEFAULT_PROVIDERS: LLMProviderConfig[] = [];
 
-const LANG_MAP: Record<string, string> = {
-  'ts': 'typescript', 'tsx': 'typescript', 'js': 'javascript', 'jsx': 'javascript',
-  'py': 'python', 'json': 'json', 'md': 'markdown', 'css': 'css', 'html': 'html',
-  'rb': 'ruby', 'rs': 'rust', 'go': 'go', 'c': 'c', 'cpp': 'cpp', 'java': 'java',
-};
 
 export const useIDEStore = create<IDEState>()(
   persist(
@@ -114,7 +110,7 @@ export const useIDEStore = create<IDEState>()(
         const ext = name.split('.').pop() || 'text';
         const newFile: FileEntry = {
           name, path, content: '',
-          language: LANG_MAP[ext] || 'text',
+          language: getLanguageForExtension(ext) || 'text',
           isDirty: true,
         };
         return {
@@ -132,7 +128,7 @@ export const useIDEStore = create<IDEState>()(
         return {
           files: state.files.map(f =>
             f.path === oldPath
-              ? { ...f, name: newName, path: newPath, language: LANG_MAP[ext] || f.language, isDirty: true }
+              ? { ...f, name: newName, path: newPath, language: getLanguageForExtension(ext) || f.language, isDirty: true }
               : f
           ),
           openTabs: state.openTabs.map(t => t === oldPath ? newPath : t),

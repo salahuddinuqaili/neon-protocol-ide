@@ -3,25 +3,11 @@
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { LESSONS } from '../../data/lessons';
+import { HELP_TEXT } from '../../config/education';
 
 interface HeaderProps {
   onOpenSettings?: () => void;
 }
-
-const HELP_TEXT: Record<string, { title: string; body: string }> = {
-  blueprint: {
-    title: 'Visual Map',
-    body: 'This is a bird\'s-eye view of your project. Each box represents a group of related files (like pages, data, or APIs). Click a box to learn more. Drag to rearrange. Use "Add Node" to create your own boxes.',
-  },
-  code: {
-    title: 'Code Editor',
-    body: 'This is where you read and edit code files. Click a file in the left sidebar to open it. The AI copilot on the right side can explain code or help you write changes. Press Ctrl+S to save.',
-  },
-  orchestrator: {
-    title: 'AI Settings',
-    body: 'Connect AI models to power the copilot assistant. You can use a local provider that runs on your machine, or a cloud service by entering your API endpoint and key.',
-  },
-};
 
 const RING_R = 11;
 const RING_CIRC = 2 * Math.PI * RING_R;

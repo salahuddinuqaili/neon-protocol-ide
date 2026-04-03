@@ -4,15 +4,7 @@ import React, { useState } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { GitFileChange } from '../../types';
 import DiffViewer from './DiffViewer';
-
-const STATUS_COLORS: Record<string, string> = {
-  M: 'text-accent-warning',
-  A: 'text-primary',
-  D: 'text-accent-error',
-  R: 'text-accent-ai',
-  '?': 'text-muted',
-  ' ': 'text-muted',
-};
+import { GIT_STATUS_COLORS } from '../../config/git';
 
 const GitFileRow: React.FC<{
   file: GitFileChange;
@@ -26,7 +18,7 @@ const GitFileRow: React.FC<{
 
   return (
     <div className="flex items-center gap-1.5 py-1 px-3 text-xs font-mono hover:bg-surface-hover/30 transition-colors group">
-      <span className={`font-bold w-3 text-center shrink-0 ${STATUS_COLORS[displayStatus] || 'text-muted'}`}>
+      <span className={`font-bold w-3 text-center shrink-0 ${GIT_STATUS_COLORS[displayStatus] || 'text-muted'}`}>
         {displayStatus === '?' ? 'U' : displayStatus}
       </span>
       <button onClick={onViewDiff} className="truncate text-text-main hover:text-primary transition-colors text-left" title={`Diff: ${file.path}`}>

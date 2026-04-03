@@ -2,29 +2,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
-import { LLMProviderConfig, ProviderType, ConnectionStatus } from '../../types';
+import { LLMProviderConfig, ProviderType } from '../../types';
 import { routeChat, chatWithProvider } from '../../lib/llm/provider';
 import ViewHint from '../onboarding/ViewHint';
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
 import ConceptTooltip from '../learning/ConceptTooltip';
+import { MODEL_PLACEHOLDERS, PROVIDER_PRESETS, STATUS_DISPLAY, ProviderPreset } from '../../config/providers';
+import { BEGINNER_EXPLAINER } from '../../config/education';
 
 type LogEntry = { msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
 type Tab = 'providers' | 'usage';
-
-const MODEL_PLACEHOLDERS: Record<string, string> = {
-  ollama: 'e.g. llama3:8b, mistral:7b',
-  openai: 'model name',
-  anthropic: 'e.g. claude-sonnet-4-20250514',
-  'openai-compatible': 'model name or ID',
-};
-
-interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; model: string; description?: string }
-
-const PROVIDER_PRESETS: ProviderPreset[] = [
-  { label: 'Local (Ollama)', type: 'ollama', baseUrl: 'http://localhost:11434', model: '', description: 'Runs models on your machine' },
-  { label: 'OpenAI-compatible API', type: 'openai-compatible', baseUrl: '', model: '', description: 'Works with most cloud providers' },
-  { label: 'Anthropic-compatible API', type: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: '', description: 'For Anthropic-format endpoints' },
-];
 
 function formatTokens(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -116,20 +103,6 @@ const ProviderCard: React.FC<{
   );
 };
 
-const STATUS_DISPLAY: Record<ConnectionStatus, { label: string; color: string }> = {
-  untested: { label: 'Not tested', color: 'text-muted border-muted/30' },
-  testing: { label: 'Verifying...', color: 'text-accent-ai border-accent-ai/30' },
-  verified: { label: 'Verified', color: 'text-primary border-primary/30' },
-  failed: { label: 'Failed', color: 'text-accent-error border-accent-error/30' },
-};
-
-const BEGINNER_EXPLAINER = [
-  { icon: 'smart_toy', q: 'What is an AI Provider?', a: 'A provider is a service that runs AI models. Local providers run on your computer (free, private). Cloud providers run on remote servers (may require an API key and charge per use).' },
-  { icon: 'psychology', q: 'What is a Model?', a: 'A model is a specific AI "brain." Smaller models (2B-7B) are fast but less capable. Larger models (70B+) are smarter but slower and need more memory. It\'s like choosing between a quick snack and a gourmet meal.' },
-  { icon: 'token', q: 'What are Tokens?', a: 'Tokens are how AI measures text -- roughly 1 token per word. When the AI reads your question and writes a response, it counts tokens. Cloud providers charge by token usage.' },
-  { icon: 'key', q: 'What is an API Key?', a: 'An API key is like a membership card for cloud AI services. You sign up on their website, get a unique key, and paste it here. Keep it secret! Local providers don\'t need one.' },
-  { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice fails, the system automatically tries the next one. Use the arrows to set the order.' },
-];
 
 const OrchestrationHub: React.FC = () => {
   const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint } = useIDEStore();

@@ -4,13 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { GLOSSARY_ENTRIES } from '../../data/glossary';
 import { GlossaryCategory } from '../../types';
-
-const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
-  coding: 'Coding Basics',
-  llm: 'AI & LLMs',
-  architecture: 'Architecture',
-  ide: 'IDE Features',
-};
+import { CATEGORY_LABELS } from '../../config/education';
 
 const CATEGORIES: GlossaryCategory[] = ['coding', 'llm', 'architecture', 'ide'];
 

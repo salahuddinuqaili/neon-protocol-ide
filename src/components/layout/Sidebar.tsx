@@ -7,25 +7,10 @@ import ContextMenu from './ContextMenu';
 import InlineDialog, { DialogConfig } from './InlineDialog';
 import SourceControlPanel from '../git/SourceControlPanel';
 import { useGitPolling } from '../../hooks/useGitPolling';
-
-const LANGUAGE_MAP: Record<string, string> = {
-  'ts': 'typescript', 'tsx': 'typescript',
-  'js': 'javascript', 'jsx': 'javascript',
-  'py': 'python', 'rb': 'ruby', 'rs': 'rust',
-  'c': 'c', 'cpp': 'cpp', 'go': 'go',
-  'java': 'java', 'json': 'json', 'md': 'markdown',
-  'css': 'css', 'html': 'html', 'txt': 'text',
-};
+import { LANGUAGE_MAP } from '../../config/languages';
+import { GIT_STATUS_COLORS } from '../../config/git';
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
-
-const GIT_STATUS_COLORS: Record<string, string> = {
-  M: 'text-accent-warning',
-  A: 'text-primary',
-  D: 'text-accent-error',
-  R: 'text-accent-ai',
-  '?': 'text-muted',
-};
 
 function getFileIcon(name: string): string {
   if (name.endsWith('.json')) return 'settings_ethernet';
