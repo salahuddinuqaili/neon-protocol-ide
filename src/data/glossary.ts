@@ -223,6 +223,64 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     category: 'architecture',
   },
 
+  // --- Git ---
+  {
+    id: 'repository',
+    term: 'Repository (Repo)',
+    shortDefinition: 'A folder tracked by git that stores your project and its complete change history.',
+    fullExplanation: 'A repository is a project folder with a hidden .git directory that records every change ever made. It is the foundation of version control. When you "clone" a repository, you download the full project and its history. GitHub hosts repositories online so teams can collaborate.',
+    relatedTerms: ['commit', 'branch', 'remote'],
+    category: 'ide',
+  },
+  {
+    id: 'commit',
+    term: 'Commit',
+    shortDefinition: 'A saved snapshot of your changes, like a save point in a video game.',
+    fullExplanation: 'A commit records what changed, who changed it, and when. Each commit has a unique ID (hash) and a message describing what was done. Commits are permanent — you can always go back to any previous commit. A good commit message explains *why* the change was made, not just what changed.',
+    relatedTerms: ['repository', 'branch', 'staging'],
+    category: 'ide',
+  },
+  {
+    id: 'branch',
+    term: 'Branch',
+    shortDefinition: 'A parallel version of your project where you can make changes without affecting the main code.',
+    fullExplanation: 'Branches let you work on features or fixes in isolation. The "main" branch is the primary version. You create a new branch, make changes, and when ready, merge it back. This prevents half-finished work from breaking the main codebase. Think of it like a draft copy of a document.',
+    relatedTerms: ['commit', 'remote', 'repository'],
+    category: 'ide',
+  },
+  {
+    id: 'staging',
+    term: 'Staging (Git Add)',
+    shortDefinition: 'Selecting which changes to include in your next commit.',
+    fullExplanation: 'Before committing, you "stage" files — this tells git which changes you want to save. You might change 5 files but only stage 2 of them for a commit. This lets you group related changes together. The staging area is like a loading dock: you choose what goes on the truck before it departs.',
+    relatedTerms: ['commit', 'repository'],
+    category: 'ide',
+  },
+  {
+    id: 'remote',
+    term: 'Remote',
+    shortDefinition: 'A copy of your repository hosted online, like on GitHub.',
+    fullExplanation: 'A remote is a version of your project stored on a server (GitHub, GitLab, etc.). When you "push", you send your local commits to the remote. When you "pull", you download others\' changes. The default remote is usually called "origin". Remotes enable team collaboration and backup.',
+    relatedTerms: ['repository', 'commit', 'branch'],
+    category: 'ide',
+  },
+  {
+    id: 'push-pull',
+    term: 'Push / Pull',
+    shortDefinition: 'Push sends your commits to the remote; pull downloads others\' commits to your machine.',
+    fullExplanation: 'Pushing uploads your local commits to the remote repository so others can see them. Pulling downloads new commits from the remote and merges them into your branch. Always pull before pushing to avoid conflicts. This back-and-forth is how teams stay synchronized.',
+    relatedTerms: ['remote', 'commit', 'branch'],
+    category: 'ide',
+  },
+  {
+    id: 'stash',
+    term: 'Stash',
+    shortDefinition: 'Temporarily shelving uncommitted changes so you can switch branches cleanly.',
+    fullExplanation: 'Sometimes you need to switch branches but have unfinished work. Stashing saves your changes to a temporary storage and reverts your files to a clean state. Later, you can "pop" the stash to get your changes back. It is like putting papers in a drawer to clear your desk.',
+    relatedTerms: ['branch', 'staging', 'commit'],
+    category: 'ide',
+  },
+
   // --- IDE ---
   {
     id: 'editor',

@@ -10,6 +10,7 @@ const TRACK_INFO: Record<LessonCategory, { label: string; icon: string; color: s
   'coding-basics': { label: 'Coding Basics', icon: 'code', color: 'text-primary' },
   'architecture': { label: 'Architecture', icon: 'account_tree', color: 'text-[#FF9F43]' },
   'llm-orchestration': { label: 'LLM Orchestration', icon: 'smart_toy', color: 'text-accent-ai' },
+  'git-collaboration': { label: 'Git & Collaboration', icon: 'source', color: 'text-accent-warning' },
 };
 
 /** Extract lines from a demo file for inline display */
@@ -361,7 +362,7 @@ const LearningPathPanel: React.FC = () => {
               )}
 
               {/* Track grid with per-track progress */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {tracks.map(track => {
                   const trackCompleted = track.lessons.filter(l => completedSet.has(l.id)).length;
                   const trackTotal = track.lessons.length;

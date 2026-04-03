@@ -117,7 +117,7 @@ export interface GlossaryEntry {
   category: GlossaryCategory;
 }
 
-export type LessonCategory = 'coding-basics' | 'architecture' | 'llm-orchestration';
+export type LessonCategory = 'coding-basics' | 'architecture' | 'llm-orchestration' | 'git-collaboration';
 
 export interface LessonStep {
   instruction: string;

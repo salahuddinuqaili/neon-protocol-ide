@@ -14,7 +14,7 @@ type Tab = 'providers' | 'usage';
 const MODEL_PLACEHOLDERS: Record<string, string> = {
   ollama: 'e.g. llama3:8b, mistral:7b',
   openai: 'model name',
-  anthropic: 'model name',
+  anthropic: 'e.g. claude-sonnet-4-20250514',
   'openai-compatible': 'model name or ID',
 };
 
@@ -23,7 +23,7 @@ interface ProviderPreset { label: string; type: ProviderType; baseUrl: string; m
 const PROVIDER_PRESETS: ProviderPreset[] = [
   { label: 'Local (Ollama)', type: 'ollama', baseUrl: 'http://localhost:11434', model: '', description: 'Runs models on your machine' },
   { label: 'OpenAI-compatible API', type: 'openai-compatible', baseUrl: '', model: '', description: 'Works with most cloud providers' },
-  { label: 'Anthropic-compatible API', type: 'anthropic', baseUrl: '', model: '', description: 'For Anthropic-format endpoints' },
+  { label: 'Anthropic-compatible API', type: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: '', description: 'For Anthropic-format endpoints' },
 ];
 
 function formatTokens(n: number): string {
@@ -70,7 +70,7 @@ const ProviderCard: React.FC<{
             <input value={provider.model} onChange={(e) => onUpdate(provider.id, { model: e.target.value, connectionStatus: 'untested' })}
               className="flex-1 bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary" placeholder={modelPlaceholder} />
           </div>
-          {(provider.type === 'openai-compatible' || provider.type === 'ollama') && (
+          {(provider.type === 'openai-compatible' || provider.type === 'ollama' || provider.type === 'anthropic') && (
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-muted font-mono uppercase shrink-0 w-12">URL:</span>
               <input value={provider.baseUrl} onChange={(e) => onUpdate(provider.id, { baseUrl: e.target.value, connectionStatus: 'untested' })}

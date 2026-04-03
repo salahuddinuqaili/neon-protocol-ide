@@ -74,7 +74,7 @@ const BranchSwitcher: React.FC<BranchSwitcherProps> = ({ onRefresh }) => {
 
       {isOpen && (<>
         <div className="fixed inset-0 z-[98]" onClick={() => { setIsOpen(false); setFilter(''); setCreating(false); }} />
-        <div className="absolute bottom-6 left-0 z-[99] w-64 bg-surface border border-muted shadow-lg max-h-72 flex flex-col">
+        <div className="absolute bottom-8 left-0 z-[99] w-64 bg-surface border border-muted shadow-lg flex flex-col" style={{ maxHeight: 'min(288px, calc(100vh - 80px))' }}>
           {/* Search + create */}
           <div className="p-2 border-b border-muted/10 flex flex-col gap-1.5">
             <input

@@ -267,6 +267,84 @@ export const LESSONS: Lesson[] = [
       },
     ],
   },
+
+  // --- Git & Collaboration Track ---
+  {
+    id: 'what-is-version-control',
+    title: 'What is Version Control?',
+    description: 'Understand why developers track changes and how git saves your work.',
+    category: 'git-collaboration',
+    requiredView: 'code',
+    prerequisiteLessons: [],
+    steps: [
+      {
+        instruction: 'Imagine writing an essay and being able to undo any change from any point — even from last week. That\'s what version control does for code. Git is the most popular version control system. It records every change as a "commit" — a snapshot of your project at a moment in time.',
+      },
+      {
+        instruction: 'Each commit has: (1) a unique ID (hash), (2) a message describing the change, (3) who made the change, and (4) when. You can browse the full history, compare any two points, or undo a mistake by going back to an earlier commit.',
+      },
+      {
+        instruction: 'In the sidebar, click the GIT tab. If your project is a git repository, you\'ll see changed files listed here. If not, it will say "Not a git repository." All professional projects use git — it\'s as fundamental as the code editor itself.',
+      },
+    ],
+  },
+  {
+    id: 'staging-and-committing',
+    title: 'Staging and Committing',
+    description: 'Learn the two-step process of saving changes: stage first, then commit.',
+    category: 'git-collaboration',
+    requiredView: 'code',
+    prerequisiteLessons: ['what-is-version-control'],
+    steps: [
+      {
+        instruction: 'Git uses a two-step save process. First you "stage" files — this selects which changes to include. Then you "commit" — this saves the staged changes permanently. Think of staging as packing a box, and committing as shipping it.',
+      },
+      {
+        instruction: 'Why two steps? Because you might change 10 files but want to save related changes together. Stage the 3 files that fix a bug, commit with message "Fix login timeout." Stage the other 7 later with a different message. This keeps your history clean and readable.',
+      },
+      {
+        instruction: 'In the GIT tab: click the + button next to a file to stage it (moves it to the "Staged" section). Write a short, clear commit message like "Add user profile page" and press Ctrl+Enter or click Commit. Your changes are now saved in git\'s history.',
+      },
+    ],
+  },
+  {
+    id: 'branches-explained',
+    title: 'Branches: Parallel Workstreams',
+    description: 'Learn how branches let you work on features without breaking the main code.',
+    category: 'git-collaboration',
+    requiredView: 'code',
+    prerequisiteLessons: ['staging-and-committing'],
+    steps: [
+      {
+        instruction: 'A branch is a parallel version of your project. The "main" branch is the primary, stable version. When you want to add a feature or fix a bug, you create a new branch, make your changes there, and merge it back when done.',
+      },
+      {
+        instruction: 'Why branch? If you code directly on "main" and break something, everyone is affected. With branches, your in-progress work is isolated. Three developers can work on three features simultaneously, each on their own branch, without interfering.',
+      },
+      {
+        instruction: 'Click the branch name in the bottom footer bar. You\'ll see all local and remote branches. Click "Create new branch" to start a new one. When you\'re done with your work, push the branch and create a pull request to merge it back to main.',
+      },
+    ],
+  },
+  {
+    id: 'push-pull-collaborate',
+    title: 'Push, Pull, and Collaboration',
+    description: 'Share your work with others by pushing to and pulling from remote repositories.',
+    category: 'git-collaboration',
+    requiredView: 'code',
+    prerequisiteLessons: ['branches-explained'],
+    steps: [
+      {
+        instruction: 'A "remote" is a copy of your repository on a server (like GitHub). When you push, your local commits upload to the remote. When you pull, you download new commits others have pushed. This is how teams stay in sync.',
+      },
+      {
+        instruction: 'The workflow: (1) Pull to get the latest changes. (2) Make your changes locally. (3) Stage and commit. (4) Push to share. Always pull before pushing to avoid conflicts. The GIT tab shows upload/download arrows for push and pull.',
+      },
+      {
+        instruction: 'If the footer shows "↑2" next to your branch, you have 2 commits to push. "↓3" means 3 commits to pull. The diff viewer (click any changed file) shows exactly what changed — the old version on the left, the new on the right.',
+      },
+    ],
+  },
 ];
 
 // --- Node Education Data ---

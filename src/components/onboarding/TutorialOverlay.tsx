@@ -21,6 +21,7 @@ const TutorialOverlay: React.FC = () => {
     advanceTutorial,
     completeTutorial,
     skipTutorial,
+    toggleLearningPath,
   } = useIDEStore();
 
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
@@ -130,6 +131,10 @@ const TutorialOverlay: React.FC = () => {
   const handleNext = () => {
     if (isLastStep) {
       completeTutorial();
+      // After completing the welcome tour, open the Learning Path so beginners know what to do next
+      if (tutorialId === 'welcome-tour') {
+        toggleLearningPath(true);
+      }
     } else {
       advanceTutorial();
     }
