@@ -63,7 +63,7 @@ const ModuleExplorer: React.FC = () => {
     } else {
       addChatMessage({
         role: 'ai',
-        text: `No AI provider is connected yet. Click the "AI" button in the top bar to add a local or cloud provider.`
+        text: `No AI provider is connected yet. Click "AI: Not Connected" in the bottom bar, or switch to the AI Settings view to add a provider.`
       });
     }
   };

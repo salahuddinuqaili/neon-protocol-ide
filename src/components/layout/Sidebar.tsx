@@ -292,12 +292,12 @@ const Sidebar: React.FC = () => {
 
       // Browser fallback
       if (!('showDirectoryPicker' in window)) {
-        addToast('File System Access API requires Chrome or Edge', 'error');
+        addToast('Opening folders requires Chrome or Edge. Try using one of those browsers.', 'error');
         return;
       }
 
       if (!window.isSecureContext && window.location.hostname !== 'localhost') {
-        addToast('Requires HTTPS or localhost', 'error');
+        addToast('Secure connection required. Use HTTPS or localhost.', 'error');
         return;
       }
 

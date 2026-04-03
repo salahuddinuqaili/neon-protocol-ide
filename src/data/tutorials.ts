@@ -22,17 +22,17 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     },
     {
       id: 'welcome-3',
-      title: 'Explore a Module',
-      description: 'When you click a box on the map, this panel opens with details. You can ask the AI questions about that part of your app here.',
+      title: 'The Boxes Are Modules',
+      description: 'Each box on the map is a "module" — a group of related code. Click any box to see what\'s inside. The lines between them show how data moves through your app.',
       targetView: 'blueprint',
-      targetSelector: '[data-tutorial="module-explorer"]',
+      targetSelector: null,
       action: 'observe',
       completionTrigger: 'manual',
     },
     {
       id: 'welcome-4',
       title: 'The Code Editor',
-      description: 'This is where you read and write code. Files open in tabs at the top. The left sidebar shows all your project files. Let\'s switch to it now.',
+      description: 'This is where you read and write code. The sidebar on the left shows your project files. We\'ve opened the first lesson file for you — you can see the code with colored text (that\'s syntax highlighting).',
       targetView: 'code',
       targetSelector: '[data-tutorial="view-toggle-code"]',
       action: 'observe',
@@ -41,7 +41,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'welcome-5',
       title: 'Your Files',
-      description: 'The sidebar shows your project\'s files and folders. Click any file to open it in the editor. Try opening one of the lesson files!',
+      description: 'The sidebar shows all files in your project. Click any file to open it. The demo project has 7 lesson files that teach coding concepts step by step.',
       targetView: 'code',
       targetSelector: '[data-tutorial="sidebar"]',
       action: 'observe',
@@ -50,7 +50,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'welcome-6',
       title: 'The AI Copilot',
-      description: 'On the right side of the editor, the Copilot can answer questions about the code you\'re reading. Try asking "What does this file do?" when you have a file open.',
+      description: 'On the right side you\'ll see the Copilot panel. Once you connect an AI provider, you can ask it questions like "What does this code do?" and it will explain the file you\'re looking at.',
       targetView: 'code',
       targetSelector: '[data-tutorial="copilot-toggle"]',
       action: 'observe',
@@ -59,7 +59,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'welcome-7',
       title: 'AI Settings',
-      description: 'This is where you connect AI models. Ollama is free and runs on your computer. You can also use cloud services like OpenAI or Anthropic. Let\'s take a look.',
+      description: 'This is where you connect an AI to power the copilot. You can use a local provider that runs on your computer, or a cloud service. We\'ll help you set this up later.',
       targetView: 'orchestrator',
       targetSelector: '[data-tutorial="view-toggle-ai"]',
       action: 'observe',
@@ -68,7 +68,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'welcome-8',
       title: 'You\'re Ready!',
-      description: 'That\'s the basics! Explore the demo project to learn coding concepts, or set up an AI provider to unlock the copilot. Look for the graduation cap icon to find more lessons.',
+      description: 'That\'s the basics! Next, your Learning Path will open with structured lessons. Start with "What is a Function?" to begin learning. You can always reopen it by clicking the progress ring in the top-right corner.',
       targetView: null,
       targetSelector: null,
       action: 'observe',

@@ -142,7 +142,13 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
         <span className="material-symbols-outlined text-3xl text-muted/30">source</span>
-        <p className="text-xs text-muted">Not a git repository</p>
+        <p className="text-xs text-text-main font-bold">Not a git repository</p>
+        <p className="text-[11px] text-muted leading-relaxed max-w-[200px]">
+          Git tracks changes to your code so you can undo mistakes and collaborate with others.
+        </p>
+        <p className="text-[11px] text-muted leading-relaxed max-w-[200px]">
+          To use Git, open a project folder that already has a <span className="text-primary font-mono">.git</span> folder, or initialize one using a terminal.
+        </p>
       </div>
     );
   }

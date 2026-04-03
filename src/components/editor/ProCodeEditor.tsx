@@ -91,7 +91,7 @@ const ProCodeEditor: React.FC = () => {
     } else {
       setCopilotMessages(prev => [...prev, {
         role: 'ai',
-        text: `No AI provider connected. Click "AI" in the top bar to add a local or cloud provider.`
+        text: `No AI provider connected. Click "AI: Not Connected" in the bottom bar, or switch to the AI Settings view to add a provider.`
       }]);
     }
   };

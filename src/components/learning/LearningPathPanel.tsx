@@ -9,7 +9,7 @@ import { Lesson, LessonCategory } from '../../types';
 const TRACK_INFO: Record<LessonCategory, { label: string; icon: string; color: string }> = {
   'coding-basics': { label: 'Coding Basics', icon: 'code', color: 'text-primary' },
   'architecture': { label: 'Architecture', icon: 'account_tree', color: 'text-[#FF9F43]' },
-  'llm-orchestration': { label: 'LLM Orchestration', icon: 'smart_toy', color: 'text-accent-ai' },
+  'llm-orchestration': { label: 'AI & LLMs', icon: 'smart_toy', color: 'text-accent-ai' },
   'git-collaboration': { label: 'Git & Collaboration', icon: 'source', color: 'text-accent-warning' },
 };
 

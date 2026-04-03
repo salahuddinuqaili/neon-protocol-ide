@@ -22,6 +22,8 @@ const TutorialOverlay: React.FC = () => {
     completeTutorial,
     skipTutorial,
     toggleLearningPath,
+    openFile,
+    ensureFiles,
   } = useIDEStore();
 
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
@@ -50,12 +52,22 @@ const TutorialOverlay: React.FC = () => {
     });
   }, [currentStep]);
 
-  // Switch view when step requires it
+  // Switch view when step requires it, and auto-open demo file for code view
   useEffect(() => {
     if (currentStep?.targetView) {
       setView(currentStep.targetView);
+      // When the welcome tour switches to code view, open the first lesson file
+      // so the editor isn't empty
+      if (tutorialId === 'welcome-tour' && currentStep.targetView === 'code' && currentStep.id === 'welcome-4') {
+        const { DEMO_FILES } = require('../../data/demoProject');
+        const firstFile = DEMO_FILES.find((f: any) => f.name === 'lesson-1-hello.ts');
+        if (firstFile) {
+          ensureFiles([firstFile]);
+          openFile(firstFile.path);
+        }
+      }
     }
-  }, [currentStep, setView]);
+  }, [currentStep, setView, tutorialId, openFile, ensureFiles]);
 
   // Recalculate spotlight position after view switch and on resize/scroll
   useEffect(() => {
