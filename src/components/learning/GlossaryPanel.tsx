@@ -19,6 +19,14 @@ const GlossaryPanel: React.FC = () => {
   });
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
   const termRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up pending scroll timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
 
   // Reset search when panel closes
   useEffect(() => {
@@ -54,7 +62,8 @@ const GlossaryPanel: React.FC = () => {
       setExpandedTerms((prev) => ({ ...prev, [termId]: true }));
     }
     // Scroll after a short delay to allow DOM update
-    setTimeout(() => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
       const el = termRefs.current[termId];
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });

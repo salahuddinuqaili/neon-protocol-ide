@@ -10,7 +10,8 @@ import ConceptTooltip from '../learning/ConceptTooltip';
 import { MODEL_PLACEHOLDERS, PROVIDER_PRESETS, STATUS_DISPLAY, ProviderPreset } from '../../config/providers';
 import { BEGINNER_EXPLAINER } from '../../config/education';
 
-type LogEntry = { msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
+type LogEntry = { id: number; msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
+let logIdCounter = 0;
 type Tab = 'providers' | 'usage';
 
 function formatTokens(n: number): string {
@@ -110,7 +111,7 @@ const OrchestrationHub: React.FC = () => {
   const [testPrompt, setTestPrompt] = useState('');
   const isBeginnerMode = learningMode === 'beginner';
   const [testLog, setTestLog] = useState<LogEntry[]>([
-    { msg: isBeginnerMode
+    { id: ++logIdCounter, msg: isBeginnerMode
       ? '> Welcome! This is like a chat window for testing your AI. Try typing a simple question below and press Send.'
       : '> Ready. Type a message to test your AI connection.', type: 'info' },
   ]);
@@ -167,15 +168,15 @@ const OrchestrationHub: React.FC = () => {
   const runTest = async () => {
     if (!testPrompt) return;
     setIsTesting(true);
-    setTestLog(prev => [...prev, { msg: `> You: "${testPrompt.slice(0, 100)}"`, type: 'primary' }]);
+    setTestLog(prev => [...prev, { id: ++logIdCounter, msg: `> You: "${testPrompt.slice(0, 100)}"`, type: 'primary' }]);
     try {
       const result = await routeChat(providers, [{ role: 'user', content: testPrompt }],
-        (msg, type) => setTestLog(prev => [...prev, { msg: `> ${msg}`, type }]));
-      setTestLog(prev => [...prev, { msg: `> AI (${result.provider}): ${result.content.slice(0, 400)}`, type: 'ai' }]);
+        (msg, type) => setTestLog(prev => [...prev, { id: ++logIdCounter, msg: `> ${msg}`, type }]));
+      setTestLog(prev => [...prev, { id: ++logIdCounter, msg: `> AI (${result.provider}): ${result.content.slice(0, 400)}`, type: 'ai' }]);
       trackTokenUsage(result.providerId, result.tokensUsed);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setTestLog(prev => [...prev, { msg: `> Error: ${message}`, type: 'error' }]);
+      setTestLog(prev => [...prev, { id: ++logIdCounter, msg: `> Error: ${message}`, type: 'error' }]);
     } finally { setIsTesting(false); setTestPrompt(''); }
   };
 
@@ -208,8 +209,8 @@ const OrchestrationHub: React.FC = () => {
                       </div>
                       <button onClick={() => dismissHint('orchestrator-explainer')} className="text-[11px] text-muted hover:text-text-main font-mono">Got it, let me configure</button>
                     </div>
-                    {BEGINNER_EXPLAINER.map((item, i) => (
-                      <details key={i} className="group">
+                    {BEGINNER_EXPLAINER.map((item) => (
+                      <details key={item.q} className="group">
                         <summary className="flex items-center gap-2 cursor-pointer text-xs text-text-main font-bold py-1 hover:text-primary transition-colors list-none">
                           <span className="material-symbols-outlined text-[14px] text-accent-ai">{item.icon}</span>
                           {item.q}
@@ -259,8 +260,8 @@ const OrchestrationHub: React.FC = () => {
                     <div className="px-4 py-2 text-xs font-bold text-muted uppercase tracking-wider bg-background/50 border-b border-muted/10">
                       Choose provider type
                     </div>
-                    {PROVIDER_PRESETS.map((preset, i) => (
-                      <button key={i} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-3 text-text-main hover:bg-surface-hover flex flex-col border-b border-muted/5">
+                    {PROVIDER_PRESETS.map((preset) => (
+                      <button key={preset.label} onClick={() => handleAddPreset(preset)} className="w-full text-left px-4 py-3 text-text-main hover:bg-surface-hover flex flex-col border-b border-muted/5">
                         <span className="text-xs font-bold">{preset.label}</span>
                         {preset.description && <span className="text-[11px] text-muted mt-0.5">{preset.description}</span>}
                       </button>
@@ -356,8 +357,8 @@ const OrchestrationHub: React.FC = () => {
             ) : (
               <>
                 <div className="flex-1 bg-surface/20 border border-muted p-4 font-mono text-xs overflow-y-auto custom-scrollbar flex flex-col gap-1">
-                  {testLog.map((log, i) => (
-                    <div key={i}><span className={log.type === 'primary' ? 'text-primary' : log.type === 'ai' ? 'text-accent-ai' : log.type === 'error' ? 'text-accent-error' : 'text-muted'}>{log.msg}</span></div>
+                  {testLog.map((log) => (
+                    <div key={log.id}><span className={log.type === 'primary' ? 'text-primary' : log.type === 'ai' ? 'text-accent-ai' : log.type === 'error' ? 'text-accent-error' : 'text-muted'}>{log.msg}</span></div>
                   ))}
                   <div ref={logEndRef} />
                 </div>

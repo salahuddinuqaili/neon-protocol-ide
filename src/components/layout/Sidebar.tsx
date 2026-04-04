@@ -286,7 +286,7 @@ const Sidebar: React.FC = () => {
         return;
       }
 
-      const dirHandle = await (window as any).showDirectoryPicker();
+      const dirHandle = await (window as any as { showDirectoryPicker: () => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker();
       const loadedFiles: FileEntry[] = [];
       setIsScanning(true);
 

@@ -20,6 +20,8 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
   const fileName = filePath.split('/').pop() || filePath;
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       const api = window.electronAPI;
       if (!api?.isElectron || !projectPath) return;
@@ -28,19 +30,24 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
       try {
         // HEAD version
         const head = await api.gitFileContent(projectPath, filePath);
+        if (cancelled) return;
         setOriginal(head || '');
 
         // Working copy — read from disk
         const fullPath = `${projectPath}/${filePath}`.replace(/\\/g, '/');
         const current = await api.readFile(fullPath);
+        if (cancelled) return;
         setModified(current || '');
       } catch {
+        if (cancelled) return;
         setOriginal('');
         setModified('');
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
     load();
+
+    return () => { cancelled = true; };
   }, [filePath, projectPath, staged]);
 
   const trapRef = useFocusTrap<HTMLDivElement>(onClose);
