@@ -21,7 +21,7 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
 
   useEffect(() => {
     const load = async () => {
-      const api = (window as any).electronAPI;
+      const api = window.electronAPI;
       if (!api?.isElectron || !projectPath) return;
 
       setLoading(true);

@@ -41,8 +41,14 @@ const MainLayout: React.FC = () => {
 
   // Track which views have been visited so we keep them mounted (preserves state)
   // but don't mount views the user has never opened (saves memory).
-  const visitedViews = useRef(new Set<IDEView>([currentView]));
-  visitedViews.current.add(currentView);
+  const visitedViews = useRef(new Set<IDEView>());
+
+  // Track visited views in an effect to avoid mutating refs during render.
+  // The current view is always rendered via the condition below, so the effect
+  // just ensures previously-visited views stay mounted on subsequent renders.
+  useEffect(() => {
+    visitedViews.current.add(currentView);
+  }, [currentView]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -139,7 +145,7 @@ const MainLayout: React.FC = () => {
         <div className="flex-1 relative overflow-hidden" role="region" aria-label={`${currentView} view`}>
           {/* Only mount views the user has visited. Once mounted, keep them alive
               (hidden via CSS) so state is preserved. Unvisited views are never rendered. */}
-          {visitedViews.current.has('blueprint') && (
+          {(currentView === 'blueprint' || visitedViews.current.has('blueprint')) && (
             <div className={`absolute inset-0 ${currentView === 'blueprint' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
               <ErrorBoundary fallbackTitle="blueprint view crashed">
                 <Suspense fallback={<ViewLoader />}>
@@ -148,7 +154,7 @@ const MainLayout: React.FC = () => {
               </ErrorBoundary>
             </div>
           )}
-          {visitedViews.current.has('code') && (
+          {(currentView === 'code' || visitedViews.current.has('code')) && (
             <div className={`absolute inset-0 ${currentView === 'code' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
               <ErrorBoundary fallbackTitle="code view crashed">
                 <Suspense fallback={<ViewLoader />}>
@@ -157,7 +163,7 @@ const MainLayout: React.FC = () => {
               </ErrorBoundary>
             </div>
           )}
-          {visitedViews.current.has('orchestrator') && (
+          {(currentView === 'orchestrator' || visitedViews.current.has('orchestrator')) && (
             <div className={`absolute inset-0 ${currentView === 'orchestrator' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
               <ErrorBoundary fallbackTitle="AI view crashed">
                 <Suspense fallback={<ViewLoader />}>
@@ -166,7 +172,7 @@ const MainLayout: React.FC = () => {
               </ErrorBoundary>
             </div>
           )}
-          {visitedViews.current.has('terminal') && (
+          {(currentView === 'terminal' || visitedViews.current.has('terminal')) && (
             <div className={`absolute inset-0 ${currentView === 'terminal' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
               <ErrorBoundary fallbackTitle="terminal view crashed">
                 <Suspense fallback={<ViewLoader />}>

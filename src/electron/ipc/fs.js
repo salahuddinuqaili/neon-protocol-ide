@@ -37,6 +37,7 @@ function registerFsHandlers() {
 
   ipcMain.handle('fs:readDirectory', async (_event, dirPath) => {
     try {
+      if (!validateFilePath(dirPath)) return [];
       const entries = fs.readdirSync(dirPath, { withFileTypes: true });
       return entries.map(e => ({
         name: e.name,
