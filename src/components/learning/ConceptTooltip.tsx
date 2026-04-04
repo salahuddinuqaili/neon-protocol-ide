@@ -19,6 +19,14 @@ const ConceptTooltip: React.FC<ConceptTooltipProps> = ({ termId, children }) => 
   const hoverTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Clean up pending timeouts on unmount to prevent memory leaks
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+      if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+    };
+  }, []);
+
   const entry = GLOSSARY_ENTRIES.find((e) => e.id === termId);
 
   if (learningMode === 'experienced' || !entry) {

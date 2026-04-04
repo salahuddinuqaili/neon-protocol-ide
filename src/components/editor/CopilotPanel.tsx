@@ -14,8 +14,9 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
   const { providers, trackTokenUsage } = useIDEStore();
 
   const [copilotInput, setCopilotInput] = useState('');
-  const [copilotMessages, setCopilotMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([]);
+  const [copilotMessages, setCopilotMessages] = useState<{ id: number; role: 'ai' | 'user'; text: string }[]>([]);
   const [copilotLoading, setCopilotLoading] = useState(false);
+  const msgIdRef = useRef(0);
   const copilotEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
   const handleCopilotSend = async () => {
     if (!copilotInput.trim() || copilotLoading) return;
     const userMsg = copilotInput.trim();
-    setCopilotMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'user', text: userMsg }]);
     setCopilotInput('');
 
     if (hasEnabledProvider) {
@@ -47,16 +48,17 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
             { role: 'user', content: userMsg },
           ]
         );
-        setCopilotMessages(prev => [...prev, { role: 'ai', text: result.content }]);
+        setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: result.content }]);
         trackTokenUsage(result.providerId, result.tokensUsed);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Connection failed';
-        setCopilotMessages(prev => [...prev, { role: 'ai', text: `Could not reach AI: ${msg}\n\nCheck your AI settings (AI button in the top bar).` }]);
+        setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: `Could not reach AI: ${msg}\n\nCheck your AI settings (AI button in the top bar).` }]);
       } finally {
         setCopilotLoading(false);
       }
     } else {
       setCopilotMessages(prev => [...prev, {
+        id: ++msgIdRef.current,
         role: 'ai',
         text: `No AI provider connected. Click "AI: Not Connected" in the bottom bar, or switch to the AI Settings view to add a provider.`
       }]);
@@ -104,8 +106,8 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
             </div>
           </div>
         )}
-        {copilotMessages.map((msg, i) => (
-          <div key={i} className={`${msg.role === 'user' ? 'border-l-2 border-primary pl-3' : 'border-l-2 border-accent-ai pl-3'}`}>
+        {copilotMessages.map((msg) => (
+          <div key={msg.id} className={`${msg.role === 'user' ? 'border-l-2 border-primary pl-3' : 'border-l-2 border-accent-ai pl-3'}`}>
             <div className={`text-xs font-bold mb-1 uppercase ${msg.role === 'user' ? 'text-primary' : 'text-accent-ai'}`}>
               {msg.role === 'user' ? 'You' : 'Copilot'}
             </div>

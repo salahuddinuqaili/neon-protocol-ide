@@ -36,27 +36,32 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
       setResults([]);
       return;
     }
-    const lower = query.toLowerCase();
-    const found: SearchResult[] = [];
 
-    for (const file of files) {
-      const lines = file.content.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].toLowerCase().includes(lower)) {
-          found.push({
-            filePath: file.path,
-            fileName: file.name,
-            line: i + 1,
-            content: lines[i].trim(),
-          });
-          if (found.length >= 100) break;
+    const timer = setTimeout(() => {
+      const lower = query.toLowerCase();
+      const found: SearchResult[] = [];
+
+      for (const file of files) {
+        const lines = file.content.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].toLowerCase().includes(lower)) {
+            found.push({
+              filePath: file.path,
+              fileName: file.name,
+              line: i + 1,
+              content: lines[i].trim(),
+            });
+            if (found.length >= 100) break;
+          }
         }
+        if (found.length >= 100) break;
       }
-      if (found.length >= 100) break;
-    }
 
-    setResults(found);
-    setSelectedIndex(0);
+      setResults(found);
+      setSelectedIndex(0);
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [query, files]);
 
   const handleSelect = (result: SearchResult) => {
