@@ -167,9 +167,33 @@ export function generateCategoryNodes(files: FileEntry[]): Node[] {
   return nodes;
 }
 
+// Cache for import edge computation — avoids re-parsing all file content on every render
+let edgeCache: { key: string; edges: Edge[] } | null = null;
+
+function computeFilesHash(files: FileEntry[]): string {
+  // Use file count + total content length as a cheap but effective cache key
+  let totalLen = 0;
+  for (const f of files) totalLen += f.content.length;
+  return `${files.length}:${totalLen}`;
+}
+
 export function generateImportEdges(nodes: Node[], files: FileEntry[]): Edge[] {
   if (nodes.length < 2) return [];
 
+  const nodeIds = nodes.map(n => n.id).sort().join(',');
+  const filesHash = computeFilesHash(files);
+  const cacheKey = `${nodeIds}::${filesHash}`;
+
+  if (edgeCache && edgeCache.key === cacheKey) {
+    return edgeCache.edges;
+  }
+
+  const edges = computeImportEdges(nodes, files);
+  edgeCache = { key: cacheKey, edges };
+  return edges;
+}
+
+function computeImportEdges(nodes: Node[], files: FileEntry[]): Edge[] {
   const prefix = files[0].path.split('/')[0];
   const fileToNode = new Map<string, string>();
   for (const node of nodes) {
