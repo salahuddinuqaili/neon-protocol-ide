@@ -8,7 +8,7 @@ interface BranchSwitcherProps {
 }
 
 const BranchSwitcher: React.FC<BranchSwitcherProps> = ({ onRefresh }) => {
-  const { gitState, projectPath, addToast } = useIDEStore();
+  const { gitState, projectPath, addToast, learningMode } = useIDEStore();
   const [isOpen, setIsOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
@@ -84,6 +84,9 @@ const BranchSwitcher: React.FC<BranchSwitcherProps> = ({ onRefresh }) => {
               className="w-full bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1 focus:outline-none focus:border-primary placeholder-muted"
               autoFocus
             />
+            {learningMode === 'beginner' && (
+              <p className="text-[10px] text-muted leading-relaxed px-0.5">Branches let you work on features without affecting the main code.</p>
+            )}
             {creating ? (
               <div className="flex gap-1">
                 <input

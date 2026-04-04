@@ -33,7 +33,7 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers } = useIDEStore();
+  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers, learningProgress, isTutorialActive, toggleLearningPath, dismissedHints, dismissHint } = useIDEStore();
   const { refresh: refreshGit } = useGitPolling();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
@@ -179,6 +179,28 @@ const MainLayout: React.FC = () => {
                   <TerminalPanel />
                 </Suspense>
               </ErrorBoundary>
+            </div>
+          )}
+          {/* Post-onboarding "Next Steps" banner for beginners who haven't started any lesson */}
+          {hasCompletedOnboarding && learningMode === 'beginner' && !isTutorialActive
+            && learningProgress.completedLessons.length === 0
+            && !dismissedHints.includes('post-onboarding-next-steps') && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-surface border border-primary/50 shadow-neon p-4 max-w-md w-[90%] flex items-start gap-3">
+              <span className="material-symbols-outlined text-lg text-primary shrink-0 mt-0.5">school</span>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-text-main mb-1">Ready to start learning?</p>
+                <p className="text-[11px] text-muted leading-relaxed mb-2">Open the Learning Path to begin interactive lessons on coding, AI, and building software.</p>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => { toggleLearningPath(true); dismissHint('post-onboarding-next-steps'); }}
+                    className="text-[11px] font-bold text-background bg-primary px-3 py-1 hover:bg-[#0cf1f1] transition-all">
+                    Open Learning Path
+                  </button>
+                  <button onClick={() => dismissHint('post-onboarding-next-steps')}
+                    className="text-[11px] text-muted hover:text-text-main font-mono">
+                    Dismiss
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           <ModuleExplorer />

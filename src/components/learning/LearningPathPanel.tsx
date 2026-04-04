@@ -377,16 +377,25 @@ const LearningPathPanel: React.FC = () => {
                         <div className="h-full bg-primary/60 transition-all duration-500" style={{ width: `${trackTotal > 0 ? (trackCompleted / trackTotal) * 100 : 0}%` }} />
                       </div>
                       <div className="flex flex-col gap-2">
-                        {track.lessons.map(lesson => (
+                        {track.lessons.map(lesson => {
+                          const locked = isLessonLocked(lesson);
+                          return (
                           <LessonCard
                             key={lesson.id}
                             lesson={lesson}
                             isCompleted={completedSet.has(lesson.id)}
-                            isLocked={isLessonLocked(lesson)}
+                            isLocked={locked}
                             missingPrereqs={getMissingPrereqs(lesson)}
-                            onClick={() => setActiveLesson(lesson.id)}
+                            onClick={() => {
+                              if (locked) {
+                                addToast(`Complete "${getMissingPrereqs(lesson)[0]}" first`, 'info');
+                                return;
+                              }
+                              setActiveLesson(lesson.id);
+                            }}
                           />
-                        ))}
+                          );
+                        })}
                         {track.lessons.length === 0 && (
                           <p className="text-[11px] text-muted/50 font-mono">Coming soon</p>
                         )}

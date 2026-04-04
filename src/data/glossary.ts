@@ -181,6 +181,31 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     category: 'llm',
   },
 
+  {
+    id: 'prompt-engineering',
+    term: 'Prompt Engineering',
+    shortDefinition: 'The skill of writing clear, specific questions to get better AI responses.',
+    fullExplanation: 'Prompt engineering is structuring your questions to an AI for the best results. Good prompts include: (1) Context — what you are working on, (2) A specific question, (3) Any constraints or preferences. Instead of "help me with React," try "I have a React component that needs to show a loading spinner while fetching data — what pattern should I use?" The difference in answer quality is dramatic.',
+    relatedTerms: ['prompt', 'llm', 'vibe-coding'],
+    category: 'llm',
+  },
+  {
+    id: 'hallucination',
+    term: 'Hallucination',
+    shortDefinition: 'When AI confidently generates information that is incorrect or made up.',
+    fullExplanation: 'AI models sometimes produce outputs that sound authoritative but are factually wrong. They might invent function names that do not exist, reference outdated APIs, or oversimplify complex problems. This is called "hallucination." It happens because AI predicts likely text, not verified truth. Always test AI-generated code and verify important claims against documentation.',
+    relatedTerms: ['llm', 'prompt', 'vibe-coding', 'inference'],
+    category: 'llm',
+  },
+  {
+    id: 'vibe-coding',
+    term: 'Vibe Coding',
+    shortDefinition: 'An iterative workflow of building software collaboratively with AI.',
+    fullExplanation: 'Vibe coding is a development approach where you describe what you want to build in plain language, ask the AI for ideas, evaluate its suggestions critically, and iterate. The loop is: describe intent → review AI output → ask follow-ups → test and verify. You drive the direction; the AI helps with implementation details. It is not about blindly accepting AI output, but about thinking together.',
+    relatedTerms: ['prompt-engineering', 'copilot', 'hallucination', 'prompt'],
+    category: 'llm',
+  },
+
   // --- Architecture ---
   {
     id: 'node',
