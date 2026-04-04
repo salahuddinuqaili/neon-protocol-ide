@@ -315,6 +315,7 @@ const Sidebar: React.FC = () => {
       addRecentProject(dirHandle.name);
       addToast(`Loaded ${loadedFiles.length} files from ${dirHandle.name}`, 'success');
       setView('blueprint');
+      setIsScanning(false);
     } catch (err: any) {
       setIsScanning(false);
       if (err?.name !== 'AbortError') {

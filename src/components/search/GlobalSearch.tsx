@@ -37,7 +37,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
       return;
     }
 
+    let cancelled = false;
     const timer = setTimeout(() => {
+      if (cancelled) return;
       const lower = query.toLowerCase();
       const found: SearchResult[] = [];
 
@@ -61,7 +63,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
       setSelectedIndex(0);
     }, 150);
 
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [query, files]);
 
   const handleSelect = (result: SearchResult) => {

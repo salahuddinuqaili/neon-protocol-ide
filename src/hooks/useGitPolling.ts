@@ -13,16 +13,19 @@ export function useGitPolling() {
   const setGitState = useIDEStore(s => s.setGitState);
   const consecutiveErrors = useRef(0);
   const lastErrorTime = useRef(0);
+  const inProgress = useRef(false);
 
   const refresh = useCallback(async () => {
-    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
-    if (!api?.isElectron || !projectPath) {
-      setGitState({ isGitRepo: false, files: [], branches: [], log: [], branch: null, changedFileCount: 0, ahead: 0, behind: 0, stashCount: 0 });
-      setGitBranch(null);
-      return;
-    }
-
+    if (inProgress.current) return;
+    inProgress.current = true;
     try {
+      const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
+      if (!api?.isElectron || !projectPath) {
+        setGitState({ isGitRepo: false, files: [], branches: [], log: [], branch: null, changedFileCount: 0, ahead: 0, behind: 0, stashCount: 0 });
+        setGitBranch(null);
+        return;
+      }
+
       const isRepo = await api.isGitRepo(projectPath);
       if (!isRepo) {
         setGitState({ isGitRepo: false, files: [], branches: [], log: [], branch: null, changedFileCount: 0, ahead: 0, behind: 0, stashCount: 0 });
@@ -69,6 +72,8 @@ export function useGitPolling() {
       consecutiveErrors.current++;
       lastErrorTime.current = Date.now();
       setGitState({ lastError: err instanceof Error ? err.message : String(err) });
+    } finally {
+      inProgress.current = false;
     }
   }, [projectPath, setGitBranch, setGitState]);
 

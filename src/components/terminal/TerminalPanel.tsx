@@ -63,8 +63,12 @@ const TerminalPanel: React.FC = () => {
       const processId = result.id;
       setCurrentProcessId(processId);
 
+      const MAX_HISTORY = 5000;
       const removeDataListener = api.onTerminalData(processId, (data: string) => {
-        setHistory(prev => [...prev, { type: 'output', text: data }]);
+        setHistory(prev => {
+          const updated = [...prev, { type: 'output' as const, text: data }];
+          return updated.length > MAX_HISTORY ? updated.slice(-MAX_HISTORY) : updated;
+        });
       });
 
       api.onTerminalExit(processId, (code: number | null) => {

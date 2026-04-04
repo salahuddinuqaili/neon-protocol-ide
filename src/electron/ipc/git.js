@@ -83,7 +83,10 @@ function registerGitHandlers() {
         child.stdin.end();
 
         let stderr = '';
-        child.stderr.on('data', (data) => { stderr += data; });
+        const MAX_STDERR = 512 * 1024; // 512KB limit
+        child.stderr.on('data', (data) => {
+          if (stderr.length < MAX_STDERR) stderr += data;
+        });
 
         child.on('close', (code) => {
           if (code === 0) resolve({ success: true });
