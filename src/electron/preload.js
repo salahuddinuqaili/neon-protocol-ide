@@ -55,8 +55,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // LLM chat proxy (API keys stay in main process)
   llmChat: (config, messages) => ipcRenderer.invoke('llm:chat', config, messages),
 
+  // Ollama management
+  ollamaCheckInstalled: () => ipcRenderer.invoke('ollama:checkInstalled'),
+  ollamaInstall: () => ipcRenderer.invoke('ollama:install'),
+  onOllamaInstallProgress: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('ollama:installProgress', listener);
+    return () => ipcRenderer.removeListener('ollama:installProgress', listener);
+  },
+  ollamaListModels: () => ipcRenderer.invoke('ollama:listModels'),
+  ollamaPullModel: (modelName) => ipcRenderer.invoke('ollama:pullModel', modelName),
+  onOllamaPullProgress: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('ollama:pullProgress', listener);
+    return () => ipcRenderer.removeListener('ollama:pullProgress', listener);
+  },
+
   // System info
   isElectron: true,
   platform: process.platform,
   systemRamGb: Math.round(require('os').totalmem() / (1024 * 1024 * 1024)),
+  getHardwareInfo: () => ipcRenderer.invoke('system:getHardwareInfo'),
 });

@@ -2,7 +2,9 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const { execSync, execFile, spawn } = require('child_process');
+const { execSync, execFile, execFileSync, spawn } = require('child_process');
+const os = require('os');
+const https = require('https');
 const isDev = !app.isPackaged;
 
 // MIME types for serving static files
@@ -544,6 +546,179 @@ ipcMain.handle('llm:chat', async (_event, config, messages) => {
   } catch (err) {
     throw new Error(err.message || String(err));
   }
+});
+
+// --- Ollama Management IPC ---
+
+ipcMain.handle('ollama:checkInstalled', async () => {
+  try {
+    if (process.platform === 'win32') {
+      execFileSync('where', ['ollama']);
+    } else {
+      execFileSync('which', ['ollama']);
+    }
+    return { installed: true };
+  } catch {
+    return { installed: false };
+  }
+});
+
+ipcMain.handle('ollama:install', async (event) => {
+  try {
+    if (process.platform === 'win32') {
+      // Download installer to temp directory and run it
+      const tmpPath = path.join(app.getPath('temp'), 'OllamaSetup.exe');
+      await new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(tmpPath);
+        event.sender.send('ollama:installProgress', 'Downloading installer...');
+        https.get('https://ollama.com/download/OllamaSetup.exe', (response) => {
+          // Follow redirects
+          if (response.statusCode === 301 || response.statusCode === 302) {
+            https.get(response.headers.location, (redirected) => {
+              redirected.pipe(file);
+              file.on('finish', () => { file.close(); resolve(); });
+            }).on('error', reject);
+          } else {
+            response.pipe(file);
+            file.on('finish', () => { file.close(); resolve(); });
+          }
+        }).on('error', reject);
+      });
+      event.sender.send('ollama:installProgress', 'Running installer...');
+      const child = spawn(tmpPath, [], { detached: true, stdio: 'ignore' });
+      child.unref();
+      return { success: true };
+    } else {
+      // macOS / Linux: use official install script
+      event.sender.send('ollama:installProgress', 'Downloading and installing...');
+      return new Promise((resolve) => {
+        const child = spawn('bash', ['-c', 'curl -fsSL https://ollama.com/install.sh | sh'], {
+          env: { ...process.env },
+        });
+        child.stdout.on('data', (data) => {
+          event.sender.send('ollama:installProgress', data.toString());
+        });
+        child.stderr.on('data', (data) => {
+          event.sender.send('ollama:installProgress', data.toString());
+        });
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve({ success: true });
+          } else {
+            resolve({ success: false, error: `Installation exited with code ${code}` });
+          }
+        });
+        child.on('error', (err) => {
+          resolve({ success: false, error: err.message });
+        });
+      });
+    }
+  } catch (err) {
+    return { success: false, error: err.message || String(err) };
+  }
+});
+
+ipcMain.handle('ollama:listModels', async () => {
+  try {
+    const response = await fetch('http://localhost:11434/api/tags', {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return { models: [] };
+    const data = await response.json();
+    return { models: (data.models || []).map((m) => m.name) };
+  } catch {
+    return { models: [] };
+  }
+});
+
+ipcMain.handle('ollama:pullModel', async (event, modelName) => {
+  try {
+    const response = await fetch('http://localhost:11434/api/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: modelName, stream: true }),
+    });
+    if (!response.ok) {
+      return { success: false, error: `Pull failed: ${response.status} ${response.statusText}` };
+    }
+    // Stream NDJSON progress lines
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          const percent = parsed.total > 0 ? Math.round((parsed.completed / parsed.total) * 100) : 0;
+          event.sender.send('ollama:pullProgress', {
+            model: modelName,
+            percent,
+            status: parsed.status || 'downloading',
+          });
+        } catch { /* skip malformed lines */ }
+      }
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message || String(err) };
+  }
+});
+
+// --- System Hardware Detection ---
+
+ipcMain.handle('system:getHardwareInfo', async () => {
+  const ramGb = Math.round(os.totalmem() / (1024 ** 3));
+  const cpuCores = os.cpus().length;
+  const gpu = { detected: false, name: '', vramGb: 0 };
+
+  try {
+    if (process.platform === 'win32') {
+      const result = execFileSync('powershell', [
+        '-NoProfile', '-Command',
+        'Get-CimInstance Win32_VideoController | Select-Object -First 1 Name, AdapterRAM | ConvertTo-Json',
+      ], { encoding: 'utf-8', timeout: 5000 });
+      const parsed = JSON.parse(result);
+      if (parsed && parsed.Name) {
+        gpu.detected = true;
+        gpu.name = parsed.Name;
+        gpu.vramGb = parsed.AdapterRAM ? Math.round(parsed.AdapterRAM / (1024 ** 3)) : 0;
+      }
+    } else if (process.platform === 'darwin') {
+      const result = execFileSync('system_profiler', ['SPDisplaysDataType', '-json'], {
+        encoding: 'utf-8', timeout: 5000,
+      });
+      const parsed = JSON.parse(result);
+      const displays = parsed?.SPDisplaysDataType;
+      if (displays && displays.length > 0) {
+        gpu.detected = true;
+        gpu.name = displays[0].sppci_model || displays[0]._name || 'Unknown';
+        const vram = displays[0].spdisplays_vram || displays[0].sppci_vram || '';
+        const match = vram.match(/(\d+)/);
+        gpu.vramGb = match ? Math.round(parseInt(match[1], 10) / 1024) : 0;
+      }
+    } else {
+      // Linux — try nvidia-smi first
+      try {
+        const result = execFileSync('nvidia-smi', [
+          '--query-gpu=name,memory.total', '--format=csv,noheader,nounits',
+        ], { encoding: 'utf-8', timeout: 5000 });
+        const parts = result.trim().split(',').map(s => s.trim());
+        if (parts.length >= 2) {
+          gpu.detected = true;
+          gpu.name = parts[0];
+          gpu.vramGb = Math.round(parseInt(parts[1], 10) / 1024);
+        }
+      } catch { /* nvidia-smi not available */ }
+    }
+  } catch { /* GPU detection failed, proceed with defaults */ }
+
+  return { ramGb, cpuCores, gpu };
 });
 
 // --- App lifecycle ---

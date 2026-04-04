@@ -78,9 +78,18 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
 
   'first-ai-connection': [
     {
+      id: 'ai-0',
+      title: 'Fastest Way to Start',
+      description: 'If Ollama is running, look for the "Quick Start" banner at the top. It can download a small demo model automatically so you can try AI in seconds. Otherwise, follow the steps below to set up a provider manually.',
+      targetView: 'orchestrator',
+      targetSelector: null,
+      action: 'observe',
+      completionTrigger: 'manual',
+    },
+    {
       id: 'ai-1',
       title: 'Let\'s Connect an AI',
-      description: 'To use the copilot, you need an AI provider. The easiest way to start is with Ollama, which is free and runs on your computer.',
+      description: 'To use the copilot, you need an AI provider. The easiest way to start is with a local provider, which is free and runs on your computer. You can also install it automatically from the provider card.',
       targetView: 'orchestrator',
       targetSelector: null,
       action: 'observe',
@@ -89,7 +98,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'ai-2',
       title: 'Add a Provider',
-      description: 'Click the "Add" button to see available providers. Choose "Ollama (local, free)" if you have it installed, or "Groq (fast, free tier)" for a cloud option.',
+      description: 'Click the "Add" button to see available providers. Choose "Local (Ollama)" for a free local option, or pick a cloud provider. If Ollama isn\'t installed, the app can install it for you automatically.',
       targetView: 'orchestrator',
       targetSelector: '[data-tutorial="add-provider"]',
       action: 'observe',
@@ -98,7 +107,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'ai-3',
       title: 'Configure Your Provider',
-      description: 'Each provider needs some setup. For Ollama, just make sure it\'s running on your computer. For cloud providers, paste your API key in the "Key" field.',
+      description: 'For local providers, the app detects your hardware and recommends models that fit your system. Check the "Recommended Models" section below your providers to find the best model and pull it with one click. For cloud providers, paste your API key.',
       targetView: 'orchestrator',
       targetSelector: null,
       action: 'observe',

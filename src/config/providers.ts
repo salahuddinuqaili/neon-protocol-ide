@@ -27,3 +27,29 @@ export const STATUS_DISPLAY: Record<ConnectionStatus, { label: string; color: st
   verified: { label: 'Verified', color: 'text-primary border-primary/30' },
   failed: { label: 'Failed', color: 'text-accent-error border-accent-error/30' },
 };
+
+// --- Model Recommendation Engine ---
+
+export interface ModelRecommendation {
+  model: string;
+  label: string;
+  sizeGb: number;
+  description: string;
+  minRamGb: number;
+}
+
+export const MODEL_CATALOG: ModelRecommendation[] = [
+  { model: 'qwen2:0.5b', label: 'Qwen2 0.5B', sizeGb: 0.4, description: 'Tiny & fast, great for testing', minRamGb: 4 },
+  { model: 'phi3:mini', label: 'Phi-3 Mini', sizeGb: 2.3, description: 'Small but capable', minRamGb: 6 },
+  { model: 'llama3:8b', label: 'Llama 3 8B', sizeGb: 4.7, description: 'Good all-rounder', minRamGb: 10 },
+  { model: 'mistral:7b', label: 'Mistral 7B', sizeGb: 4.1, description: 'Fast and efficient', minRamGb: 10 },
+  { model: 'codellama:7b', label: 'Code Llama 7B', sizeGb: 3.8, description: 'Optimized for code tasks', minRamGb: 10 },
+  { model: 'llama3:70b-q4', label: 'Llama 3 70B (Q4)', sizeGb: 40, description: 'Top quality, needs powerful hardware', minRamGb: 48 },
+];
+
+export const DEMO_MODEL = MODEL_CATALOG[0]; // qwen2:0.5b — smallest model for onboarding
+
+export function getRecommendedModels(ramGb: number): (ModelRecommendation & { fits: boolean })[] {
+  return MODEL_CATALOG.filter(m => m.minRamGb <= ramGb)
+    .map(m => ({ ...m, fits: m.minRamGb <= ramGb * 0.7 }));
+}

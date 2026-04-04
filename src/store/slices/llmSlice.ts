@@ -1,10 +1,19 @@
 import { StateCreator } from 'zustand';
-import { LLMProviderConfig, OllamaStatus } from '../../types';
+import { LLMProviderConfig, OllamaStatus, OllamaInstallStatus, HardwareInfo, ModelPullProgress } from '../../types';
 
 export interface LLMSlice {
   providers: LLMProviderConfig[];
   ollamaStatus: OllamaStatus;
+  ollamaInstallStatus: OllamaInstallStatus;
+  ollamaInstallError: string | null;
+  hardwareInfo: HardwareInfo | null;
+  availableOllamaModels: string[];
+  modelPullProgress: ModelPullProgress | null;
   setOllamaStatus: (status: OllamaStatus) => void;
+  setOllamaInstallStatus: (status: OllamaInstallStatus, error?: string) => void;
+  setHardwareInfo: (info: HardwareInfo) => void;
+  setAvailableOllamaModels: (models: string[]) => void;
+  setModelPullProgress: (progress: ModelPullProgress | null) => void;
   updateProvider: (id: string, updates: Partial<LLMProviderConfig>) => void;
   reorderProviders: (providers: LLMProviderConfig[]) => void;
   addProvider: (provider: LLMProviderConfig) => void;
@@ -15,8 +24,21 @@ export interface LLMSlice {
 export const createLLMSlice: StateCreator<LLMSlice, [], [], LLMSlice> = (set) => ({
   providers: [],
   ollamaStatus: 'checking',
+  ollamaInstallStatus: 'unknown',
+  ollamaInstallError: null,
+  hardwareInfo: null,
+  availableOllamaModels: [],
+  modelPullProgress: null,
 
   setOllamaStatus: (status) => set({ ollamaStatus: status }),
+
+  setOllamaInstallStatus: (status, error) => set({ ollamaInstallStatus: status, ollamaInstallError: error || null }),
+
+  setHardwareInfo: (info) => set({ hardwareInfo: info }),
+
+  setAvailableOllamaModels: (models) => set({ availableOllamaModels: models }),
+
+  setModelPullProgress: (progress) => set({ modelPullProgress: progress }),
 
   updateProvider: (id, updates) => set((state) => ({
     providers: state.providers.map(p => p.id === id ? { ...p, ...updates } : p),

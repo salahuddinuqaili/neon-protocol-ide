@@ -1,6 +1,19 @@
 export type IDEView = 'blueprint' | 'code' | 'orchestrator' | 'terminal';
 
 export type OllamaStatus = 'active' | 'offline' | 'checking';
+export type OllamaInstallStatus = 'unknown' | 'not-installed' | 'installing' | 'installed' | 'error';
+
+export interface HardwareInfo {
+  ramGb: number;
+  cpuCores: number;
+  gpu: { detected: boolean; name: string; vramGb: number };
+}
+
+export interface ModelPullProgress {
+  model: string;
+  percent: number;
+  status: string;
+}
 
 export interface FileEntry {
   name: string;
@@ -154,6 +167,11 @@ export interface IDEState {
   activeFile: string | null;
   gitBranch: string | null;
   ollamaStatus: OllamaStatus;
+  ollamaInstallStatus: OllamaInstallStatus;
+  ollamaInstallError: string | null;
+  hardwareInfo: HardwareInfo | null;
+  availableOllamaModels: string[];
+  modelPullProgress: ModelPullProgress | null;
   hasCompletedOnboarding: boolean;
   chatMessages: ChatMessage[];
   editorSettings: EditorSettings;
@@ -188,6 +206,10 @@ export interface IDEState {
   deleteFile: (path: string) => void;
   setGitBranch: (branch: string | null) => void;
   setOllamaStatus: (status: OllamaStatus) => void;
+  setOllamaInstallStatus: (status: OllamaInstallStatus, error?: string) => void;
+  setHardwareInfo: (info: HardwareInfo) => void;
+  setAvailableOllamaModels: (models: string[]) => void;
+  setModelPullProgress: (progress: ModelPullProgress | null) => void;
   setOnboardingComplete: () => void;
   addChatMessage: (message: ChatMessage) => void;
   clearChatMessages: () => void;
