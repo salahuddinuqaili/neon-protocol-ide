@@ -26,7 +26,7 @@ describe('SSR safety', () => {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory() && !entry.name.startsWith('__') && entry.name !== 'test' && entry.name !== 'node_modules') {
           scanDir(fullPath);
-        } else if (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts')) {
+        } else if ((entry.name.endsWith('.tsx') || entry.name.endsWith('.ts')) && !entry.name.endsWith('.d.ts')) {
           const content = fs.readFileSync(fullPath, 'utf-8');
           const lines = content.split('\n');
 

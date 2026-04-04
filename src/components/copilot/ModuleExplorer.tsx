@@ -49,7 +49,7 @@ const ModuleExplorer: React.FC = () => {
             { role: 'user', content: userMessage },
           ]
         );
-        addChatMessage({ role: 'ai', text: result.content });
+        addChatMessage({ role: 'ai', text: result.content, provider: result.provider, model: result.model, tokensUsed: result.tokensUsed });
         trackTokenUsage(result.providerId, result.tokensUsed);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Connection failed';

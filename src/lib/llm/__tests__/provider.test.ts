@@ -1,13 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { routeChat, chatWithProvider } from '../provider';
 import { LLMProviderConfig } from '../../../types';
 
-// Mock global fetch
+// Mock global fetch (used by Ollama browser fallback)
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+// Mock llmChat IPC function
+const mockLlmChat = vi.fn();
+
 beforeEach(() => {
   mockFetch.mockReset();
+  mockLlmChat.mockReset();
+  // Set up window.electronAPI mock for IPC routing
+  (window as any).electronAPI = { isElectron: true, llmChat: mockLlmChat };
+});
+
+afterEach(() => {
+  (window as any).electronAPI = undefined;
 });
 
 function makeProvider(overrides: Partial<LLMProviderConfig> = {}): LLMProviderConfig {
@@ -25,13 +35,13 @@ function makeProvider(overrides: Partial<LLMProviderConfig> = {}): LLMProviderCo
 }
 
 describe('chatWithProvider', () => {
-  it('calls OpenAI-compatible endpoint with correct headers', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'Hello!' } }],
-        usage: { total_tokens: 10 },
-      }),
+  it('routes through IPC when electronAPI is available', async () => {
+    mockLlmChat.mockResolvedValueOnce({
+      content: 'Hello!',
+      provider: 'Test Provider',
+      providerId: 'test',
+      model: 'test-model',
+      tokensUsed: 10,
     });
 
     const result = await chatWithProvider(
@@ -39,21 +49,18 @@ describe('chatWithProvider', () => {
       [{ role: 'user', content: 'Hi' }]
     );
 
-    expect(mockFetch).toHaveBeenCalledOnce();
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('https://api.test.com/v1/chat/completions');
-    expect(options.headers['Authorization']).toBe('Bearer sk-test');
+    expect(mockLlmChat).toHaveBeenCalledOnce();
     expect(result.content).toBe('Hello!');
     expect(result.tokensUsed).toBe(10);
   });
 
-  it('calls Anthropic endpoint with x-api-key header', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        content: [{ text: 'Hi from Claude' }],
-        usage: { input_tokens: 5, output_tokens: 8 },
-      }),
+  it('routes Anthropic through IPC', async () => {
+    mockLlmChat.mockResolvedValueOnce({
+      content: 'Hi from Claude',
+      provider: 'Anthropic',
+      providerId: 'test',
+      model: 'claude-3',
+      tokensUsed: 13,
     });
 
     const result = await chatWithProvider(
@@ -61,14 +68,15 @@ describe('chatWithProvider', () => {
       [{ role: 'user', content: 'Hello' }]
     );
 
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('https://api.anthropic.com/v1/messages');
-    expect(options.headers['x-api-key']).toBe('sk-test');
+    expect(mockLlmChat).toHaveBeenCalledOnce();
     expect(result.content).toBe('Hi from Claude');
     expect(result.tokensUsed).toBe(13);
   });
 
-  it('calls Ollama endpoint without API key', async () => {
+  it('falls back to direct fetch for Ollama in browser mode', async () => {
+    // Remove electronAPI to simulate browser mode
+    (window as any).electronAPI = undefined;
+
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
@@ -86,13 +94,21 @@ describe('chatWithProvider', () => {
     const [url, options] = mockFetch.mock.calls[0];
     expect(url).toBe('http://localhost:11434/api/chat');
     expect(options.headers).not.toHaveProperty('Authorization');
-    expect(options.headers).not.toHaveProperty('x-api-key');
     expect(result.content).toBe('Local response');
     expect(result.tokensUsed).toBe(35);
   });
 
-  it('throws on non-ok response', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 401, statusText: 'Unauthorized' });
+  it('throws for non-Ollama providers in browser mode', async () => {
+    // Remove electronAPI to simulate browser mode
+    (window as any).electronAPI = undefined;
+
+    await expect(
+      chatWithProvider(makeProvider(), [{ role: 'user', content: 'Hi' }])
+    ).rejects.toThrow('Browser mode only supports local Ollama');
+  });
+
+  it('throws on IPC error', async () => {
+    mockLlmChat.mockRejectedValueOnce(new Error('401 Unauthorized'));
 
     await expect(
       chatWithProvider(makeProvider(), [{ role: 'user', content: 'Hi' }])
@@ -102,12 +118,12 @@ describe('chatWithProvider', () => {
 
 describe('routeChat', () => {
   it('uses highest-priority enabled provider first', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'From P2' } }],
-        usage: { total_tokens: 5 },
-      }),
+    mockLlmChat.mockResolvedValueOnce({
+      content: 'From P2',
+      provider: 'High Priority',
+      providerId: 'p2',
+      model: 'test-model',
+      tokensUsed: 5,
     });
 
     const providers = [
@@ -120,12 +136,12 @@ describe('routeChat', () => {
   });
 
   it('skips disabled providers', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'Fallback' } }],
-        usage: { total_tokens: 5 },
-      }),
+    mockLlmChat.mockResolvedValueOnce({
+      content: 'Fallback',
+      provider: 'Enabled',
+      providerId: 'p2',
+      model: 'test-model',
+      tokensUsed: 5,
     });
 
     const providers = [
@@ -138,14 +154,14 @@ describe('routeChat', () => {
   });
 
   it('falls back to next provider on failure', async () => {
-    mockFetch
-      .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Server Error' })
+    mockLlmChat
+      .mockRejectedValueOnce(new Error('500 Server Error'))
       .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: 'Fallback response' } }],
-          usage: { total_tokens: 7 },
-        }),
+        content: 'Fallback response',
+        provider: 'Backup',
+        providerId: 'p2',
+        model: 'test-model',
+        tokensUsed: 7,
       });
 
     const providers = [
@@ -155,11 +171,11 @@ describe('routeChat', () => {
 
     const result = await routeChat(providers, [{ role: 'user', content: 'Test' }]);
     expect(result.provider).toBe('Backup');
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockLlmChat).toHaveBeenCalledTimes(2);
   });
 
   it('throws when all providers fail', async () => {
-    mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Error' });
+    mockLlmChat.mockRejectedValue(new Error('500 Error'));
 
     const providers = [
       makeProvider({ id: 'p1', priority: 1, enabled: true }),

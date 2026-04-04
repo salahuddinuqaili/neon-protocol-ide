@@ -113,6 +113,36 @@ async function createWindow() {
   }
 }
 
+// --- IPC path validation ---
+
+/**
+ * Track the currently opened project directory.
+ * All file operations are restricted to this directory.
+ */
+let activeProjectPath = null;
+
+/**
+ * Validates that a file path is within the given root directory.
+ * Prevents path traversal attacks from the renderer.
+ */
+function isPathWithinRoot(filePath, rootPath) {
+  if (!rootPath) return false;
+  const resolved = path.resolve(filePath);
+  const root = path.resolve(rootPath);
+  return resolved === root || resolved.startsWith(root + path.sep);
+}
+
+/**
+ * Validates a file path against the active project. Returns true if allowed.
+ * Returns false and logs a warning if the path escapes the project root.
+ */
+function validateFilePath(filePath) {
+  if (!activeProjectPath) return true; // No project open yet — allow (for initial open)
+  if (isPathWithinRoot(filePath, activeProjectPath)) return true;
+  console.warn(`[IPC Security] Blocked path outside project: ${filePath}`);
+  return false;
+}
+
 // --- IPC Handlers for native file system operations ---
 
 /**
@@ -154,6 +184,7 @@ ipcMain.handle('fs:readDirectory', async (_event, dirPath) => {
 
 ipcMain.handle('fs:readFile', async (_event, filePath) => {
   try {
+    if (!validateFilePath(filePath)) return null;
     return fs.readFileSync(filePath, 'utf-8');
   } catch {
     return null;
@@ -162,9 +193,7 @@ ipcMain.handle('fs:readFile', async (_event, filePath) => {
 
 ipcMain.handle('fs:writeFile', async (_event, filePath, content) => {
   try {
-    // Basic path validation - ensure it's not trying to escape a known allowed root if we had one
-    // For now, Electron is the user's local tool, so we trust the path provided by the frontend
-    // but we should still be careful.
+    if (!validateFilePath(filePath)) return false;
     fs.writeFileSync(filePath, content, 'utf-8');
     return true;
   } catch {
@@ -174,6 +203,7 @@ ipcMain.handle('fs:writeFile', async (_event, filePath, content) => {
 
 ipcMain.handle('fs:deleteFile', async (_event, filePath) => {
   try {
+    if (!validateFilePath(filePath)) return false;
     fs.unlinkSync(filePath);
     return true;
   } catch {
@@ -183,6 +213,7 @@ ipcMain.handle('fs:deleteFile', async (_event, filePath) => {
 
 ipcMain.handle('fs:renameFile', async (_event, oldPath, newPath) => {
   try {
+    if (!validateFilePath(oldPath) || !validateFilePath(newPath)) return false;
     fs.renameSync(oldPath, newPath);
     return true;
   } catch {
@@ -229,6 +260,7 @@ ipcMain.handle('fs:scanProject', async (_event, dirPath) => {
   }
 
   try {
+    activeProjectPath = dirPath;
     const dirName = path.basename(dirPath);
     scan(dirPath, dirName);
     return results;
