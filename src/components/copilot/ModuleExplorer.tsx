@@ -7,7 +7,7 @@ import ConceptTooltip from '../learning/ConceptTooltip';
 import { NODE_EDUCATION } from '../../data/lessons';
 
 const ModuleExplorer: React.FC = () => {
-  const { selectedModule, isExplorerOpen, toggleExplorer, setView, activeFile, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
+  const { selectedModule, isExplorerOpen, toggleExplorer, setView, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
   const [chatInput, setChatInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -44,7 +44,9 @@ const ModuleExplorer: React.FC = () => {
         const result = await routeChat(
           providers,
           [
-            { role: 'system', content: `You are an architecture copilot for the Neon Protocol IDE. The user is looking at the "${selectedModule || 'unknown'}" module. Be concise and helpful.` },
+            { role: 'system', content: learningMode === 'beginner'
+              ? `You are a teaching-focused architecture copilot. The user is learning about the "${selectedModule || 'unknown'}" module. Explain concepts simply using analogies. At the end of your response, suggest a follow-up question they could ask.`
+              : `You are an architecture copilot for the Neon Protocol IDE. The user is looking at the "${selectedModule || 'unknown'}" module. Be concise and helpful.` },
             ...chatMessages.map(m => ({ role: m.role === 'ai' ? 'assistant' as const : 'user' as const, content: m.text })),
             { role: 'user', content: userMessage },
           ]

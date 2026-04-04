@@ -27,6 +27,8 @@ Each file is a lesson that introduces a coding concept.
 | lesson-5-ai-prompt.ts | How AI understands text |
 | lesson-6-ai-router.ts | Provider routing and fallback |
 | lesson-7-orchestrator.ts | The complete AI pipeline |
+| lesson-8-prompting.ts | Writing effective prompts |
+| lesson-9-vibe-coding.ts | Iterating with AI (vibe coding) |
 
 Happy learning!
 `,
@@ -687,6 +689,224 @@ async function askCopilot(
 // both coding AND AI orchestration. Keep exploring! 🚀
 
 export { askCopilot, buildCopilotPrompt, trackUsage };
+`,
+  },
+  {
+    name: 'lesson-8-prompting.ts',
+    path: 'demo-project/lesson-8-prompting.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// LESSON 8: Writing Effective Prompts
+// ===========================================
+// The #1 skill for working with AI is asking good questions.
+// A vague prompt gets a vague answer. A specific, structured
+// prompt gets a useful, actionable response.
+// This lesson teaches you the difference.
+
+// --- Why prompt quality matters ---
+// AI models respond to patterns. If your question is fuzzy,
+// the AI has to guess what you mean. If your question is
+// precise, the AI can give you exactly what you need.
+//
+// Think of it like asking for directions:
+//   Bad:  "How do I get there?"
+//   Good: "How do I walk from the train station to the library
+//          using the shortest route that avoids construction?"
+
+// --- Bad vs Good prompts ---
+
+// BAD PROMPT: "How do I code?"
+// Problem: Too vague. The AI will give a generic overview
+// that probably won't help with your specific situation.
+
+// GOOD PROMPT:
+// "I have a TypeScript function that takes a user object
+//  and returns their full name. How should I handle the
+//  case where lastName is undefined?"
+//
+// Why it works:
+// - Context: TypeScript function, user object
+// - Specific question: handling undefined lastName
+// - Clear goal: defensive coding for edge cases
+
+// --- Even better with constraints ---
+
+// GREAT PROMPT:
+// "I have this TypeScript function:
+//  function fullName(user: { first: string; last?: string }) { ... }
+//  How should I handle when 'last' is undefined?
+//  I want to return just the first name in that case,
+//  not 'undefined' or an empty string."
+//
+// Why it's great:
+// - Shows the actual code
+// - States the desired behavior
+// - Rules out wrong answers ("not undefined or empty string")
+
+// --- The prompt structure pattern ---
+// Most great prompts follow this structure:
+//
+// 1. CONTEXT:  What are you working on?
+//    "I'm building a React form that submits user data..."
+//
+// 2. QUESTION: What specifically do you need?
+//    "How should I validate the email field before submit?"
+//
+// 3. CONSTRAINTS: Any requirements or preferences?
+//    "I want client-side validation without a library."
+
+interface PromptTemplate {
+  context: string;     // What you're working on
+  question: string;    // What you need help with
+  constraints?: string; // Any preferences or limits
+}
+
+function buildEffectivePrompt(template: PromptTemplate): string {
+  let prompt = template.context + '\\n\\n' + template.question;
+  if (template.constraints) {
+    prompt += '\\n\\nConstraints: ' + template.constraints;
+  }
+  return prompt;
+}
+
+// --- Follow-up prompting ---
+// The first answer isn't always perfect. That's normal!
+// Great AI users iterate with follow-ups:
+//
+// "Explain that more simply"
+//   → When the answer is too technical
+//
+// "Give me a concrete example"
+//   → When the answer is too abstract
+//
+// "What could go wrong with this approach?"
+//   → When you want to stress-test the suggestion
+//
+// "That doesn't seem right because..."
+//   → When you spot an error (AI can be wrong!)
+//
+// "Can you simplify this? I don't need X or Y"
+//   → When the answer is over-engineered
+
+// KEY TAKEAWAYS:
+// 1. Specific prompts get specific (useful) answers
+// 2. Include context, question, and constraints
+// 3. Show actual code when asking about code
+// 4. Use follow-ups to refine: "explain simpler", "give example"
+// 5. The AI works WITH you — it's a conversation, not a search
+`,
+  },
+  {
+    name: 'lesson-9-vibe-coding.ts',
+    path: 'demo-project/lesson-9-vibe-coding.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// LESSON 9: Vibe Coding — Iterating with AI
+// ===========================================
+// Vibe coding is a workflow where you and the AI collaborate.
+// You describe your intent in plain language, the AI suggests
+// an approach, you evaluate it, refine it, and iterate.
+// It's not "AI writes code for me" — it's "AI thinks with me."
+
+// --- What is vibe coding? ---
+// Traditional coding: you think, you type, you debug alone.
+// Vibe coding: you describe, AI suggests, you evaluate, repeat.
+//
+// The key difference: you stay in the driver's seat.
+// The AI is your copilot — it helps navigate, but YOU decide
+// where to go.
+
+// --- The vibe coding loop ---
+//
+// Step 1: DESCRIBE your intent in plain English
+//   "I need a function that filters a list of products
+//    to only show ones under $50 that are in stock."
+//
+// Step 2: REVIEW the AI's suggestion critically
+//   - Does it handle edge cases? (empty list, negative prices)
+//   - Is it readable? Could a teammate understand it?
+//   - Is it the simplest approach that works?
+//
+// Step 3: ASK FOLLOW-UPS to refine
+//   "What if the price is null?"
+//   "Can you add TypeScript types?"
+//   "Is there a more efficient way?"
+//
+// Step 4: TEST the result yourself
+//   - Run it. Does it actually work?
+//   - Try weird inputs. What breaks?
+//   - Read through it. Do you understand every line?
+
+// --- Example: Building a feature with vibe coding ---
+
+// You say: "I need to sort a list of tasks by priority,
+// with 'high' first, 'medium' second, 'low' last."
+
+// AI suggests something like:
+type Priority = 'high' | 'medium' | 'low';
+interface Task { id: number; title: string; priority: Priority; }
+
+const PRIORITY_ORDER: Record<Priority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
+
+function sortByPriority(tasks: Task[]): Task[] {
+  return [...tasks].sort(
+    (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+  );
+}
+
+// --- Now you evaluate ---
+// Good: It uses a lookup object for clear priority mapping
+// Good: It spreads [...tasks] to avoid mutating the original
+// Question: What if two tasks have the same priority?
+//
+// You ask: "Can you add secondary sorting by title
+//           when priorities are equal?"
+//
+// The AI refines. You review again. This IS vibe coding.
+
+// --- Why not let AI do everything? ---
+// Because AI can "hallucinate" — produce code that LOOKS right
+// but has subtle bugs. Examples:
+//
+// - Using a function that doesn't exist in your framework version
+// - Missing edge cases (what if the array is empty?)
+// - Suggesting patterns that work in Python but not TypeScript
+// - Being confidently wrong about how a library works
+//
+// The code might pass a quick glance but fail in production.
+// That's why you always need to:
+//
+// 1. READ the code — don't just copy-paste
+// 2. TEST the code — run it with real and edge-case inputs
+// 3. UNDERSTAND the code — could you explain it to someone?
+// 4. OWN the code — if it breaks, you need to fix it
+
+// --- Vibe coding best practices ---
+//
+// DO:
+//   ✓ Start with a clear description of what you want
+//   ✓ Ask "What could go wrong?" after getting a suggestion
+//   ✓ Ask for simpler alternatives if the code is complex
+//   ✓ Test everything the AI generates
+//   ✓ Use AI to learn — ask "why does this work?"
+//
+// DON'T:
+//   ✗ Copy-paste without reading
+//   ✗ Assume the AI is always right
+//   ✗ Skip testing because "the AI wrote it"
+//   ✗ Use AI-generated code you don't understand
+//   ✗ Feel bad about asking "dumb" questions — there are none
+
+// KEY TAKEAWAYS:
+// 1. Vibe coding = describe, review, refine, test (repeat)
+// 2. You drive the direction; AI helps with implementation
+// 3. Always read, test, and understand AI-generated code
+// 4. AI is a thinking partner, not a replacement for thinking
+// 5. The best developers combine their judgment with AI speed
 `,
   },
 ];

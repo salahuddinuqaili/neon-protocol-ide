@@ -25,6 +25,8 @@ export const BEGINNER_EXPLAINER = [
   { icon: 'token', q: 'What are Tokens?', a: 'Tokens are how AI measures text -- roughly 1 token per word. When the AI reads your question and writes a response, it counts tokens. Cloud providers charge by token usage.' },
   { icon: 'key', q: 'What is an API Key?', a: 'An API key is like a membership card for cloud AI services. You sign up on their website, get a unique key, and paste it here. Keep it secret! Local providers don\'t need one.' },
   { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice fails, the system automatically tries the next one. Use the arrows to set the order.' },
+  { icon: 'edit_note', q: 'How do I ask good questions?', a: 'Be specific! Instead of "how do I use React?" try "I have a component that needs to update when a button is clicked — how do I use useState?" Include what you are working on, what you want, and any constraints. More context = better answers.' },
+  { icon: 'verified_user', q: 'Can I trust the AI\'s answer?', a: 'Not always. AI can be confidently wrong ("hallucinate"). Always verify by: testing the code, checking official docs, or asking "Are you sure? What could go wrong?" Treat AI answers as suggestions to evaluate, not facts to accept.' },
 ];
 
 export const CATEGORY_LABELS: Record<GlossaryCategory, string> = {

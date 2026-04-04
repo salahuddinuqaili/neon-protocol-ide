@@ -11,7 +11,7 @@ interface CopilotPanelProps {
 }
 
 const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
-  const { providers, trackTokenUsage } = useIDEStore();
+  const { providers, trackTokenUsage, learningMode } = useIDEStore();
 
   const [copilotInput, setCopilotInput] = useState('');
   const [copilotMessages, setCopilotMessages] = useState<{ id: number; role: 'ai' | 'user'; text: string }[]>([]);
@@ -37,10 +37,13 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
         const context = currentFile
           ? `The user is editing "${currentFile.name}" (${currentFile.language}). Here are the first 100 lines:\n\`\`\`\n${currentFile.content.split('\n').slice(0, 100).join('\n')}\n\`\`\``
           : 'No file is currently open.';
+        const systemPrompt = learningMode === 'beginner'
+          ? `You are a teaching-focused code copilot helping someone learn to code. When explaining: start with the simplest explanation, use analogies to familiar concepts, and suggest a follow-up question at the end. ${context}`
+          : `You are a code copilot. Be concise. ${context}`;
         const result = await routeChat(
           providers,
           [
-            { role: 'system', content: `You are a code copilot. Be concise. ${context}` },
+            { role: 'system', content: systemPrompt },
             ...copilotMessages.map(m => ({
               role: m.role === 'ai' ? 'assistant' as const : 'user' as const,
               content: m.text,
@@ -121,6 +124,11 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
               <span className="w-1.5 h-1.5 bg-accent-ai animate-pulse rounded-full" />
               Thinking...
             </div>
+          </div>
+        )}
+        {learningMode === 'beginner' && copilotMessages.length === 1 && copilotMessages[0].role === 'ai' && !copilotLoading && (
+          <div className="bg-accent-ai/5 border border-accent-ai/20 p-2.5 text-[11px] text-muted leading-relaxed">
+            <span className="text-accent-ai font-bold">Tip:</span> Not satisfied? Try follow-ups like "Explain more simply", "Give a concrete example", or "What could go wrong with this?"
           </div>
         )}
         <div ref={copilotEndRef} />

@@ -4,22 +4,29 @@ import React, { useState } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { GitFileChange } from '../../types';
 import DiffViewer from './DiffViewer';
-import { GIT_STATUS_COLORS } from '../../config/git';
+import { GIT_STATUS_COLORS, GIT_STATUS_WORDS, GIT_STATUS_TIPS } from '../../config/git';
 
 const GitFileRow: React.FC<{
   file: GitFileChange;
   onToggleStage: () => void;
   onViewDiff: () => void;
   staged: boolean;
-}> = ({ file, onToggleStage, onViewDiff, staged }) => {
+  beginnerMode?: boolean;
+}> = ({ file, onToggleStage, onViewDiff, staged, beginnerMode }) => {
   const displayStatus = staged ? file.indexStatus : file.workTreeStatus;
   const fileName = file.path.split('/').pop() || file.path;
   const dirPath = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';
+  const statusWord = GIT_STATUS_WORDS[displayStatus] || 'Unknown';
+  const statusTip = GIT_STATUS_TIPS[displayStatus] || '';
 
   return (
     <div className="flex items-center gap-1.5 py-1 px-3 text-xs font-mono hover:bg-surface-hover/30 transition-colors group">
-      <span className={`font-bold w-3 text-center shrink-0 ${GIT_STATUS_COLORS[displayStatus] || 'text-muted'}`} aria-label={displayStatus === 'M' ? 'Modified' : displayStatus === 'A' ? 'Added' : displayStatus === 'D' ? 'Deleted' : displayStatus === 'R' ? 'Renamed' : displayStatus === '?' ? 'Untracked' : 'Unknown'}>
-        {displayStatus === '?' ? 'U' : displayStatus}
+      <span
+        className={`font-bold shrink-0 ${GIT_STATUS_COLORS[displayStatus] || 'text-muted'} ${beginnerMode ? 'text-[10px] w-16' : 'w-3 text-center'}`}
+        aria-label={statusWord}
+        title={statusTip}
+      >
+        {beginnerMode ? statusWord : (displayStatus === '?' ? 'U' : displayStatus)}
       </span>
       <button onClick={onViewDiff} className="truncate text-text-main hover:text-primary transition-colors text-left" title={`Diff: ${file.path}`}>
         {fileName}
@@ -41,7 +48,8 @@ const GitFileRow: React.FC<{
 type SCTab = 'changes' | 'log';
 
 const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
-  const { gitState, projectPath, addToast } = useIDEStore();
+  const { gitState, projectPath, addToast, learningMode } = useIDEStore();
+  const isBeginnerMode = learningMode === 'beginner';
   const [commitMsg, setCommitMsg] = useState('');
   const [isCommitting, setIsCommitting] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
@@ -115,9 +123,13 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     } else {
       const errorMsg = result.error || 'Unknown error';
       if (errorMsg.includes('no upstream branch')) {
-        addToast('No upstream branch. Use terminal to set upstream.', 'error');
+        addToast(isBeginnerMode
+          ? 'Not connected to a remote server yet. In Terminal, run: git push -u origin ' + (gitState.branch || 'main')
+          : 'No upstream branch. Use terminal to set upstream.', 'error');
       } else if (errorMsg.includes('rejected')) {
-        addToast('Push rejected. Try pulling first.', 'error');
+        addToast(isBeginnerMode
+          ? 'Someone else pushed changes first. Click the download (Pull) button, then try pushing again.'
+          : 'Push rejected. Try pulling first.', 'error');
       } else {
         addToast(`Push failed: ${errorMsg}`, 'error');
       }
@@ -135,9 +147,13 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     } else {
       const errorMsg = result.error || 'Unknown error';
       if (errorMsg.includes('diverged')) {
-        addToast('Branches have diverged. Use terminal to merge or rebase.', 'error');
+        addToast(isBeginnerMode
+          ? 'Your version and the remote version went in different directions. In Terminal, run: git pull --rebase origin ' + (gitState.branch || 'main')
+          : 'Branches have diverged. Use terminal to merge or rebase.', 'error');
       } else if (errorMsg.includes('conflict')) {
-        addToast('Merge conflicts detected.', 'error');
+        addToast(isBeginnerMode
+          ? 'Two people changed the same lines. Open the affected files and look for <<<< markers to resolve.'
+          : 'Merge conflicts detected.', 'error');
         onRefresh();
       } else {
         addToast(`Pull failed: ${errorMsg}`, 'error');
@@ -245,7 +261,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
             <div>
               <button onClick={() => setStagedOpen(s => !s)} className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-muted uppercase tracking-widest hover:text-text-main transition-colors">
                 <span className={`material-symbols-outlined text-[12px] transition-transform ${stagedOpen ? '' : '-rotate-90'}`}>expand_more</span>
-                Staged
+                {isBeginnerMode ? 'Ready to Commit' : 'Staged'}
                 <span className="text-primary font-mono ml-auto">{staged.length}</span>
                 {staged.length > 0 && (
                   <button onClick={(e) => { e.stopPropagation(); handleUnstageAll(); }} className="text-muted hover:text-text-main ml-1" title="Unstage all">
@@ -254,7 +270,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
                 )}
               </button>
               {stagedOpen && staged.map(f => (
-                <GitFileRow key={`s-${f.path}`} file={f} staged onToggleStage={() => handleUnstage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: true })} />
+                <GitFileRow key={`s-${f.path}`} file={f} staged onToggleStage={() => handleUnstage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: true })} beginnerMode={isBeginnerMode} />
               ))}
             </div>
 
@@ -262,7 +278,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
             <div>
               <button onClick={() => setChangesOpen(s => !s)} className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-muted uppercase tracking-widest hover:text-text-main transition-colors">
                 <span className={`material-symbols-outlined text-[12px] transition-transform ${changesOpen ? '' : '-rotate-90'}`}>expand_more</span>
-                Changes
+                {isBeginnerMode ? 'Unsaved Changes' : 'Changes'}
                 <span className="text-accent-warning font-mono ml-auto">{unstaged.length}</span>
                 {unstaged.length > 0 && (
                   <button onClick={(e) => { e.stopPropagation(); handleStageAll(); }} className="text-muted hover:text-text-main ml-1" title="Stage all">
@@ -271,7 +287,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
                 )}
               </button>
               {changesOpen && unstaged.map(f => (
-                <GitFileRow key={`u-${f.path}`} file={f} staged={false} onToggleStage={() => handleStage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: false })} />
+                <GitFileRow key={`u-${f.path}`} file={f} staged={false} onToggleStage={() => handleStage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: false })} beginnerMode={isBeginnerMode} />
               ))}
             </div>
           </>)}

@@ -268,6 +268,81 @@ export const LESSONS: Lesson[] = [
     ],
   },
 
+  // --- AI Best Practices Track ---
+  {
+    id: 'writing-effective-prompts',
+    title: 'Writing Effective Prompts',
+    description: 'Learn to ask better questions and get better answers from AI.',
+    category: 'llm-orchestration',
+    requiredView: 'code',
+    prerequisiteLessons: ['what-is-an-llm'],
+    steps: [
+      {
+        instruction: 'Open "lesson-8-prompting.ts". The quality of an AI\'s answer depends almost entirely on how you ask. A vague question gets a vague answer. A specific, well-structured question gets a useful one.',
+        codeHighlight: { file: 'demo-project/lesson-8-prompting.ts', startLine: 1, endLine: 18 },
+      },
+      {
+        instruction: 'Look at the "bad vs good" prompt examples. "How do I code?" gives the AI nothing to work with. But "I have a TypeScript function that takes a user object and returns their full name — how should I handle the case where the last name is missing?" gives context, constraints, and a clear question.',
+        codeHighlight: { file: 'demo-project/lesson-8-prompting.ts', startLine: 19, endLine: 46 },
+      },
+      {
+        instruction: 'Great prompts follow a pattern: (1) Context — what you are working on, (2) Question — what you need, (3) Constraints — any requirements or preferences. Try it now: open the Copilot and ask about the file you have open. Include what you are trying to do, not just "explain this code."',
+        codeHighlight: { file: 'demo-project/lesson-8-prompting.ts', startLine: 47, endLine: 70 },
+      },
+      {
+        instruction: 'One last skill: follow-up prompting. If the AI\'s answer is too complex, say "Explain that more simply." If it is too brief, say "Give me a concrete example." If it is wrong, say "That doesn\'t seem right because..." Conversation with AI is iterative, not one-shot.',
+        codeHighlight: { file: 'demo-project/lesson-8-prompting.ts', startLine: 71, endLine: 90 },
+      },
+    ],
+  },
+  {
+    id: 'vibe-coding-with-ai',
+    title: 'Vibe Coding: Iterating with AI',
+    description: 'Learn the iterative workflow of building software collaboratively with AI.',
+    category: 'llm-orchestration',
+    requiredView: 'code',
+    prerequisiteLessons: ['writing-effective-prompts'],
+    steps: [
+      {
+        instruction: 'Open "lesson-9-vibe-coding.ts". Vibe coding is a workflow where you describe what you want, ask the AI for ideas, evaluate its suggestions, and iterate. Instead of "write this for me," you collaborate: "Let\'s think about how to solve this."',
+        codeHighlight: { file: 'demo-project/lesson-9-vibe-coding.ts', startLine: 1, endLine: 20 },
+      },
+      {
+        instruction: 'The vibe coding loop has 4 steps: (1) Describe your intent in plain English, (2) Review the AI\'s suggestion critically, (3) Ask follow-ups to refine, (4) Test the result yourself. You drive; the AI assists. Never blindly copy-paste AI output.',
+        codeHighlight: { file: 'demo-project/lesson-9-vibe-coding.ts', startLine: 21, endLine: 45 },
+      },
+      {
+        instruction: 'Why not just let the AI do everything? Because AI can hallucinate — confidently produce code that looks correct but has subtle bugs. You need to understand what the code does, test it, and verify edge cases. AI is a power tool, not an autopilot.',
+        codeHighlight: { file: 'demo-project/lesson-9-vibe-coding.ts', startLine: 46, endLine: 70 },
+      },
+      {
+        instruction: 'Try it now! Open the Copilot and practice the vibe coding loop: (1) Describe a small feature you want, (2) Read the AI\'s response carefully, (3) Ask "What could go wrong with this approach?", (4) Ask "Can you simplify this?" The best developers use AI as a thinking partner, not a replacement for thinking.',
+      },
+    ],
+  },
+  {
+    id: 'spotting-ai-mistakes',
+    title: 'Spotting AI Mistakes',
+    description: 'Learn to identify when AI is wrong and how to verify its output.',
+    category: 'llm-orchestration',
+    requiredView: 'code',
+    prerequisiteLessons: ['writing-effective-prompts'],
+    steps: [
+      {
+        instruction: 'AI models are confident even when wrong. They can invent function names that don\'t exist, suggest deprecated syntax, or oversimplify complex problems. This is called "hallucination." Your job is to stay skeptical and verify.',
+      },
+      {
+        instruction: 'Red flags to watch for: (1) The AI says "simply do X" for something complex — it may be oversimplifying. (2) It references a specific library version — it may be outdated. (3) It gives very different answers when you rephrase the same question — it may be guessing.',
+      },
+      {
+        instruction: 'How to verify: (1) Test the code — does it actually run? (2) Check the docs — does that function really exist with those parameters? (3) Ask a follow-up: "Are you sure about that? What\'s the source?" (4) Ask for alternatives: "What other approaches exist?"',
+      },
+      {
+        instruction: 'Knowing when NOT to trust AI is just as important as knowing how to use it. Use AI for brainstorming, explaining concepts, and getting unstuck. Use documentation, tests, and your own reasoning for final decisions. The best developers combine both.',
+      },
+    ],
+  },
+
   // --- Git & Collaboration Track ---
   {
     id: 'what-is-version-control',
