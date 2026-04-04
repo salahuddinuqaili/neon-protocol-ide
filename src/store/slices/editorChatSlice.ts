@@ -2,6 +2,7 @@ import { StateCreator } from 'zustand';
 import { ChatMessage, EditorSettings, Toast } from '../../types';
 
 let toastCounter = 0;
+let chatCounter = 0;
 
 export interface EditorChatSlice {
   editorSettings: EditorSettings;
@@ -9,7 +10,7 @@ export interface EditorChatSlice {
   toasts: Toast[];
 
   updateEditorSettings: (settings: Partial<EditorSettings>) => void;
-  addChatMessage: (message: ChatMessage) => void;
+  addChatMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   clearChatMessages: () => void;
   addToast: (message: string, type: Toast['type']) => void;
   removeToast: (id: string) => void;
@@ -25,7 +26,11 @@ export const createEditorChatSlice: StateCreator<EditorChatSlice, [], [], Editor
   })),
 
   addChatMessage: (message) => set((state) => ({
-    chatMessages: [...state.chatMessages, message],
+    chatMessages: [...state.chatMessages, {
+      ...message,
+      id: `msg-${++chatCounter}`,
+      timestamp: Date.now(),
+    }],
   })),
 
   clearChatMessages: () => set({ chatMessages: [] }),
@@ -33,6 +38,9 @@ export const createEditorChatSlice: StateCreator<EditorChatSlice, [], [], Editor
   addToast: (message, type) => {
     const id = `toast-${++toastCounter}`;
     set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
+    // Auto-remove after 3 seconds. The timeout ID is not tracked because
+    // the removal is idempotent — if the toast was already manually removed,
+    // the filter is a no-op.
     setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) }));
     }, 3000);

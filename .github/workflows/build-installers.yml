@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Run tests
+        run: npx vitest run
+
       - name: Build Next.js
         run: npm run build
 
@@ -49,6 +52,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
+
+      - name: Run tests
+        run: npx vitest run
 
       - name: Build Next.js
         run: npm run build

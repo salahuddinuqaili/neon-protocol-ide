@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useIDEStore } from '../store/useIDEStore';
+
+const POLL_INTERVAL = 10000; // 10 seconds — balanced between freshness and CPU
+const BACKOFF_MAX = 30000;   // Max backoff on repeated errors
 
 export function useGitPolling() {
   const projectPath = useIDEStore(s => s.projectPath);
   const setGitBranch = useIDEStore(s => s.setGitBranch);
   const setGitState = useIDEStore(s => s.setGitState);
+  const consecutiveErrors = useRef(0);
 
   const refresh = useCallback(async () => {
-    const api = (window as any).electronAPI;
+    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
     if (!api?.isElectron || !projectPath) {
       setGitState({ isGitRepo: false, files: [], branches: [], log: [], branch: null, changedFileCount: 0, ahead: 0, behind: 0, stashCount: 0 });
       setGitBranch(null);
@@ -21,10 +25,11 @@ export function useGitPolling() {
       if (!isRepo) {
         setGitState({ isGitRepo: false, files: [], branches: [], log: [], branch: null, changedFileCount: 0, ahead: 0, behind: 0, stashCount: 0 });
         setGitBranch(null);
+        consecutiveErrors.current = 0;
         return;
       }
 
-      const [branch, files, branches, remoteStatus, log, stashList] = await Promise.all([
+      const results = await Promise.allSettled([
         api.getGitBranch(projectPath),
         api.getGitStatusFiles(projectPath),
         api.gitBranchList(projectPath),
@@ -32,6 +37,16 @@ export function useGitPolling() {
         api.gitLog(projectPath, 30),
         api.gitStashList(projectPath),
       ]);
+
+      const getValue = <T,>(result: PromiseSettledResult<T>, fallback: T): T =>
+        result.status === 'fulfilled' ? result.value : fallback;
+
+      const branch = getValue(results[0], null) as string | null;
+      const files = getValue(results[1], []) as any[];
+      const branches = getValue(results[2], []) as any[];
+      const remoteStatus = getValue(results[3], { ahead: 0, behind: 0 }) as { ahead: number; behind: number };
+      const log = getValue(results[4], []) as any[];
+      const stashList = getValue(results[5], []) as string[];
 
       setGitBranch(branch);
       setGitState({
@@ -47,7 +62,9 @@ export function useGitPolling() {
         isLoading: false,
         lastError: null,
       });
+      consecutiveErrors.current = 0;
     } catch (err) {
+      consecutiveErrors.current++;
       setGitState({ lastError: err instanceof Error ? err.message : String(err) });
     }
   }, [projectPath, setGitBranch, setGitState]);
@@ -55,11 +72,12 @@ export function useGitPolling() {
   useEffect(() => {
     refresh();
     const interval = setInterval(() => {
-      // Only poll if the window is focused to save resources
-      if (document.hasFocus()) {
-        refresh();
-      }
-    }, 5000);
+      if (!document.hasFocus()) return;
+      // Exponential backoff on repeated errors (up to 30s)
+      const backoff = Math.min(POLL_INTERVAL * Math.pow(2, consecutiveErrors.current), BACKOFF_MAX);
+      if (consecutiveErrors.current > 0 && backoff > POLL_INTERVAL) return;
+      refresh();
+    }, POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [refresh]);
 

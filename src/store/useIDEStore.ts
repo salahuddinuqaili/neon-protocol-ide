@@ -29,7 +29,8 @@ export const useIDEStore = create<IDEStoreState>()(
         isSidebarOpen: state.isSidebarOpen,
         recentProjects: state.recentProjects,
         dismissedHints: state.dismissedHints,
-        providers: state.providers,
+        // Strip apiKey from persisted providers — keys should not live in localStorage
+        providers: state.providers.map(({ apiKey, ...rest }) => rest),
         learningMode: state.learningMode,
         learningProgress: state.learningProgress,
       }),

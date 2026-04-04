@@ -241,7 +241,7 @@ const Sidebar: React.FC = () => {
     try {
       if (typeof window === 'undefined') return;
 
-      const api = (window as any).electronAPI;
+      const api = window.electronAPI;
 
       // Electron path: use IPC to get real filesystem path
       if (api?.isElectron) {

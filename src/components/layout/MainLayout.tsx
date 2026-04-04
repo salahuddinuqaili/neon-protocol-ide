@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ModuleExplorer from '../copilot/ModuleExplorer';
@@ -16,6 +16,7 @@ import ErrorBoundary from '../ErrorBoundary';
 import BranchSwitcher from '../git/BranchSwitcher';
 import { useGitPolling } from '../../hooks/useGitPolling';
 import { useIDEStore } from '../../store/useIDEStore';
+import { IDEView } from '../../types';
 
 const BlueprintCanvas = lazy(() => import('../blueprint/BlueprintCanvas'));
 const ProCodeEditor = lazy(() => import('../editor/ProCodeEditor'));
@@ -37,6 +38,11 @@ const MainLayout: React.FC = () => {
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
+
+  // Track which views have been visited so we keep them mounted (preserves state)
+  // but don't mount views the user has never opened (saves memory).
+  const visitedViews = useRef(new Set<IDEView>([currentView]));
+  visitedViews.current.add(currentView);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -92,7 +98,7 @@ const MainLayout: React.FC = () => {
 
   // Auto-detect RAM from Electron if available
   useEffect(() => {
-    const api = (window as any).electronAPI;
+    const api = window.electronAPI;
     if (api?.systemRamGb && api.systemRamGb > 0) {
       const { updateEditorSettings } = useIDEStore.getState();
       updateEditorSettings({ systemRamGb: api.systemRamGb });
@@ -131,36 +137,44 @@ const MainLayout: React.FC = () => {
       <main className="flex-1 flex overflow-hidden relative" role="main">
         {isSidebarOpen && <Sidebar />}
         <div className="flex-1 relative overflow-hidden" role="region" aria-label={`${currentView} view`}>
-          {/* Render all views but hide inactive ones — prevents remount/state loss.
-              Use absolute positioning instead of display:none so Monaco can measure its container. */}
-          <div className={`absolute inset-0 ${currentView === 'blueprint' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
-            <ErrorBoundary fallbackTitle="blueprint view crashed">
-              <Suspense fallback={<ViewLoader />}>
-                <BlueprintCanvas />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
-          <div className={`absolute inset-0 ${currentView === 'code' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
-            <ErrorBoundary fallbackTitle="code view crashed">
-              <Suspense fallback={<ViewLoader />}>
-                <ProCodeEditor />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
-          <div className={`absolute inset-0 ${currentView === 'orchestrator' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
-            <ErrorBoundary fallbackTitle="AI view crashed">
-              <Suspense fallback={<ViewLoader />}>
-                <OrchestrationHub />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
-          <div className={`absolute inset-0 ${currentView === 'terminal' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
-            <ErrorBoundary fallbackTitle="terminal view crashed">
-              <Suspense fallback={<ViewLoader />}>
-                <TerminalPanel />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
+          {/* Only mount views the user has visited. Once mounted, keep them alive
+              (hidden via CSS) so state is preserved. Unvisited views are never rendered. */}
+          {visitedViews.current.has('blueprint') && (
+            <div className={`absolute inset-0 ${currentView === 'blueprint' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
+              <ErrorBoundary fallbackTitle="blueprint view crashed">
+                <Suspense fallback={<ViewLoader />}>
+                  <BlueprintCanvas />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {visitedViews.current.has('code') && (
+            <div className={`absolute inset-0 ${currentView === 'code' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
+              <ErrorBoundary fallbackTitle="code view crashed">
+                <Suspense fallback={<ViewLoader />}>
+                  <ProCodeEditor />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {visitedViews.current.has('orchestrator') && (
+            <div className={`absolute inset-0 ${currentView === 'orchestrator' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
+              <ErrorBoundary fallbackTitle="AI view crashed">
+                <Suspense fallback={<ViewLoader />}>
+                  <OrchestrationHub />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {visitedViews.current.has('terminal') && (
+            <div className={`absolute inset-0 ${currentView === 'terminal' ? 'z-10' : 'z-0 pointer-events-none opacity-0'}`}>
+              <ErrorBoundary fallbackTitle="terminal view crashed">
+                <Suspense fallback={<ViewLoader />}>
+                  <TerminalPanel />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
           <ModuleExplorer />
           <GlossaryPanel />
         </div>

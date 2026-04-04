@@ -12,8 +12,13 @@ export interface FileEntry {
 }
 
 export interface ChatMessage {
+  id: string;
   role: 'ai' | 'user';
   text: string;
+  timestamp: number;
+  provider?: string;   // Name of the provider that generated the response
+  model?: string;      // Model used for the response
+  tokensUsed?: number; // Token count for this message
 }
 
 export interface EditorSettings {
@@ -189,7 +194,7 @@ export interface IDEState {
   setGitBranch: (branch: string | null) => void;
   setOllamaStatus: (status: OllamaStatus) => void;
   setOnboardingComplete: () => void;
-  addChatMessage: (message: ChatMessage) => void;
+  addChatMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   clearChatMessages: () => void;
   updateEditorSettings: (settings: Partial<EditorSettings>) => void;
   addToast: (message: string, type: Toast['type']) => void;
