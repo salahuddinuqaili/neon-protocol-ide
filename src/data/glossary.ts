@@ -206,6 +206,58 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     category: 'llm',
   },
 
+  // --- Git Workflows ---
+  {
+    id: 'merge',
+    term: 'Merge',
+    shortDefinition: 'Combining changes from one branch into another.',
+    fullExplanation: 'When you finish work on a branch, you merge it back into main. This combines all your changes with any changes others made. If both of you changed the same lines, you get a "merge conflict" that you must resolve manually.',
+    relatedTerms: ['branch', 'commit', 'conflict'],
+    category: 'ide',
+  },
+  {
+    id: 'conflict',
+    term: 'Merge Conflict',
+    shortDefinition: 'When two branches change the same code, Git cannot automatically merge them.',
+    fullExplanation: 'A merge conflict happens when you and a teammate both edited the same line. Git marks the conflict in the file with markers (<<<, ===, >>>). You must manually choose which version to keep. This is a normal part of collaboration — not a sign that something went wrong.',
+    relatedTerms: ['merge', 'branch', 'push-pull'],
+    category: 'ide',
+  },
+  {
+    id: 'pull-request',
+    term: 'Pull Request (PR)',
+    shortDefinition: 'A request to merge your branch into main, with a chance for review before merging.',
+    fullExplanation: 'A pull request lets you propose changes without immediately merging them. Others can review your code, leave comments, and request changes. Only after approval does your branch merge. This catches bugs early and spreads knowledge on the team.',
+    relatedTerms: ['branch', 'merge', 'commit'],
+    category: 'ide',
+  },
+
+  // --- AI Concepts ---
+  {
+    id: 'bias-in-ai',
+    term: 'Bias in AI',
+    shortDefinition: 'When AI unfairly favors certain groups or outcomes because its training data was biased.',
+    fullExplanation: 'AI learns from training data. If the training data is biased (e.g., contains more examples of one group), the AI learns that bias. This can lead to unfair decisions. Recognizing bias is crucial for responsible AI use — always evaluate AI output with a critical eye.',
+    relatedTerms: ['llm', 'inference', 'hallucination'],
+    category: 'llm',
+  },
+  {
+    id: 'context-limit',
+    term: 'Context Limit',
+    shortDefinition: 'The maximum number of tokens an AI can process in one request.',
+    fullExplanation: 'AI models have memory limits. A model with a 4,096 token limit can handle about 3,000 words of context. If you send more, older messages are dropped. This is why the copilot only sends the first 100 lines of your file — to leave room for your question and the response.',
+    relatedTerms: ['token', 'context-window', 'model'],
+    category: 'llm',
+  },
+  {
+    id: 'temperature',
+    term: 'Temperature',
+    shortDefinition: 'A setting that controls how creative vs predictable an AI response is.',
+    fullExplanation: 'Temperature ranges from 0 (deterministic) to 1+ (random). Low temperature (0.2) makes the AI give predictable answers — good for code generation. High temperature (0.8) makes the AI more creative — good for brainstorming. For reliable code generation, use low temperature.',
+    relatedTerms: ['model', 'llm', 'inference'],
+    category: 'llm',
+  },
+
   // --- Architecture ---
   {
     id: 'node',

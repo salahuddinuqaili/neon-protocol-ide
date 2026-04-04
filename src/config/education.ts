@@ -27,6 +27,9 @@ export const BEGINNER_EXPLAINER = [
   { icon: 'route', q: 'What does Routing mean?', a: 'Routing means trying AI providers in order. If your first choice fails, the system automatically tries the next one. Use the arrows to set the order.' },
   { icon: 'edit_note', q: 'How do I ask good questions?', a: 'Be specific! Instead of "how do I use React?" try "I have a component that needs to update when a button is clicked — how do I use useState?" Include what you are working on, what you want, and any constraints. More context = better answers.' },
   { icon: 'verified_user', q: 'Can I trust the AI\'s answer?', a: 'Not always. AI can be confidently wrong ("hallucinate"). Always verify by: testing the code, checking official docs, or asking "Are you sure? What could go wrong?" Treat AI answers as suggestions to evaluate, not facts to accept.' },
+  { icon: 'error', q: 'What if I don\'t have an AI provider?', a: 'No problem! All lessons, glossary, and tutorials work without AI. The copilot just won\'t work until you set up a provider. Start with Ollama (free, local) for a zero-cost start.' },
+  { icon: 'lightbulb', q: 'What should I learn first?', a: 'Start with the Learning Path (click the progress ring). Lessons are ordered: functions → components → APIs → databases → AI. Follow the recommended order unless you already know some topics.' },
+  { icon: 'shield', q: 'How do I stay safe with AI?', a: 'Don\'t share passwords, API keys, or sensitive data in prompts. Always test AI-generated code before using it in production. Remember: AI is a tool, not a replacement for your judgment.' },
 ];
 
 export const CATEGORY_LABELS: Record<GlossaryCategory, string> = {

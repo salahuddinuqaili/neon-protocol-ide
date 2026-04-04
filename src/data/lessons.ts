@@ -96,6 +96,79 @@ export const LESSONS: Lesson[] = [
     ],
   },
 
+  {
+    id: 'error-handling-basics',
+    title: 'Error Handling: When Code Breaks',
+    description: 'Learn to handle errors gracefully so your app doesn\'t crash.',
+    category: 'coding-basics',
+    requiredView: 'code',
+    prerequisiteLessons: ['what-is-a-function'],
+    steps: [
+      {
+        instruction: 'Every function can fail. A network request might timeout. A file might not exist. Instead of crashing, good code anticipates problems and handles them. This is called "error handling."',
+      },
+      {
+        instruction: 'The most common pattern is try/catch. You "try" a risky operation, and if it fails, you "catch" the error and respond safely. This prevents the entire app from crashing.',
+        codeHighlight: { file: 'demo-project/lesson-error-handling.ts', startLine: 1, endLine: 25 },
+      },
+      {
+        instruction: 'Look at how we fetch data: if the network request fails, we don\'t crash. Instead, we return a helpful error message. Users can retry or go back. The app stays responsive.',
+        codeHighlight: { file: 'demo-project/lesson-error-handling.ts', startLine: 26, endLine: 50 },
+      },
+      {
+        instruction: 'Congratulations! You now understand error handling: anticipate failures, catch errors, and respond gracefully. This is what separates apps that break from apps that work.',
+      },
+    ],
+  },
+  {
+    id: 'debugging-basics',
+    title: 'Debugging: Finding and Fixing Bugs',
+    description: 'Learn to systematically find and fix problems in your code.',
+    category: 'coding-basics',
+    requiredView: 'code',
+    prerequisiteLessons: ['what-is-a-function', 'error-handling-basics'],
+    steps: [
+      {
+        instruction: 'Every programmer writes bugs. The skill is finding them fast. Debugging is the process of finding what\'s wrong and fixing it. The three main tools: (1) Read the code carefully, (2) Use console.log() to see values, (3) Use a debugger to pause execution.',
+      },
+      {
+        instruction: 'Most bugs are found by adding console.log() statements: print the input, the output, and intermediate values. This shows you exactly where the data goes wrong.',
+        codeHighlight: { file: 'demo-project/lesson-debugging.ts', startLine: 1, endLine: 30 },
+      },
+      {
+        instruction: 'Systematic debugging: (1) Understand what the code should do, (2) Run it and see what it actually does, (3) Form a hypothesis about what\'s wrong, (4) Test with console.log or the debugger, (5) Fix it, (6) Test again.',
+        codeHighlight: { file: 'demo-project/lesson-debugging.ts', startLine: 31, endLine: 55 },
+      },
+      {
+        instruction: 'You\'re now a debugger! Remember: debugging is not about being smart — it\'s about being methodical. Print values, read errors, form hypotheses, and test them.',
+      },
+    ],
+  },
+  {
+    id: 'testing-basics',
+    title: 'Testing: Verify Your Code Works',
+    description: 'Learn to write tests that catch bugs before users do.',
+    category: 'coding-basics',
+    requiredView: 'code',
+    prerequisiteLessons: ['what-is-a-function', 'error-handling-basics'],
+    steps: [
+      {
+        instruction: 'Testing means writing small checks that verify your code works correctly. Instead of manually testing every feature, you write code that tests your code automatically.',
+      },
+      {
+        instruction: 'A test has three parts: (1) Set up test data, (2) Call the function, (3) Check if the result matches expectations. If the result matches, the test passes. If not, it fails and tells you what went wrong.',
+        codeHighlight: { file: 'demo-project/lesson-testing.ts', startLine: 1, endLine: 30 },
+      },
+      {
+        instruction: 'Look at how we test the greet function from Lesson 1. We call it with different inputs and verify the output. If a test fails, we know the function is broken before it reaches users.',
+        codeHighlight: { file: 'demo-project/lesson-testing.ts', startLine: 31, endLine: 60 },
+      },
+      {
+        instruction: 'The power of testing: when you change code, run all tests automatically. If anything breaks, tests tell you immediately. This is why professional developers write tests — it saves time and prevents bugs.',
+      },
+    ],
+  },
+
   // --- Architecture Track ---
   {
     id: 'frontend-vs-backend',
@@ -326,7 +399,7 @@ export const LESSONS: Lesson[] = [
     description: 'Learn to identify when AI is wrong and how to verify its output.',
     category: 'llm-orchestration',
     requiredView: 'code',
-    prerequisiteLessons: ['writing-effective-prompts'],
+    prerequisiteLessons: ['what-is-an-llm', 'writing-effective-prompts'],
     steps: [
       {
         instruction: 'AI models are confident even when wrong. They can invent function names that don\'t exist, suggest deprecated syntax, or oversimplify complex problems. This is called "hallucination." Your job is to stay skeptical and verify.',
@@ -339,6 +412,29 @@ export const LESSONS: Lesson[] = [
       },
       {
         instruction: 'Knowing when NOT to trust AI is just as important as knowing how to use it. Use AI for brainstorming, explaining concepts, and getting unstuck. Use documentation, tests, and your own reasoning for final decisions. The best developers combine both.',
+      },
+    ],
+  },
+
+  {
+    id: 'ai-limitations-ethics',
+    title: 'AI Limitations and Responsible Use',
+    description: 'Understand what AI can and cannot do, and how to use it responsibly.',
+    category: 'llm-orchestration',
+    requiredView: 'code',
+    prerequisiteLessons: ['spotting-ai-mistakes', 'vibe-coding-with-ai'],
+    steps: [
+      {
+        instruction: 'AI is powerful but not magical. LLMs have hard limits: they can hallucinate, they can\'t reason about the future, they can\'t access the internet unless you tell them, and they can produce biased outputs if trained on biased data.',
+      },
+      {
+        instruction: 'Good practices: (1) Always verify AI output — test the code it generates, (2) Use AI for brainstorming, not final decisions, (3) Don\'t share sensitive data (passwords, API keys) in prompts, (4) Understand that AI doesn\'t truly "understand" — it predicts patterns.',
+      },
+      {
+        instruction: 'Responsible use means: knowing AI can be wrong, knowing training data includes biases, knowing AI output may have licensing implications. When using AI, you are responsible for the final result.',
+      },
+      {
+        instruction: 'The best developers use AI as a tool, not a replacement for judgment. AI is fast at generating code, but humans are responsible for its correctness and ethics. You now understand how to use AI effectively and responsibly.',
       },
     ],
   },
@@ -417,6 +513,29 @@ export const LESSONS: Lesson[] = [
       },
       {
         instruction: 'If the footer shows "↑2" next to your branch, you have 2 commits to push. "↓3" means 3 commits to pull. The diff viewer (click any changed file) shows exactly what changed — the old version on the left, the new on the right.',
+      },
+    ],
+  },
+  {
+    id: 'handling-merge-conflicts',
+    title: 'Merge Conflicts: When Collaboration Collides',
+    description: 'Learn to resolve merge conflicts when two developers change the same code.',
+    category: 'git-collaboration',
+    requiredView: 'code',
+    prerequisiteLessons: ['push-pull-collaborate'],
+    steps: [
+      {
+        instruction: 'When you and a teammate both edit the same lines, Git can\'t automatically merge. You get a "merge conflict." Instead of panicking, there\'s a clear process: read the conflict markers, choose which version to keep, test, and commit.',
+      },
+      {
+        instruction: 'Git marks conflicts with special markers: <<<<<<< marks your changes, ======= separates the two versions, and >>>>>>> marks their changes. You manually edit the file to keep the correct version, delete the markers, and commit.',
+        codeHighlight: { file: 'demo-project/lesson-merge-conflict.ts', startLine: 1, endLine: 30 },
+      },
+      {
+        instruction: 'Best practice: communicate with your team before committing. "I\'m changing the login function — are you working on it too?" Prevention is easier than resolution. Use branches to isolate work. Pull before pushing. This reduces conflicts dramatically.',
+      },
+      {
+        instruction: 'Congratulations! You can now handle the trickiest part of team development. Merge conflicts are normal. With the right process, they\'re not scary — just a routine part of collaboration.',
       },
     ],
   },

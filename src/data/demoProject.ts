@@ -12,7 +12,7 @@ Each file is a lesson that introduces a coding concept.
 
 ## How to Use This Project
 
-1. **Read the files in order** (lesson-1 through lesson-7)
+1. **Read the files in order** — start with lesson-1 and work your way up
 2. **Switch to the MAP view** to see how the pieces connect visually
 3. **Ask the AI Copilot** questions about any code you don't understand
 
@@ -29,6 +29,10 @@ Each file is a lesson that introduces a coding concept.
 | lesson-7-orchestrator.ts | The complete AI pipeline |
 | lesson-8-prompting.ts | Writing effective prompts |
 | lesson-9-vibe-coding.ts | Iterating with AI (vibe coding) |
+| lesson-error-handling.ts | Error handling with try/catch |
+| lesson-debugging.ts | Finding and fixing bugs |
+| lesson-testing.ts | Writing tests to verify code |
+| lesson-merge-conflict.ts | Resolving git merge conflicts |
 
 Happy learning!
 `,
@@ -907,6 +911,272 @@ function sortByPriority(tasks: Task[]): Task[] {
 // 3. Always read, test, and understand AI-generated code
 // 4. AI is a thinking partner, not a replacement for thinking
 // 5. The best developers combine their judgment with AI speed
+`,
+  },
+  {
+    name: 'lesson-error-handling.ts',
+    path: 'demo-project/lesson-error-handling.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// ERROR HANDLING: When Code Breaks Gracefully
+// ===========================================
+// A function that might fail needs error handling.
+// Without it, one failure crashes the whole app.
+// With it, your app stays responsive.
+
+// --- The try/catch pattern ---
+// "try" a risky operation. If it fails, "catch" the error.
+
+async function fetchUserData(userId: number): Promise<{ id: number; name: string } | null> {
+  try {
+    // This might fail if the network is down
+    const response = await fetch(\`/api/users/\${userId}\`);
+
+    // Check if the server returned an error (status 4xx or 5xx)
+    if (!response.ok) {
+      throw new Error(\`Server error: \${response.status}\`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    // Something went wrong — handle it instead of crashing
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.log(\`Failed to fetch user: \${message}\`);
+    return null; // Return a safe default
+  }
+}
+
+// --- Using the error-handling function ---
+async function displayUser(userId: number) {
+  const user = await fetchUserData(userId);
+
+  if (user) {
+    console.log(\`Welcome, \${user.name}!\`);
+  } else {
+    console.log('Could not load user. Please try again.');
+  }
+  // The app keeps running either way!
+}
+
+// --- Why error handling matters ---
+// Without it: Network fails → app crashes → user is stuck
+// With it:    Network fails → show message → user can retry
+//
+// Error handling is the difference between apps that break
+// and apps that recover gracefully.
+
+// KEY TAKEAWAYS:
+// 1. Wrap risky operations in try/catch
+// 2. Return safe defaults when errors occur (null, empty array, etc.)
+// 3. Show helpful error messages to the user
+// 4. The app should never crash from a predictable failure
+`,
+  },
+  {
+    name: 'lesson-debugging.ts',
+    path: 'demo-project/lesson-debugging.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// DEBUGGING: Finding and Fixing Bugs
+// ===========================================
+// Bugs are inevitable. The skill is finding them fast.
+// The main tool: console.log() to see what's really happening.
+
+// --- A buggy function ---
+// This function is supposed to calculate a discount, but has a bug.
+
+function calculateDiscount(price: number, discountPercent: number): number {
+  // Bug: divides by 10 instead of 100
+  const discount = price * discountPercent / 10;
+  const finalPrice = price - discount;
+  return finalPrice;
+}
+
+// --- Debugging with console.log ---
+// Add print statements to see what's happening at each step.
+
+function calculateDiscountDebug(price: number, discountPercent: number): number {
+  console.log('Input:', { price, discountPercent });
+
+  const discount = price * discountPercent / 10;
+  console.log('Discount amount:', discount);
+  // Output: Discount amount: 100  (for price=100, discount=10%)
+  // Expected: 10 ... that's 10x too much! Found the bug!
+
+  const finalPrice = price - discount;
+  console.log('Final price:', finalPrice);
+  return finalPrice;
+}
+
+// --- The fixed version ---
+function calculateDiscountFixed(price: number, discountPercent: number): number {
+  const discount = price * discountPercent / 100; // Fixed: divide by 100
+  const finalPrice = price - discount;
+  return finalPrice;
+}
+
+// --- The debugging process ---
+// 1. REPRODUCE: Run the code and see the wrong output
+// 2. HYPOTHESIZE: "The discount amount looks too large"
+// 3. INVESTIGATE: Add console.log to print intermediate values
+// 4. IDENTIFY: "Dividing by 10 instead of 100!"
+// 5. FIX: Change 10 to 100
+// 6. VERIFY: Run again, output is now correct
+
+// --- Common bug patterns ---
+// - Off-by-one: loops starting at 1 instead of 0
+// - Wrong operator: = (assign) vs === (compare)
+// - Missing null check: accessing .name on undefined
+// - Async issues: using data before it's loaded
+
+// KEY TAKEAWAYS:
+// 1. console.log() is your best debugging tool
+// 2. Print inputs, outputs, and intermediate values
+// 3. Follow the scientific method: hypothesize, test, verify
+// 4. Most bugs are simple once you see the actual values
+`,
+  },
+  {
+    name: 'lesson-testing.ts',
+    path: 'demo-project/lesson-testing.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// TESTING: Verify Your Code Works
+// ===========================================
+// Testing = writing code that checks if your code works.
+// Instead of manually testing every case, automate it.
+
+// --- The function we want to test ---
+function greet(name: string): string {
+  if (!name || name.trim() === '') {
+    return 'Hello, stranger!';
+  }
+  return 'Hello, ' + name.trim() + '!';
+}
+
+// --- A simple test function ---
+// Test pattern: set up data, call function, check result
+
+function testGreet() {
+  // Test 1: Normal input
+  const result1 = greet('Alice');
+  console.assert(
+    result1 === 'Hello, Alice!',
+    'greet("Alice") should return "Hello, Alice!"'
+  );
+  console.log('✓ Test 1 passed: greet("Alice")');
+
+  // Test 2: Empty string (edge case)
+  const result2 = greet('');
+  console.assert(
+    result2 === 'Hello, stranger!',
+    'greet("") should handle empty input'
+  );
+  console.log('✓ Test 2 passed: greet("")');
+
+  // Test 3: Whitespace (edge case)
+  const result3 = greet('  Bob  ');
+  console.assert(
+    result3 === 'Hello, Bob!',
+    'greet("  Bob  ") should trim whitespace'
+  );
+  console.log('✓ Test 3 passed: greet("  Bob  ")');
+}
+
+// --- Another function to test ---
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+function testAdd() {
+  console.assert(add(2, 3) === 5, 'add(2, 3) should be 5');
+  console.log('✓ Test: add(2, 3) = 5');
+
+  console.assert(add(-1, 1) === 0, 'add(-1, 1) should be 0');
+  console.log('✓ Test: add(-1, 1) = 0');
+
+  console.assert(add(0, 0) === 0, 'add(0, 0) should be 0');
+  console.log('✓ Test: add(0, 0) = 0');
+}
+
+// --- Run the tests ---
+console.log('--- Running Tests ---');
+testGreet();
+testAdd();
+console.log('All tests passed!');
+
+// --- Why testing matters ---
+// 1. Catch bugs early: tests fail before users see broken code
+// 2. Refactor safely: change code, run tests, know nothing broke
+// 3. Document behavior: tests show how code is supposed to work
+// 4. Save time: automated testing is faster than manual clicking
+//
+// Professional developers test their code. It's not optional.
+`,
+  },
+  {
+    name: 'lesson-merge-conflict.ts',
+    path: 'demo-project/lesson-merge-conflict.ts',
+    language: 'typescript',
+    content: `// ===========================================
+// MERGE CONFLICTS: When Collaboration Collides
+// ===========================================
+// When two developers change the same lines of code,
+// Git can't automatically combine them. This is a
+// "merge conflict" — and it's completely normal.
+
+// --- What a merge conflict looks like ---
+// Git inserts markers into the file:
+
+// <<<<<<< HEAD (your changes)
+// function greet(name: string) {
+//   return "Hi, " + name + "!";
+// }
+// =======
+// function greet(name: string) {
+//   return "Hey there, " + name + "!";
+// }
+// >>>>>>> feature-branch (their changes)
+
+// YOUR version is above the ===
+// THEIR version is below the ===
+// You must choose one (or combine both) and delete the markers.
+
+// --- How to resolve ---
+// 1. Open the conflicted file
+// 2. Find the <<<<<<< markers
+// 3. Decide: keep yours, keep theirs, or combine
+// 4. Delete ALL conflict markers (<<<, ===, >>>)
+// 5. Test the result
+// 6. Stage and commit
+
+// --- The resolved version ---
+function greet(name: string) {
+  // We decided to keep "Hi" but add the exclamation marks
+  return "Hi, " + name + "!";
+}
+
+// --- Prevention is better than resolution ---
+// These practices reduce conflicts:
+//
+// 1. COMMUNICATE: "I'm working on the login page"
+// 2. PULL OFTEN: Get updates before starting new work
+// 3. SMALL COMMITS: Smaller changes = smaller conflicts
+// 4. USE BRANCHES: Isolate your work from others
+// 5. DON'T EDIT THE SAME FILES: Coordinate with your team
+
+// --- When conflicts happen anyway ---
+// Don't panic. Conflicts are not errors — they're Git asking
+// for your help. Read both versions, pick the right one,
+// and move on. It gets easier with practice.
+
+// KEY TAKEAWAYS:
+// 1. Merge conflicts happen when two people change the same lines
+// 2. Git marks conflicts with <<<, ===, >>> markers
+// 3. You resolve by choosing/combining versions and deleting markers
+// 4. Prevention: communicate, pull often, use branches
+// 5. Conflicts are normal — not a sign that something went wrong
 `,
   },
 ];
