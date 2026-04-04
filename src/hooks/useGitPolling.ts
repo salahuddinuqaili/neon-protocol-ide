@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useIDEStore } from '../store/useIDEStore';
+import { GitFileChange, GitBranch, GitLogEntry } from '../types';
 
-const POLL_INTERVAL = 10000; // 10 seconds — balanced between freshness and CPU
+const POLL_INTERVAL = 10000; // 10 seconds
 const BACKOFF_MAX = 30000;   // Max backoff on repeated errors
 
 export function useGitPolling() {
@@ -11,6 +12,7 @@ export function useGitPolling() {
   const setGitBranch = useIDEStore(s => s.setGitBranch);
   const setGitState = useIDEStore(s => s.setGitState);
   const consecutiveErrors = useRef(0);
+  const lastErrorTime = useRef(0);
 
   const refresh = useCallback(async () => {
     const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
@@ -42,10 +44,10 @@ export function useGitPolling() {
         result.status === 'fulfilled' ? result.value : fallback;
 
       const branch = getValue(results[0], null) as string | null;
-      const files = getValue(results[1], []) as any[];
-      const branches = getValue(results[2], []) as any[];
+      const files = getValue(results[1], []) as GitFileChange[];
+      const branches = getValue(results[2], []) as GitBranch[];
       const remoteStatus = getValue(results[3], { ahead: 0, behind: 0 }) as { ahead: number; behind: number };
-      const log = getValue(results[4], []) as any[];
+      const log = getValue(results[4], []) as GitLogEntry[];
       const stashList = getValue(results[5], []) as string[];
 
       setGitBranch(branch);
@@ -65,6 +67,7 @@ export function useGitPolling() {
       consecutiveErrors.current = 0;
     } catch (err) {
       consecutiveErrors.current++;
+      lastErrorTime.current = Date.now();
       setGitState({ lastError: err instanceof Error ? err.message : String(err) });
     }
   }, [projectPath, setGitBranch, setGitState]);
@@ -73,9 +76,12 @@ export function useGitPolling() {
     refresh();
     const interval = setInterval(() => {
       if (!document.hasFocus()) return;
-      // Exponential backoff on repeated errors (up to 30s)
-      const backoff = Math.min(POLL_INTERVAL * Math.pow(2, consecutiveErrors.current), BACKOFF_MAX);
-      if (consecutiveErrors.current > 0 && backoff > POLL_INTERVAL) return;
+      // Exponential backoff on repeated errors
+      if (consecutiveErrors.current > 0) {
+        const backoff = Math.min(POLL_INTERVAL * Math.pow(2, consecutiveErrors.current), BACKOFF_MAX);
+        const elapsed = Date.now() - lastErrorTime.current;
+        if (elapsed < backoff) return;
+      }
       refresh();
     }, POLL_INTERVAL);
     return () => clearInterval(interval);

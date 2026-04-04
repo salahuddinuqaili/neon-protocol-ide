@@ -17,7 +17,7 @@ const TerminalPanel: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentProcessId, setCurrentProcessId] = useState<string | null>(null);
 
-  const api = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
+  const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -53,8 +53,8 @@ const TerminalPanel: React.FC = () => {
     }
 
     try {
-      const result = await api.terminalExecute(cmd, projectPath);
-      if (result.error) {
+      const result = await api.terminalExecute(cmd, projectPath || undefined);
+      if ('error' in result) {
         setHistory(prev => [...prev, { type: 'error', text: result.error }]);
         setIsExecuting(false);
         return;
@@ -67,8 +67,8 @@ const TerminalPanel: React.FC = () => {
         setHistory(prev => [...prev, { type: 'output', text: data }]);
       });
 
-      api.onTerminalExit(processId, (code: number) => {
-        setHistory(prev => [...prev, { type: 'system', text: `Process exited with code ${code}` }]);
+      api.onTerminalExit(processId, (code: number | null) => {
+        setHistory(prev => [...prev, { type: 'system', text: `Process exited with code ${code ?? 'unknown'}` }]);
         setIsExecuting(false);
         setCurrentProcessId(null);
         removeDataListener();
@@ -147,6 +147,7 @@ const TerminalPanel: React.FC = () => {
               disabled={isExecuting}
               autoFocus
               className="w-full bg-transparent outline-none border-none text-[#c5c6c7] placeholder-muted/20"
+              aria-label="Terminal command input"
               placeholder={isExecuting ? "Executing..." : "Enter command..."}
             />
           </form>
