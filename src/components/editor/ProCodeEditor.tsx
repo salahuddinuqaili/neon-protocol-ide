@@ -206,7 +206,7 @@ const ProCodeEditor: React.FC = () => {
                 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
                   handleSave();
                 });
-                editor.onDidChangeCursorPosition((e) => {
+                editor.onDidChangeCursorPosition((e: any) => {
                   setCursorPos({ line: e.position.lineNumber, col: e.position.column });
                 });
               }}

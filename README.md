@@ -1,7 +1,7 @@
 # Neon Protocol IDE
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.3.3-00FFD1.svg)](package.json)
+[![Version](https://img.shields.io/badge/Version-1.3.4-00FFD1.svg)](package.json)
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-brightgreen.svg)](https://nodejs.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
 
