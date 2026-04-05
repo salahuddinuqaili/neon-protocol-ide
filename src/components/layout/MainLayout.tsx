@@ -142,7 +142,7 @@ const MainLayout: React.FC = () => {
       <Header onOpenSettings={() => setSettingsVisible(true)} />
       <main className="flex-1 flex overflow-hidden relative" role="main">
         {isSidebarOpen && <Sidebar />}
-        <div className="flex-1 relative overflow-hidden" role="region" aria-label={`${currentView} view`}>
+        <div className="flex-1 relative overflow-clip" role="region" aria-label={`${currentView} view`}>
           {/* Only mount views the user has visited. Once mounted, keep them alive
               (hidden via CSS) so state is preserved. Unvisited views are never rendered. */}
           {(currentView === 'blueprint' || visitedViews.current.has('blueprint')) && (
