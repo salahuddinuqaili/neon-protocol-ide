@@ -147,6 +147,20 @@ export interface NodeEducation {
   realWorldAnalogy: string;
 }
 
+// --- Error Translation ---
+
+export interface TranslatedError {
+  id: string;
+  rawError: string;
+  title: string;
+  explanation: string;
+  commonCauses: string[];
+  suggestedFix?: string;
+  relatedLessonId?: string;
+  relatedGlossaryTerms?: string[];
+  severity: 'info' | 'warning' | 'error';
+}
+
 // --- IDE State ---
 
 export interface IDEState {

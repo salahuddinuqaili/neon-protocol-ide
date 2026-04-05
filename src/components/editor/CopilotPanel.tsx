@@ -2,9 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
-import { FileEntry } from '../../types';
+import { FileEntry, TranslatedError } from '../../types';
 import { routeChat } from '../../lib/llm/provider';
+import { translateError } from '../../lib/errorTranslator';
 import ConceptTooltip from '../learning/ConceptTooltip';
+import ErrorCard from '../terminal/ErrorCard';
 
 interface CopilotPanelProps {
   currentFile: FileEntry | undefined;
@@ -14,8 +16,9 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
   const { providers, trackTokenUsage, learningMode } = useIDEStore();
 
   const [copilotInput, setCopilotInput] = useState('');
-  const [copilotMessages, setCopilotMessages] = useState<{ id: number; role: 'ai' | 'user'; text: string }[]>([]);
+  const [copilotMessages, setCopilotMessages] = useState<{ id: number; role: 'ai' | 'user'; text: string; translatedError?: TranslatedError | null }[]>([]);
   const [copilotLoading, setCopilotLoading] = useState(false);
+  const [dismissedCopilotErrors, setDismissedCopilotErrors] = useState<Set<string>>(new Set());
   const msgIdRef = useRef(0);
   const copilotEndRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +58,8 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
         trackTokenUsage(result.providerId, result.tokensUsed);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Connection failed';
-        setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: `Could not reach AI: ${msg}\n\nCheck your AI settings (AI button in the top bar).` }]);
+        const translated = translateError(msg);
+        setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: `Could not reach AI: ${msg}\n\nCheck your AI settings (AI button in the top bar).`, translatedError: translated }]);
       } finally {
         setCopilotLoading(false);
       }
@@ -110,12 +114,23 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
           </div>
         )}
         {copilotMessages.map((msg) => (
-          <div key={msg.id} className={`${msg.role === 'user' ? 'border-l-2 border-primary pl-3' : 'border-l-2 border-accent-ai pl-3'}`}>
-            <div className={`text-xs font-bold mb-1 uppercase ${msg.role === 'user' ? 'text-primary' : 'text-accent-ai'}`}>
-              {msg.role === 'user' ? 'You' : 'Copilot'}
+          <React.Fragment key={msg.id}>
+            <div className={`${msg.role === 'user' ? 'border-l-2 border-primary pl-3' : 'border-l-2 border-accent-ai pl-3'}`}>
+              <div className={`text-xs font-bold mb-1 uppercase ${msg.role === 'user' ? 'text-primary' : 'text-accent-ai'}`}>
+                {msg.role === 'user' ? 'You' : 'Copilot'}
+              </div>
+              <div className="text-text-main leading-relaxed whitespace-pre-wrap">{msg.text}</div>
             </div>
-            <div className="text-text-main leading-relaxed whitespace-pre-wrap">{msg.text}</div>
-          </div>
+            {msg.translatedError && !dismissedCopilotErrors.has(msg.translatedError.id) && (
+              <ErrorCard
+                error={msg.translatedError}
+                onDismiss={() => setDismissedCopilotErrors(prev => new Set(prev).add(msg.translatedError!.id))}
+                onAskAI={(errorText) => {
+                  setCopilotInput(`I got this error and I'm new to coding. Explain what it means and how to fix it:\n\n${errorText}`);
+                }}
+              />
+            )}
+          </React.Fragment>
         ))}
         {copilotLoading && (
           <div className="border-l-2 border-accent-ai pl-3">
