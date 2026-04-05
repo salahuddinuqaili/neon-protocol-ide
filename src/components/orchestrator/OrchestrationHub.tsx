@@ -7,8 +7,9 @@ import { routeChat, chatWithProvider } from '../../lib/llm/provider';
 import ViewHint from '../onboarding/ViewHint';
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
 import ConceptTooltip from '../learning/ConceptTooltip';
-import { MODEL_PLACEHOLDERS, PROVIDER_PRESETS, STATUS_DISPLAY, ProviderPreset } from '../../config/providers';
+import { MODEL_PLACEHOLDERS, PROVIDER_PRESETS, STATUS_DISPLAY, ProviderPreset, DEMO_MODEL, getRecommendedModels } from '../../config/providers';
 import { BEGINNER_EXPLAINER } from '../../config/education';
+import { OllamaInstallStatus, ModelPullProgress } from '../../types';
 
 type LogEntry = { id: number; msg: string; type: 'info' | 'primary' | 'ai' | 'error' };
 let logIdCounter = 0;
@@ -26,11 +27,13 @@ const ProviderCard: React.FC<{
   index: number;
   total: number;
   ollamaStatus: string;
+  ollamaInstallStatus: OllamaInstallStatus;
+  onInstallOllama: () => void;
   onMove: (index: number, dir: 'up' | 'down') => void;
   onVerify: (p: LLMProviderConfig) => void;
   onUpdate: (id: string, updates: Partial<LLMProviderConfig>) => void;
   onRemove: (id: string) => void;
-}> = ({ provider, index, total, ollamaStatus, onMove, onVerify, onUpdate, onRemove }) => {
+}> = ({ provider, index, total, ollamaStatus, ollamaInstallStatus, onInstallOllama, onMove, onVerify, onUpdate, onRemove }) => {
   const status = provider.connectionStatus || 'untested';
   const statusDisplay = STATUS_DISPLAY[status];
   const modelPlaceholder = MODEL_PLACEHOLDERS[provider.type] || MODEL_PLACEHOLDERS['openai-compatible'];
@@ -74,12 +77,43 @@ const ProviderCard: React.FC<{
           )}
           {provider.type === 'ollama' && ollamaStatus !== 'active' && status !== 'verified' && (
             <div className="bg-background border border-accent-ai/20 p-2.5">
-              <p className="text-xs text-accent-ai font-bold mb-1">Ollama not detected</p>
-              <ol className="text-xs text-muted leading-relaxed list-decimal list-inside space-y-0.5">
-                <li>Download from <span className="text-primary">ollama.com</span></li>
-                <li>Install and open it</li>
-                <li>Run: <span className="text-primary font-mono">ollama pull {provider.model}</span></li>
-              </ol>
+              {(ollamaInstallStatus === 'not-installed' || ollamaInstallStatus === 'unknown') && (
+                <>
+                  <p className="text-xs text-accent-ai font-bold mb-2">Ollama not detected</p>
+                  <button onClick={onInstallOllama}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-background text-xs font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all mb-2">
+                    <span className="material-symbols-outlined text-[14px]">download</span> Install Ollama Automatically
+                  </button>
+                  <details className="group">
+                    <summary className="text-[11px] text-muted cursor-pointer hover:text-text-main list-none flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px] group-open:rotate-180 transition-transform">expand_more</span>
+                      Or install manually
+                    </summary>
+                    <ol className="text-xs text-muted leading-relaxed list-decimal list-inside space-y-0.5 mt-1 pl-4">
+                      <li>Download from <span className="text-primary">ollama.com</span></li>
+                      <li>Install and open it</li>
+                      <li>Run: <span className="text-primary font-mono">ollama pull {provider.model || 'llama3:8b'}</span></li>
+                    </ol>
+                  </details>
+                </>
+              )}
+              {ollamaInstallStatus === 'installing' && (
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-accent-ai font-bold">Installing Ollama...</span>
+                </div>
+              )}
+              {ollamaInstallStatus === 'error' && (
+                <>
+                  <p className="text-xs text-accent-error font-bold mb-1">Installation failed</p>
+                  <p className="text-[11px] text-muted mb-2">Try installing manually from <span className="text-primary">ollama.com</span></p>
+                  <button onClick={onInstallOllama}
+                    className="text-xs text-primary font-bold hover:underline">Retry</button>
+                </>
+              )}
+              {ollamaInstallStatus === 'installed' && (
+                <p className="text-xs text-primary font-bold">Ollama installed. Start it to connect.</p>
+              )}
             </div>
           )}
           {status === 'failed' && provider.connectionError && (
@@ -106,7 +140,7 @@ const ProviderCard: React.FC<{
 
 
 const OrchestrationHub: React.FC = () => {
-  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint } = useIDEStore();
+  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint, ollamaInstallStatus, setOllamaInstallStatus, hardwareInfo, availableOllamaModels, setAvailableOllamaModels, modelPullProgress, setModelPullProgress } = useIDEStore();
   const [activeTab, setActiveTab] = useState<Tab>('providers');
   const [testPrompt, setTestPrompt] = useState('');
   const isBeginnerMode = learningMode === 'beginner';
@@ -179,6 +213,77 @@ const OrchestrationHub: React.FC = () => {
       setTestLog(prev => [...prev, { id: ++logIdCounter, msg: `> Error: ${message}`, type: 'error' }]);
     } finally { setIsTesting(false); setTestPrompt(''); }
   };
+
+  const handleInstallOllama = () => {
+    setDialog({
+      isOpen: true, type: 'confirm', title: 'Install Ollama',
+      message: 'This will download and install Ollama from ollama.com. Continue?',
+      confirmLabel: 'Install',
+      onConfirm: async () => {
+        setDialog(null);
+        if (typeof window === 'undefined') return;
+        const api = window.electronAPI;
+        if (!api?.ollamaInstall) { addToast('Ollama install not available in browser mode', 'error'); return; }
+        setOllamaInstallStatus('installing');
+        const cleanup = api.onOllamaInstallProgress?.((data) => {
+          addToast(data.detail?.slice(0, 100) || data.status, 'info');
+        });
+        try {
+          await api.ollamaInstall();
+          setOllamaInstallStatus('installed');
+          addToast('Ollama installed successfully', 'success');
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          setOllamaInstallStatus('error', msg);
+          addToast(`Install failed: ${msg}`, 'error');
+        } finally {
+          cleanup?.();
+        }
+      },
+      onClose: () => setDialog(null),
+    });
+  };
+
+  const handlePullModel = async (modelName: string) => {
+    if (typeof window === 'undefined') return;
+    const api = window.electronAPI;
+    if (!api?.ollamaPullModel) { addToast('Model pull not available in browser mode', 'error'); return; }
+    setModelPullProgress({ model: modelName, percent: 0, status: 'starting' });
+    const cleanup = api.onOllamaPullProgress?.((data) => {
+      setModelPullProgress(data);
+    });
+    try {
+      await api.ollamaPullModel(modelName);
+      addToast(`${modelName} pulled successfully`, 'success');
+      // Refresh model list
+      const result = await api.ollamaListModels?.();
+      if (result?.models) setAvailableOllamaModels(result.models);
+      // Auto-set model on existing empty Ollama provider
+      const ollamaProvider = providers.find(p => p.type === 'ollama' && !p.model);
+      if (ollamaProvider) updateProvider(ollamaProvider.id, { model: modelName });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      addToast(`Pull failed: ${msg}`, 'error');
+    } finally {
+      setModelPullProgress(null);
+      cleanup?.();
+    }
+  };
+
+  const handleSetupDemoModel = async () => {
+    // Create Ollama provider if none exists
+    let ollamaProvider = providers.find(p => p.type === 'ollama');
+    if (!ollamaProvider) {
+      const id = `provider-${Date.now()}`;
+      addProvider({ id, name: 'Local (Ollama)', type: 'ollama', model: '', baseUrl: 'http://localhost:11434', apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' });
+      ollamaProvider = { id, name: 'Local (Ollama)', type: 'ollama' as const, model: '', baseUrl: 'http://localhost:11434', apiKey: '', enabled: true, priority: 0, tokensUsed: 0, requestCount: 0, connectionStatus: 'untested' as const };
+    }
+    await handlePullModel(DEMO_MODEL.model);
+  };
+
+  const recommendedModels = hardwareInfo ? getRecommendedModels(hardwareInfo.ramGb) : [];
+  const hasOllamaProvider = providers.some(p => p.type === 'ollama');
+  const showDemoOffer = ollamaStatus === 'active' && availableOllamaModels.length === 0 && !dismissedHints.includes('demo-model-offer');
 
   return (
     <div className="flex-1 h-full flex flex-col bg-background overflow-hidden relative">
@@ -276,6 +381,8 @@ const OrchestrationHub: React.FC = () => {
                     index={index}
                     total={providers.length}
                     ollamaStatus={ollamaStatus}
+                    ollamaInstallStatus={ollamaInstallStatus}
+                    onInstallOllama={handleInstallOllama}
                     onMove={moveProvider}
                     onVerify={verifyProvider}
                     onUpdate={updateProvider}
@@ -285,6 +392,79 @@ const OrchestrationHub: React.FC = () => {
                     }}
                   />
                 ))}
+
+                {/* Demo Model Quick Start */}
+                {showDemoOffer && (
+                  <div className="bg-background border border-primary/30 p-3 shadow-neon">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm text-primary">rocket_launch</span>
+                        <span className="text-xs font-bold text-primary uppercase tracking-widest">Quick Start</span>
+                      </div>
+                      <button onClick={() => dismissHint('demo-model-offer')} className="text-[11px] text-muted hover:text-text-main font-mono">Dismiss</button>
+                    </div>
+                    <p className="text-xs text-muted leading-relaxed mb-2">
+                      Ollama is running but has no models. Pull a tiny demo model ({DEMO_MODEL.sizeGb} GB) to test AI instantly.
+                    </p>
+                    {modelPullProgress && modelPullProgress.model === DEMO_MODEL.model ? (
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] font-mono mb-1">
+                          <span className="text-primary">{modelPullProgress.status}</span>
+                          <span className="text-muted">{modelPullProgress.percent}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-muted/20"><div className="h-full bg-primary transition-all" style={{ width: `${modelPullProgress.percent}%` }} /></div>
+                      </div>
+                    ) : (
+                      <button onClick={handleSetupDemoModel}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-background text-xs font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all">
+                        <span className="material-symbols-outlined text-[14px]">download</span> Get Demo Model ({DEMO_MODEL.label})
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Recommended Models */}
+                {ollamaStatus === 'active' && hasOllamaProvider && recommendedModels.length > 0 && (
+                  <div className="bg-background border border-muted/30 p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="material-symbols-outlined text-sm text-accent-ai">memory</span>
+                      <span className="text-xs font-bold text-text-main uppercase tracking-widest">Recommended Models</span>
+                    </div>
+                    {hardwareInfo && (
+                      <p className="text-[11px] text-muted font-mono mb-2">
+                        {hardwareInfo.ramGb} GB RAM, {hardwareInfo.cpuCores} cores
+                        {hardwareInfo.gpu.detected ? `, ${hardwareInfo.gpu.name}` : ''}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-1.5">
+                      {recommendedModels.map((m) => {
+                        const isInstalled = availableOllamaModels.some(am => am.startsWith(m.model.split(':')[0]));
+                        const isPulling = modelPullProgress?.model === m.model;
+                        return (
+                          <div key={m.model} className="flex items-center gap-2 py-1.5 px-2 bg-surface/50 border border-muted/10">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-text-main">{m.label}</span>
+                                <span className="text-[10px] text-muted font-mono">{m.sizeGb} GB</span>
+                              </div>
+                              <p className="text-[11px] text-muted truncate">{m.description}</p>
+                            </div>
+                            {isInstalled ? (
+                              <span className="text-[10px] text-primary font-bold px-2 py-0.5 border border-primary/30">Installed</span>
+                            ) : isPulling ? (
+                              <span className="text-[10px] text-accent-ai font-mono">{modelPullProgress?.percent || 0}%</span>
+                            ) : (
+                              <button onClick={() => handlePullModel(m.model)}
+                                className="text-[10px] text-text-main font-bold px-2 py-0.5 border border-muted hover:border-primary hover:text-primary transition-colors">
+                                Pull
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

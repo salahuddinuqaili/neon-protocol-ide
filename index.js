@@ -7,6 +7,8 @@ const { registerFsHandlers } = require('./src/electron/ipc/fs');
 const { registerGitHandlers } = require('./src/electron/ipc/git');
 const { registerTerminalHandlers, cleanupProcesses } = require('./src/electron/ipc/terminal');
 const { registerLlmHandlers } = require('./src/electron/ipc/llm');
+const { registerOllamaHandlers } = require('./src/electron/ipc/ollama');
+const { registerSystemHandlers } = require('./src/electron/ipc/system');
 
 async function createWindow() {
   const win = new BrowserWindow({
@@ -37,6 +39,8 @@ registerFsHandlers();
 registerGitHandlers();
 registerTerminalHandlers();
 registerLlmHandlers();
+registerOllamaHandlers();
+registerSystemHandlers();
 
 // App lifecycle
 app.whenReady().then(async () => {

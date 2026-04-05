@@ -2,6 +2,20 @@ export type IDEView = 'blueprint' | 'code' | 'orchestrator' | 'terminal';
 
 export type OllamaStatus = 'active' | 'offline' | 'checking';
 
+export type OllamaInstallStatus = 'unknown' | 'not-installed' | 'installing' | 'installed' | 'error';
+
+export interface HardwareInfo {
+  ramGb: number;
+  cpuCores: number;
+  gpu: { detected: boolean; name: string; vramGb: number };
+}
+
+export interface ModelPullProgress {
+  model: string;
+  percent: number;
+  status: string;
+}
+
 export interface FileEntry {
   name: string;
   path: string;
@@ -169,6 +183,13 @@ export interface IDEState {
   dismissedHints: string[];
   providers: LLMProviderConfig[];
 
+  // Ollama auto-installer
+  ollamaInstallStatus: OllamaInstallStatus;
+  ollamaInstallError: string | null;
+  hardwareInfo: HardwareInfo | null;
+  availableOllamaModels: string[];
+  modelPullProgress: ModelPullProgress | null;
+
   // Git
   gitState: GitState;
 
@@ -211,6 +232,10 @@ export interface IDEState {
   addProvider: (provider: LLMProviderConfig) => void;
   removeProvider: (id: string) => void;
   trackTokenUsage: (providerId: string, tokens: number) => void;
+  setOllamaInstallStatus: (status: OllamaInstallStatus, error?: string) => void;
+  setHardwareInfo: (info: HardwareInfo | null) => void;
+  setAvailableOllamaModels: (models: string[]) => void;
+  setModelPullProgress: (progress: ModelPullProgress | null) => void;
 
   // Learning actions
   setLearningMode: (mode: LearningMode) => void;
