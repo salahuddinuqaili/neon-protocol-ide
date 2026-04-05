@@ -5,14 +5,22 @@ import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry, TranslatedError } from '../../types';
 import { routeChat } from '../../lib/llm/provider';
 import { translateError } from '../../lib/errorTranslator';
+import { buildExplainPrompt, ExplainMode } from '../../lib/explainPrompts';
 import ConceptTooltip from '../learning/ConceptTooltip';
 import ErrorCard from '../terminal/ErrorCard';
 
-interface CopilotPanelProps {
-  currentFile: FileEntry | undefined;
+export interface ExplainRequest {
+  code: string;
+  mode: ExplainMode;
+  id: number; // monotonic counter to detect new requests
 }
 
-const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
+interface CopilotPanelProps {
+  currentFile: FileEntry | undefined;
+  explainRequest?: ExplainRequest | null;
+}
+
+const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile, explainRequest }) => {
   const { providers, trackTokenUsage, learningMode } = useIDEStore();
 
   const [copilotInput, setCopilotInput] = useState('');
@@ -25,6 +33,60 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({ currentFile }) => {
   useEffect(() => {
     copilotEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [copilotMessages]);
+
+  // Handle incoming explain requests from the editor context menu
+  const lastHandledExplainRef = useRef<number>(0);
+  useEffect(() => {
+    if (!explainRequest || explainRequest.id <= lastHandledExplainRef.current) return;
+    lastHandledExplainRef.current = explainRequest.id;
+
+    const fileName = currentFile?.name || 'unknown';
+    const language = currentFile?.language || 'text';
+    const prompt = buildExplainPrompt(explainRequest.code, explainRequest.mode, fileName, language);
+    const label = explainRequest.code.length > 50
+      ? explainRequest.code.slice(0, 50) + '...'
+      : explainRequest.code;
+    const modeLabels: Record<ExplainMode, string> = {
+      explain: 'Explain',
+      line: 'What does this do',
+      simplify: 'Simplify',
+      ask: 'Ask about',
+    };
+    const userText = `${modeLabels[explainRequest.mode]}: ${label}`;
+
+    setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'user', text: userText }]);
+
+    if (!providers.some(p => p.enabled)) {
+      setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: 'No AI provider connected. Set one up in AI Settings (Ctrl+3) to use Explain This.' }]);
+      return;
+    }
+
+    setCopilotLoading(true);
+    const context = currentFile
+      ? `The user is editing "${currentFile.name}" (${currentFile.language}). Here are the first 100 lines:\n\`\`\`\n${currentFile.content.split('\n').slice(0, 100).join('\n')}\n\`\`\``
+      : 'No file is currently open.';
+    const systemPrompt = `You are a teaching-focused code copilot helping someone learn to code. Use simple language and real-world analogies. ${context}`;
+
+    routeChat(providers, [
+      { role: 'system', content: systemPrompt },
+      ...copilotMessages.map(m => ({
+        role: m.role === 'ai' ? 'assistant' as const : 'user' as const,
+        content: m.text,
+      })),
+      { role: 'user', content: prompt },
+    ]).then(result => {
+      setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: result.content }]);
+      trackTokenUsage(result.providerId, result.tokensUsed);
+    }).catch(err => {
+      const msg = err instanceof Error ? err.message : 'Connection failed';
+      const translated = translateError(msg);
+      setCopilotMessages(prev => [...prev, { id: ++msgIdRef.current, role: 'ai', text: `Could not reach AI: ${msg}`, translatedError: translated }]);
+    }).finally(() => {
+      setCopilotLoading(false);
+    });
+    // Only re-run when explainRequest changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [explainRequest]);
 
   const hasEnabledProvider = providers.some(p => p.enabled);
 
