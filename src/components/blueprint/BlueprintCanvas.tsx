@@ -73,7 +73,7 @@ const nodeTypes = { custom: CustomNode };
 // ─── Canvas component ───
 
 const BlueprintCanvasInner: React.FC = () => {
-  const { selectModule, files, projectPath, addToast, learningMode } = useIDEStore();
+  const { selectModule, toggleExplorer, files, projectPath, addToast, learningMode } = useIDEStore();
   const reactFlow = useReactFlow();
   const [hasUserEdited, setHasUserEdited] = useState(false);
   const [initialFitDone, setInitialFitDone] = useState(false);
@@ -111,7 +111,8 @@ const BlueprintCanvasInner: React.FC = () => {
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
     selectModule(node.data.label);
-  }, [selectModule]);
+    toggleExplorer(true);
+  }, [selectModule, toggleExplorer]);
 
   const handleAddNode = () => {
     setHasUserEdited(true);

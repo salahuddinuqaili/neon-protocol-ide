@@ -7,16 +7,46 @@ import ConceptTooltip from '../learning/ConceptTooltip';
 import { NODE_EDUCATION } from '../../data/lessons';
 
 const ModuleExplorer: React.FC = () => {
-  const { selectedModule, isExplorerOpen, toggleExplorer, toggleGlossary, setView, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
+  const { selectedModule, isExplorerOpen, toggleExplorer, toggleGlossary, currentView, setView, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
+
+  // Close when leaving blueprint view
+  useEffect(() => {
+    if (currentView !== 'blueprint' && isExplorerOpen) toggleExplorer(false);
+  }, [currentView, isExplorerOpen, toggleExplorer]);
 
   // Close glossary when explorer opens (mutual exclusion for right panels)
   useEffect(() => {
     if (isExplorerOpen) toggleGlossary(false);
   }, [isExplorerOpen, toggleGlossary]);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isExplorerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') toggleExplorer(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isExplorerOpen, toggleExplorer]);
+
   const [chatInput, setChatInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const prevModuleRef = useRef<string | null>(null);
+
+  // Click outside to close
+  useEffect(() => {
+    if (!isExplorerOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        toggleExplorer(false);
+      }
+    };
+    // Delay listener to avoid closing on the same click that opened it
+    const timer = setTimeout(() => window.addEventListener('mousedown', handleClick), 0);
+    return () => { clearTimeout(timer); window.removeEventListener('mousedown', handleClick); };
+  }, [isExplorerOpen, toggleExplorer]);
 
   // Clear chat when switching modules
   useEffect(() => {
@@ -77,8 +107,9 @@ const ModuleExplorer: React.FC = () => {
 
   return (
     <div
+      ref={panelRef}
       data-tutorial="module-explorer"
-      className={`absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-50 transform transition-transform duration-300 ease-in-out ${
+      className={`absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-30 transform transition-transform duration-300 ease-in-out ${
         isExplorerOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
