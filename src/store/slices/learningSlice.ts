@@ -18,6 +18,7 @@ export interface LearningSlice {
   setLearningMode: (mode: LearningMode) => void;
   startTutorial: (tutorialId: string) => void;
   advanceTutorial: () => void;
+  retreatTutorial: () => void;
   completeTutorial: () => void;
   skipTutorial: () => void;
   completeLesson: (lessonId: string) => void;
@@ -56,6 +57,13 @@ export const createLearningSlice: StateCreator<LearningSlice, [], [], LearningSl
       },
     };
   }),
+
+  retreatTutorial: () => set((state) => ({
+    learningProgress: {
+      ...state.learningProgress,
+      currentTutorialStep: Math.max(0, state.learningProgress.currentTutorialStep - 1),
+    },
+  })),
 
   completeTutorial: () => set((state) => ({
     isTutorialActive: false,

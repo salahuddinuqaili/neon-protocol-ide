@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
 import ContextMenu from './ContextMenu';
@@ -151,6 +151,11 @@ const Sidebar: React.FC = () => {
   const [fileFilter, setFileFilter] = useState('');
   const [collapseKey, setCollapseKey] = useState(0);
   const { refresh: refreshGit } = useGitPolling();
+
+  // Reset to files tab when project closes
+  useEffect(() => {
+    if (!projectPath) setActiveTab('files');
+  }, [projectPath]);
 
   const filteredFiles = useMemo(() => {
     if (!fileFilter) return files;

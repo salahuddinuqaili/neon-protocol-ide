@@ -112,7 +112,12 @@ const WelcomeScreen: React.FC = () => {
               {recentProjects.map(name => (
                 <button
                   key={name}
-                  onClick={handleSkip}
+                  onClick={() => {
+                    setLearningMode('experienced');
+                    setOnboardingComplete();
+                    // Recent projects are names only — user needs to re-open from disk
+                    // so we just dismiss onboarding and let them use the Open Folder button
+                  }}
                   className="flex items-center gap-2 px-4 py-2 bg-surface border border-muted/30 text-text-main text-xs font-mono hover:border-primary hover:shadow-neon transition-all"
                 >
                   <span className="material-symbols-outlined text-sm text-primary">folder</span>

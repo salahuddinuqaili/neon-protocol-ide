@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { LESSONS } from '../../data/lessons';
 import { DEMO_FILES } from '../../data/demoProject';
@@ -185,6 +185,14 @@ const LearningPathPanel: React.FC = () => {
     setJustCompleted(null);
     setActiveLesson(null);
   });
+
+  // Clear stale completion state when panel reopens
+  useEffect(() => {
+    if (isLearningPathOpen) {
+      setJustCompleted(null);
+      setActiveLesson(null);
+    }
+  }, [isLearningPathOpen]);
 
   if (!isLearningPathOpen) return null;
 

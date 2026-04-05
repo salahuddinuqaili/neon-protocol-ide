@@ -30,10 +30,11 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
 
   setView: (view) => set({ currentView: view }),
 
-  selectModule: (name) => set({
+  selectModule: (name) => set((state) => ({
     selectedModule: name,
-    isExplorerOpen: !!name,
-  }),
+    // Only auto-open on first selection; don't force-open if user closed it
+    isExplorerOpen: name ? state.isExplorerOpen || !state.selectedModule : false,
+  })),
 
   toggleExplorer: (open?) => set((state) => ({
     isExplorerOpen: typeof open !== 'undefined' ? open : !state.isExplorerOpen,

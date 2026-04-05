@@ -7,7 +7,12 @@ import ConceptTooltip from '../learning/ConceptTooltip';
 import { NODE_EDUCATION } from '../../data/lessons';
 
 const ModuleExplorer: React.FC = () => {
-  const { selectedModule, isExplorerOpen, toggleExplorer, setView, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
+  const { selectedModule, isExplorerOpen, toggleExplorer, toggleGlossary, setView, chatMessages, addChatMessage, clearChatMessages, providers, trackTokenUsage, learningMode } = useIDEStore();
+
+  // Close glossary when explorer opens (mutual exclusion for right panels)
+  useEffect(() => {
+    if (isExplorerOpen) toggleGlossary(false);
+  }, [isExplorerOpen, toggleGlossary]);
   const [chatInput, setChatInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);

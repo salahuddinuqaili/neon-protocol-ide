@@ -84,7 +84,7 @@ const MainLayout: React.FC = () => {
       if (e.ctrlKey && e.key === '1') { e.preventDefault(); setView('blueprint'); }
       if (e.ctrlKey && e.key === '2') { e.preventDefault(); setView('code'); }
       if (e.ctrlKey && e.key === '3') { e.preventDefault(); setView('orchestrator'); }
-    if (e.ctrlKey && e.key === '4') { e.preventDefault(); setView('terminal'); }
+      if (e.ctrlKey && e.key === '4') { e.preventDefault(); setView('terminal'); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

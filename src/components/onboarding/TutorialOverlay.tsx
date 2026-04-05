@@ -19,6 +19,7 @@ const TutorialOverlay: React.FC = () => {
     learningProgress,
     setView,
     advanceTutorial,
+    retreatTutorial,
     completeTutorial,
     skipTutorial,
     toggleLearningPath,
@@ -153,16 +154,8 @@ const TutorialOverlay: React.FC = () => {
   };
 
   const handleBack = () => {
-    // Go back by manipulating the step directly via store
-    // advanceTutorial goes forward, so we need to set step back manually
-    // The store only has advanceTutorial, so we re-start at previous step
     if (stepIndex > 0) {
-      useIDEStore.setState((state) => ({
-        learningProgress: {
-          ...state.learningProgress,
-          currentTutorialStep: state.learningProgress.currentTutorialStep - 1,
-        },
-      }));
+      retreatTutorial();
     }
   };
 

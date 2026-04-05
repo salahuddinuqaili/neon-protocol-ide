@@ -84,10 +84,11 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
   }, [query]);
 
   const handleSelect = useCallback((path: string) => {
+    if (!files.some(f => f.path === path)) return;
     openFile(path);
     setView('code');
     onClose();
-  }, [openFile, setView, onClose]);
+  }, [files, openFile, setView, onClose]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {

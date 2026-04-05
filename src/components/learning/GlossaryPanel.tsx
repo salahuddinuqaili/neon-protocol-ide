@@ -9,7 +9,12 @@ import { CATEGORY_LABELS } from '../../config/education';
 const CATEGORIES: GlossaryCategory[] = ['coding', 'llm', 'architecture', 'ide'];
 
 const GlossaryPanel: React.FC = () => {
-  const { isGlossaryOpen, toggleGlossary } = useIDEStore();
+  const { isGlossaryOpen, toggleGlossary, toggleExplorer } = useIDEStore();
+
+  // Close module explorer when glossary opens (mutual exclusion for right panels)
+  useEffect(() => {
+    if (isGlossaryOpen) toggleExplorer(false);
+  }, [isGlossaryOpen, toggleExplorer]);
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     coding: true,
