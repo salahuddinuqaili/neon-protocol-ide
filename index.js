@@ -26,7 +26,7 @@ async function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:3001');
   } else {
-    const outDir = path.join(__dirname, 'out');
+    const outDir = path.join(process.resourcesPath, 'out');
     const port = await startStaticServer(outDir);
     win.loadURL(`http://127.0.0.1:${port}`);
   }
