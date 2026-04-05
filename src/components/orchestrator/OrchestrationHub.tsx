@@ -140,7 +140,7 @@ const ProviderCard: React.FC<{
 
 
 const OrchestrationHub: React.FC = () => {
-  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint, ollamaInstallStatus, setOllamaInstallStatus, hardwareInfo, availableOllamaModels, setAvailableOllamaModels, modelPullProgress, setModelPullProgress } = useIDEStore();
+  const { ollamaStatus, addToast, providers, updateProvider, reorderProviders, addProvider, removeProvider, trackTokenUsage, learningMode, dismissedHints, dismissHint, ollamaInstallStatus, setOllamaInstallStatus, hardwareInfo, availableOllamaModels, setAvailableOllamaModels, modelPullProgress, setModelPullProgress, editorSettings } = useIDEStore();
   const [activeTab, setActiveTab] = useState<Tab>('providers');
   const [testPrompt, setTestPrompt] = useState('');
   const isBeginnerMode = learningMode === 'beginner';
@@ -281,7 +281,8 @@ const OrchestrationHub: React.FC = () => {
     await handlePullModel(DEMO_MODEL.model);
   };
 
-  const recommendedModels = hardwareInfo ? getRecommendedModels(hardwareInfo.ramGb) : [];
+  const ramGb = hardwareInfo?.ramGb || editorSettings.systemRamGb || 16;
+  const recommendedModels = getRecommendedModels(ramGb);
   const hasOllamaProvider = providers.some(p => p.type === 'ollama');
   const showDemoOffer = ollamaStatus === 'active' && availableOllamaModels.length === 0 && !dismissedHints.includes('demo-model-offer');
 
@@ -430,12 +431,10 @@ const OrchestrationHub: React.FC = () => {
                       <span className="material-symbols-outlined text-sm text-accent-ai">memory</span>
                       <span className="text-xs font-bold text-text-main uppercase tracking-widest">Recommended Models</span>
                     </div>
-                    {hardwareInfo && (
-                      <p className="text-[11px] text-muted font-mono mb-2">
-                        {hardwareInfo.ramGb} GB RAM, {hardwareInfo.cpuCores} cores
-                        {hardwareInfo.gpu.detected ? `, ${hardwareInfo.gpu.name}` : ''}
-                      </p>
-                    )}
+                    <p className="text-[11px] text-muted font-mono mb-2">
+                      {ramGb} GB RAM{hardwareInfo ? `, ${hardwareInfo.cpuCores} cores` : ''}
+                      {hardwareInfo?.gpu.detected ? `, ${hardwareInfo.gpu.name}` : ''}
+                    </p>
                     <div className="flex flex-col gap-1.5">
                       {recommendedModels.map((m) => {
                         const isInstalled = availableOllamaModels.some(am => am.startsWith(m.model.split(':')[0]));
