@@ -107,6 +107,8 @@ export interface TutorialStep {
 export interface LearningProgress {
   completedSteps: string[];
   completedLessons: string[];
+  completedChallenges: string[];
+  challengeAttempts: Record<string, number>;
   currentTutorialStep: number;
   activeTutorialId: string | null;
 }
@@ -145,6 +147,33 @@ export interface NodeEducation {
   concept: string;
   explanation: string;
   realWorldAnalogy: string;
+}
+
+// --- Challenge Types ---
+
+export type ChallengeType = 'fill-in-the-blank' | 'fix-the-bug' | 'predict-output' | 'free-code';
+export type ChallengeStatus = 'locked' | 'available' | 'attempted' | 'completed';
+
+export interface ChallengeValidation {
+  choices?: string[];
+  correctChoice?: number;
+  testFn?: string;
+  expectedOutput?: string;
+  requiredSubstrings?: string[];
+  forbiddenSubstrings?: string[];
+}
+
+export interface Challenge {
+  id: string;
+  lessonId: string;
+  title: string;
+  description: string;
+  type: ChallengeType;
+  difficulty: 1 | 2 | 3;
+  starterCode: string;
+  language: string;
+  hints: string[];
+  validation: ChallengeValidation;
 }
 
 // --- Error Translation ---
@@ -233,6 +262,9 @@ export interface IDEState {
   completeTutorial: () => void;
   skipTutorial: () => void;
   completeLesson: (lessonId: string) => void;
+  startChallenge: (challengeId: string) => void;
+  completeChallenge: (challengeId: string) => void;
+  recordChallengeAttempt: (challengeId: string) => void;
   toggleGlossary: (open?: boolean) => void;
   toggleLearningPath: (open?: boolean) => void;
   resetLearningProgress: () => void;

@@ -4,6 +4,8 @@ import { LearningMode, LearningProgress } from '../../types';
 const DEFAULT_LEARNING_PROGRESS: LearningProgress = {
   completedSteps: [],
   completedLessons: [],
+  completedChallenges: [],
+  challengeAttempts: {},
   currentTutorialStep: 0,
   activeTutorialId: null,
 };
@@ -22,6 +24,9 @@ export interface LearningSlice {
   completeTutorial: () => void;
   skipTutorial: () => void;
   completeLesson: (lessonId: string) => void;
+  startChallenge: (challengeId: string) => void;
+  completeChallenge: (challengeId: string) => void;
+  recordChallengeAttempt: (challengeId: string) => void;
   toggleGlossary: (open?: boolean) => void;
   toggleLearningPath: (open?: boolean) => void;
   resetLearningProgress: () => void;
@@ -85,6 +90,35 @@ export const createLearningSlice: StateCreator<LearningSlice, [], [], LearningSl
       completedLessons: state.learningProgress.completedLessons.includes(lessonId)
         ? state.learningProgress.completedLessons
         : [...state.learningProgress.completedLessons, lessonId],
+    },
+  })),
+
+  startChallenge: (challengeId) => set((state) => ({
+    learningProgress: {
+      ...state.learningProgress,
+      challengeAttempts: {
+        ...state.learningProgress.challengeAttempts,
+        [challengeId]: state.learningProgress.challengeAttempts[challengeId] || 0,
+      },
+    },
+  })),
+
+  completeChallenge: (challengeId) => set((state) => ({
+    learningProgress: {
+      ...state.learningProgress,
+      completedChallenges: state.learningProgress.completedChallenges.includes(challengeId)
+        ? state.learningProgress.completedChallenges
+        : [...state.learningProgress.completedChallenges, challengeId],
+    },
+  })),
+
+  recordChallengeAttempt: (challengeId) => set((state) => ({
+    learningProgress: {
+      ...state.learningProgress,
+      challengeAttempts: {
+        ...state.learningProgress.challengeAttempts,
+        [challengeId]: (state.learningProgress.challengeAttempts[challengeId] || 0) + 1,
+      },
     },
   })),
 

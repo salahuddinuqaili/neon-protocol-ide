@@ -21,7 +21,7 @@ export const useIDEStore = create<IDEStoreState>()(
     }),
     {
       name: 'neon-protocol-ide',
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         currentView: state.currentView,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
@@ -53,9 +53,17 @@ export const useIDEStore = create<IDEStoreState>()(
           persisted.learningProgress = persisted.learningProgress || {
             completedSteps: [],
             completedLessons: [],
+            completedChallenges: [],
+            challengeAttempts: {},
             currentTutorialStep: 0,
             activeTutorialId: null,
           };
+        }
+        if (version < 4) {
+          if (persisted.learningProgress) {
+            persisted.learningProgress.completedChallenges = persisted.learningProgress.completedChallenges || [];
+            persisted.learningProgress.challengeAttempts = persisted.learningProgress.challengeAttempts || {};
+          }
         }
         return persisted;
       },
