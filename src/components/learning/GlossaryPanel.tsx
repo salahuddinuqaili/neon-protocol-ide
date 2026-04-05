@@ -26,20 +26,6 @@ const GlossaryPanel: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isGlossaryOpen, toggleGlossary]);
 
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // Click outside to close
-  useEffect(() => {
-    if (!isGlossaryOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        toggleGlossary(false);
-      }
-    };
-    const timer = setTimeout(() => window.addEventListener('mousedown', handleClick), 0);
-    return () => { clearTimeout(timer); window.removeEventListener('mousedown', handleClick); };
-  }, [isGlossaryOpen, toggleGlossary]);
-
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     coding: true,
@@ -103,10 +89,7 @@ const GlossaryPanel: React.FC = () => {
 
   return (
     <div
-      ref={panelRef}
-      className={`absolute right-0 top-0 h-full w-[450px] max-w-[95vw] bg-surface border-l border-muted z-30 transform transition-transform duration-300 ease-in-out shadow-[-10px_0_30px_rgba(0,0,0,0.5)] ${
-        isGlossaryOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
+      className="absolute right-0 top-0 h-full w-[450px] max-w-[95vw] bg-surface border-l border-muted z-30 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-muted bg-background">

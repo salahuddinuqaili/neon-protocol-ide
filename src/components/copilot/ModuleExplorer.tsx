@@ -32,21 +32,7 @@ const ModuleExplorer: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   const prevModuleRef = useRef<string | null>(null);
-
-  // Click outside to close
-  useEffect(() => {
-    if (!isExplorerOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        toggleExplorer(false);
-      }
-    };
-    // Delay listener to avoid closing on the same click that opened it
-    const timer = setTimeout(() => window.addEventListener('mousedown', handleClick), 0);
-    return () => { clearTimeout(timer); window.removeEventListener('mousedown', handleClick); };
-  }, [isExplorerOpen, toggleExplorer]);
 
   // Clear chat when switching modules
   useEffect(() => {
@@ -64,6 +50,9 @@ const ModuleExplorer: React.FC = () => {
     setView('code');
     toggleExplorer(false);
   };
+
+  // Don't render at all when closed — prevents overspill and z-index issues
+  if (!isExplorerOpen) return null;
 
   const hasEnabledProvider = providers.some(p => p.enabled);
 
@@ -107,11 +96,8 @@ const ModuleExplorer: React.FC = () => {
 
   return (
     <div
-      ref={panelRef}
       data-tutorial="module-explorer"
-      className={`absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-30 transform transition-transform duration-300 ease-in-out ${
-        isExplorerOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
+      className="absolute right-0 top-0 h-full w-[450px] max-w-full bg-surface border-l border-muted flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-30"
     >
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-muted bg-background">
@@ -136,7 +122,6 @@ const ModuleExplorer: React.FC = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50 custom-scrollbar">
-        {/* 🎓 LEARNER TIP: Beginner Insight Card */}
         {!selectedModule && (
           <div className="bg-surface-hover border border-primary/50 p-4">
             <div className="flex items-center gap-2 mb-2 text-primary">
@@ -156,7 +141,6 @@ const ModuleExplorer: React.FC = () => {
           </div>
         )}
 
-        {/* Educational card for selected module (beginner mode) */}
         {selectedModule && learningMode === 'beginner' && NODE_EDUCATION[selectedModule] && (
           <div className="bg-surface-hover border border-accent-ai/30 p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -184,7 +168,7 @@ const ModuleExplorer: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <div className="space-y-4">
           {chatMessages.map((msg, i) => (
             <div key={i} className={`flex gap-3 w-full ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -200,8 +184,8 @@ const ModuleExplorer: React.FC = () => {
                   {msg.role === 'ai' ? 'Architect Copilot' : 'User'}
                 </span>
                 <div className={`p-3 text-xs font-mono leading-relaxed ${
-                  msg.role === 'ai' 
-                    ? 'bg-surface-hover border-l-2 border-accent-ai text-text-main' 
+                  msg.role === 'ai'
+                    ? 'bg-surface-hover border-l-2 border-accent-ai text-text-main'
                     : 'bg-primary/10 border-r-2 border-primary text-text-main text-right'
                 }`}>
                   {msg.text}
@@ -237,7 +221,7 @@ const ModuleExplorer: React.FC = () => {
 
       {/* Footer CTA */}
       <div className="border-t border-muted bg-background">
-        <button 
+        <button
           onClick={handleInspectCode}
           className="w-full bg-primary hover:bg-[#0cf1f1] text-background font-bold py-4 flex items-center justify-center gap-2 transition-all group"
         >

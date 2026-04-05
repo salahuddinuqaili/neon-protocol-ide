@@ -23,6 +23,7 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ filePath, staged, onClose }) =>
     let cancelled = false;
 
     const load = async () => {
+      if (typeof window === 'undefined') return;
       const api = window.electronAPI;
       if (!api?.isElectron || !projectPath) return;
 

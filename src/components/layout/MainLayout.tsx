@@ -104,6 +104,7 @@ const MainLayout: React.FC = () => {
 
   // Auto-detect RAM from Electron if available
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const api = window.electronAPI;
     if (api?.systemRamGb && api.systemRamGb > 0) {
       const { updateEditorSettings } = useIDEStore.getState();
