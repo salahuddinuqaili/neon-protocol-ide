@@ -1,11 +1,59 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 
 interface QuickOpenProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+/** Fuzzy match scoring — bonuses for consecutive chars and segment starts */
+function fuzzyScore(query: string, target: string): number {
+  let qi = 0, score = 0, consecutive = 0, prevIdx = -2;
+  const q = query.toLowerCase(), t = target.toLowerCase();
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) {
+      score += 1;
+      if (ti === prevIdx + 1) { consecutive++; score += consecutive * 2; }
+      else { consecutive = 0; }
+      if (ti === 0 || '/.-_'.includes(t[ti - 1])) score += 5;
+      prevIdx = ti;
+      qi++;
+    }
+  }
+  return qi === q.length ? score : 0;
+}
+
+/** Highlight matched characters in text */
+function highlightMatches(text: string, query: string): React.ReactNode[] {
+  if (!query) return [text];
+  const result: React.ReactNode[] = [];
+  let qi = 0;
+  const q = query.toLowerCase(), t = text.toLowerCase();
+  let buffer = '';
+  for (let i = 0; i < text.length; i++) {
+    if (qi < q.length && t[i] === q[qi]) {
+      if (buffer) { result.push(buffer); buffer = ''; }
+      result.push(<span key={i} className="text-primary font-bold">{text[i]}</span>);
+      qi++;
+    } else {
+      buffer += text[i];
+    }
+  }
+  if (buffer) result.push(buffer);
+  return result;
+}
+
+function getFileIcon(name: string): string {
+  if (name.endsWith('.json')) return 'settings_ethernet';
+  if (name.endsWith('.md')) return 'description';
+  if (name.endsWith('.css')) return 'css';
+  if (name.endsWith('.html')) return 'html';
+  if (name.endsWith('.py')) return 'code';
+  if (name.endsWith('.ts') || name.endsWith('.tsx')) return 'code';
+  if (name.endsWith('.js') || name.endsWith('.jsx')) return 'javascript';
+  return 'code';
 }
 
 const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
@@ -14,11 +62,14 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = files.filter(f => {
-    if (!query) return true;
-    const lower = query.toLowerCase();
-    return f.name.toLowerCase().includes(lower) || f.path.toLowerCase().includes(lower);
-  });
+  const results = useMemo(() => {
+    if (!query) return files.slice(0, 30).map(f => ({ file: f, score: 0 }));
+    return files
+      .map(f => ({ file: f, score: Math.max(fuzzyScore(query, f.name), fuzzyScore(query, f.path) * 0.7) }))
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 30);
+  }, [files, query]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,12 +94,12 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
       onClose();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
+      setSelectedIndex(i => Math.min(i + 1, results.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex(i => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && filtered[selectedIndex]) {
-      handleSelect(filtered[selectedIndex].path);
+    } else if (e.key === 'Enter' && results[selectedIndex]) {
+      handleSelect(results[selectedIndex].file.path);
     }
   };
 
@@ -73,12 +124,12 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
           <span className="text-[11px] text-muted font-mono bg-background px-1.5 py-0.5 border border-muted/30">ESC</span>
         </div>
         <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-          {filtered.length === 0 ? (
+          {results.length === 0 ? (
             <div className="px-4 py-6 text-center text-xs text-muted font-mono">
               {files.length === 0 ? 'No project open' : 'No matching files'}
             </div>
           ) : (
-            filtered.slice(0, 20).map((file, i) => (
+            results.map(({ file }, i) => (
               <div
                 key={file.path}
                 onClick={() => handleSelect(file.path)}
@@ -88,10 +139,10 @@ const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {
                     : 'text-muted hover:text-text-main hover:bg-surface-hover'
                 }`}
               >
-                <span className="material-symbols-outlined text-[14px]">code</span>
+                <span className="material-symbols-outlined text-[14px]">{getFileIcon(file.name)}</span>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-text-main truncate">{file.name}</span>
-                  <span className="text-[11px] text-muted truncate">{file.path}</span>
+                  <span className="text-text-main truncate">{highlightMatches(file.name, query)}</span>
+                  <span className="text-[11px] text-muted truncate">{highlightMatches(file.path, query)}</span>
                 </div>
               </div>
             ))

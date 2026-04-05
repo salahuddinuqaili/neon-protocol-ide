@@ -10,9 +10,10 @@ const GitFileRow: React.FC<{
   file: GitFileChange;
   onToggleStage: () => void;
   onViewDiff: () => void;
+  onDiscard?: () => void;
   staged: boolean;
   beginnerMode?: boolean;
-}> = ({ file, onToggleStage, onViewDiff, staged, beginnerMode }) => {
+}> = ({ file, onToggleStage, onViewDiff, onDiscard, staged, beginnerMode }) => {
   const displayStatus = staged ? file.indexStatus : file.workTreeStatus;
   const fileName = file.path.split('/').pop() || file.path;
   const dirPath = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';
@@ -32,15 +33,26 @@ const GitFileRow: React.FC<{
         {fileName}
       </button>
       {dirPath && <span className="text-muted/50 truncate text-[10px] ml-0.5">{dirPath}</span>}
-      <button
-        onClick={(e) => { e.stopPropagation(); onToggleStage(); }}
-        className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-primary"
-        title={staged ? 'Unstage' : 'Stage'}
-      >
-        <span className="material-symbols-outlined text-[14px]">
-          {staged ? 'remove' : 'add'}
-        </span>
-      </button>
+      <div className="ml-auto flex items-center gap-0.5 shrink-0">
+        {!staged && onDiscard && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDiscard(); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-accent-error"
+            title="Discard changes"
+          >
+            <span className="material-symbols-outlined text-[14px]">undo</span>
+          </button>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleStage(); }}
+          className="opacity-60 hover:opacity-100 transition-opacity text-muted hover:text-primary"
+          title={staged ? 'Unstage' : 'Stage'}
+        >
+          <span className="material-symbols-outlined text-[14px]">
+            {staged ? 'remove' : 'add'}
+          </span>
+        </button>
+      </div>
     </div>
   );
 };
@@ -175,6 +187,33 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
     else addToast(`Stash pop failed: ${result.error}`, 'error');
   };
 
+  const handleDiscard = async (filePath: string) => {
+    if (!api?.gitDiscardFile || !projectPath) return;
+    if (!confirm(`Discard all changes to ${filePath.split('/').pop()}? This cannot be undone.`)) return;
+    const result = await api.gitDiscardFile(projectPath, filePath);
+    if (result.success) { addToast('Changes discarded', 'info'); onRefresh(); }
+    else addToast(`Discard failed: ${result.error}`, 'error');
+  };
+
+  const handleCommitAndPush = async () => {
+    if (!api?.isElectron || !projectPath || !commitMsg.trim() || staged.length === 0) return;
+    setIsCommitting(true);
+    const commitResult = await api.gitCommit(projectPath, commitMsg.trim());
+    if (!commitResult.success) {
+      setIsCommitting(false);
+      addToast(`Commit failed: ${commitResult.error || 'Unknown error'}`, 'error');
+      return;
+    }
+    setCommitMsg('');
+    setIsPushing(true);
+    setIsCommitting(false);
+    const pushResult = await api.gitPush(projectPath);
+    setIsPushing(false);
+    if (pushResult.success) { addToast('Committed and pushed', 'success'); }
+    else { addToast(`Committed but push failed: ${pushResult.error || 'Unknown error'}`, 'error'); }
+    onRefresh();
+  };
+
   if (!gitState.isGitRepo) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center gap-3">
@@ -287,7 +326,7 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
                 )}
               </button>
               {changesOpen && unstaged.map(f => (
-                <GitFileRow key={`u-${f.path}`} file={f} staged={false} onToggleStage={() => handleStage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: false })} beginnerMode={isBeginnerMode} />
+                <GitFileRow key={`u-${f.path}`} file={f} staged={false} onToggleStage={() => handleStage(f.path)} onViewDiff={() => setDiffFile({ path: f.path, staged: false })} onDiscard={() => handleDiscard(f.path)} beginnerMode={isBeginnerMode} />
               ))}
             </div>
           </>)}
@@ -302,14 +341,24 @@ const SourceControlPanel: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) 
             placeholder="Commit message..."
             className="w-full bg-background border border-muted/30 text-text-main text-xs font-mono px-2 py-1.5 resize-none h-16 focus:outline-none focus:border-primary placeholder-muted custom-scrollbar"
           />
-          <button
-            onClick={handleCommit}
-            disabled={isCommitting || !commitMsg.trim() || staged.length === 0}
-            className="w-full flex items-center justify-center gap-1.5 h-7 bg-primary text-background text-[11px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all disabled:opacity-30"
-          >
-            <span className="material-symbols-outlined text-[14px]">check</span>
-            {isCommitting ? 'Committing...' : `Commit (${staged.length})`}
-          </button>
+          <div className="flex gap-0.5">
+            <button
+              onClick={handleCommit}
+              disabled={isCommitting || !commitMsg.trim() || staged.length === 0}
+              className="flex-1 flex items-center justify-center gap-1.5 h-7 bg-primary text-background text-[11px] font-bold uppercase tracking-wider hover:bg-[#0cf1f1] transition-all disabled:opacity-30"
+            >
+              <span className="material-symbols-outlined text-[14px]">check</span>
+              {isCommitting ? 'Committing...' : `Commit (${staged.length})`}
+            </button>
+            <button
+              onClick={handleCommitAndPush}
+              disabled={isCommitting || isPushing || !commitMsg.trim() || staged.length === 0}
+              className="w-8 flex items-center justify-center h-7 bg-primary/80 text-background hover:bg-[#0cf1f1] transition-all disabled:opacity-30 border-l border-background/20"
+              title="Commit and Push"
+            >
+              <span className="material-symbols-outlined text-[12px]">upload</span>
+            </button>
+          </div>
         </div>
       </>)}
 

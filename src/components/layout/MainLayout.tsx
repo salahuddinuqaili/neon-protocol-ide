@@ -209,7 +209,7 @@ const MainLayout: React.FC = () => {
       </main>
       
       {/* Global Footer — green/neon when AI is connected, warning orange otherwise */}
-      <footer className={`h-6 flex items-center justify-between px-3 text-background text-[11px] font-mono font-bold shrink-0 z-50 transition-colors ${
+      <footer className={`h-7 flex items-center justify-between px-3 text-background text-[11px] font-mono font-bold shrink-0 z-50 transition-colors ${
         providers.some(p => p.enabled && p.connectionStatus === 'verified')
           ? 'bg-primary shadow-neon'
           : 'bg-accent-warning shadow-neon-warning'

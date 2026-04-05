@@ -183,6 +183,13 @@ function registerGitHandlers() {
     } catch (e) { return { success: false, error: e.message }; }
   });
 
+  ipcMain.handle('git:discardFile', async (_event, dirPath, filePath) => {
+    try {
+      await gitExec(['checkout', '--', filePath], dirPath, 5000);
+      return { success: true };
+    } catch (e) { return { success: false, error: e.message }; }
+  });
+
   ipcMain.handle('git:stashList', async (_event, dirPath) => {
     try {
       const raw = await gitExec(['stash', 'list', '--oneline'], dirPath, 5000);

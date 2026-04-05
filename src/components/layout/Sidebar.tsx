@@ -148,12 +148,20 @@ const Sidebar: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string; isFolder: boolean } | null>(null);
   const [dialog, setDialog] = useState<DialogConfig | null>(null);
   const [activeTab, setActiveTab] = useState<SidebarTab>('files');
+  const [fileFilter, setFileFilter] = useState('');
+  const [collapseKey, setCollapseKey] = useState(0);
   const { refresh: refreshGit } = useGitPolling();
 
+  const filteredFiles = useMemo(() => {
+    if (!fileFilter) return files;
+    const lower = fileFilter.toLowerCase();
+    return files.filter(f => f.name.toLowerCase().includes(lower) || f.path.toLowerCase().includes(lower));
+  }, [files, fileFilter]);
+
   const tree = useMemo(() => {
-    if (!projectPath || files.length === 0) return [];
-    return buildTree(files, projectPath);
-  }, [files, projectPath]);
+    if (!projectPath || filteredFiles.length === 0) return [];
+    return buildTree(filteredFiles, projectPath);
+  }, [filteredFiles, projectPath]);
 
   // Build a map of filename -> git status for file tree indicators
   const gitStatusMap = useMemo(() => {
@@ -411,6 +419,13 @@ const Sidebar: React.FC = () => {
                     note_add
                   </button>
                   <button
+                    onClick={() => { setCollapseKey(k => k + 1); setFileFilter(''); }}
+                    className="material-symbols-outlined text-[14px] text-muted hover:text-primary transition-colors"
+                    title="Collapse all"
+                  >
+                    unfold_less
+                  </button>
+                  <button
                     onClick={() => {
                       setDialog({
                         isOpen: true, type: 'confirm', title: 'Close Project',
@@ -426,9 +441,19 @@ const Sidebar: React.FC = () => {
                     close
                   </button>
                 </div>
+                {files.length > 15 && (
+                  <div className="px-2 py-1.5 border-b border-muted/10">
+                    <input
+                      value={fileFilter}
+                      onChange={e => setFileFilter(e.target.value)}
+                      placeholder="Filter files..."
+                      className="w-full bg-background border border-muted/30 text-text-main text-[11px] font-mono px-2 py-1 focus:outline-none focus:border-primary placeholder-muted"
+                    />
+                  </div>
+                )}
                 {tree.map(node => (
                   <FolderNode
-                    key={node.path}
+                    key={`${node.path}-${collapseKey}`}
                     node={node}
                     depth={0}
                     activeFile={activeFile}

@@ -19,6 +19,7 @@ const ProCodeEditor: React.FC = () => {
   const [copilotVisible, setCopilotVisible] = useState(true);
   const [terminalTab, setTerminalTab] = useState<'terminal' | 'output'>('terminal');
   const [terminalExpanded, setTerminalExpanded] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
   const handleEditorChange = (value: string | undefined) => {
     if (activeFile && value !== undefined) {
@@ -142,6 +143,33 @@ const ProCodeEditor: React.FC = () => {
                 automaticLayout: true,
                 wordWrap: editorSettings.wordWrap ? 'on' : 'off',
                 lineHeight: editorSettings.lineHeight,
+                // Bracket pair colorization + indent guides
+                bracketPairColorization: { enabled: true },
+                guides: {
+                  bracketPairs: true,
+                  indentation: true,
+                  highlightActiveIndentation: true,
+                },
+                // Sticky scroll (pins enclosing scopes at top)
+                stickyScroll: { enabled: true },
+                // Smooth scrolling + cursor animation
+                smoothScrolling: true,
+                cursorSmoothCaretAnimation: 'on',
+                cursorBlinking: 'smooth',
+                // Padding for readability
+                padding: { top: 8, bottom: 8 },
+                // Find widget improvements
+                find: {
+                  addExtraSpaceOnTop: true,
+                  autoFindInSelection: 'multiline',
+                  seedSearchStringFromSelection: 'selection',
+                },
+                // Word-based autocomplete
+                suggest: {
+                  showWords: true,
+                  showSnippets: true,
+                  insertMode: 'replace',
+                },
               }}
               beforeMount={(monaco) => {
                 monaco.editor.defineTheme('neon-blueprint', {
@@ -159,12 +187,27 @@ const ProCodeEditor: React.FC = () => {
                     'editor.lineHighlightBackground': '#1E222B',
                     'editorCursor.foreground': '#00FFD1',
                     'editorIndentGuide.background': '#1E222B',
+                    'editorIndentGuide.activeBackground': '#00FFD140',
+                    'editorBracketHighlight.foreground1': '#00FFD1',
+                    'editorBracketHighlight.foreground2': '#B026FF',
+                    'editorBracketHighlight.foreground3': '#FF8800',
+                    'editorBracketHighlight.foreground4': '#FF5C5C',
+                    'editorBracketHighlight.foreground5': '#A8FF00',
+                    'editorBracketHighlight.foreground6': '#60A5FA',
+                    'editorBracketHighlight.unexpectedBracket.foreground': '#FF007F',
+                    'editorBracketPairGuide.foreground1': '#00FFD150',
+                    'editorBracketPairGuide.foreground2': '#B026FF50',
+                    'editorStickyScroll.background': '#181A20',
+                    'editorStickyScrollHover.background': '#242730',
                   }
                 });
               }}
               onMount={(editor, monaco) => {
                 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
                   handleSave();
+                });
+                editor.onDidChangeCursorPosition((e) => {
+                  setCursorPos({ line: e.position.lineNumber, col: e.position.column });
                 });
               }}
             />
@@ -182,6 +225,15 @@ const ProCodeEditor: React.FC = () => {
                   <p className="text-xs text-muted max-w-xs">Click any file in the left sidebar to open it here. You can also press <strong className="text-primary">Ctrl+P</strong> to search for a file by name.</p>
                 </>
               )}
+            </div>
+          )}
+          {/* Editor info bar */}
+          {currentFile && (
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-surface/90 border-t border-muted/10 flex items-center justify-end px-3 gap-4 text-[11px] font-mono text-muted z-10">
+              <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
+              <span>{currentFile.language}</span>
+              <span>Spaces: 2</span>
+              <span>UTF-8</span>
             </div>
           )}
         </div>

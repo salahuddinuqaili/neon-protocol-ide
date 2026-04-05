@@ -34,6 +34,7 @@ export interface ElectronAPI {
   gitStash: (dirPath: string) => Promise<{ success: boolean; error?: string }>;
   gitStashPop: (dirPath: string) => Promise<{ success: boolean; error?: string }>;
   gitStashList: (dirPath: string) => Promise<string[]>;
+  gitDiscardFile: (dirPath: string, filePath: string) => Promise<{ success: boolean; error?: string }>;
 
   // Terminal operations
   terminalExecute: (command: string, dirPath?: string) => Promise<{ id: string } | { error: string }>;

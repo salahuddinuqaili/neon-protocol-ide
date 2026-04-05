@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitStash: (dirPath) => ipcRenderer.invoke('git:stash', dirPath),
   gitStashPop: (dirPath) => ipcRenderer.invoke('git:stashPop', dirPath),
   gitStashList: (dirPath) => ipcRenderer.invoke('git:stashList', dirPath),
+  gitDiscardFile: (dirPath, filePath) => ipcRenderer.invoke('git:discardFile', dirPath, filePath),
 
   // Terminal operations
   terminalExecute: (command, dirPath) => ipcRenderer.invoke('terminal:execute', command, dirPath),
