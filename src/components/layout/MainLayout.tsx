@@ -33,7 +33,7 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers, learningProgress, isTutorialActive, toggleLearningPath, dismissedHints, dismissHint } = useIDEStore();
+  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers, learningProgress, isTutorialActive, toggleLearningPath, dismissedHints, dismissHint, setOllamaInstallStatus, setHardwareInfo, setAvailableOllamaModels } = useIDEStore();
   const { refresh: refreshGit } = useGitPolling();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
@@ -111,6 +111,44 @@ const MainLayout: React.FC = () => {
       updateEditorSettings({ systemRamGb: api.systemRamGb });
     }
   }, []);
+
+  // Check if Ollama binary is installed
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const api = window.electronAPI;
+    if (!api?.ollamaCheckInstalled) return;
+    api.ollamaCheckInstalled().then(({ installed }) => {
+      setOllamaInstallStatus(installed ? 'installed' : 'not-installed');
+    }).catch(() => {
+      setOllamaInstallStatus('unknown');
+    });
+  }, [setOllamaInstallStatus]);
+
+  // Detect hardware for model recommendations
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const api = window.electronAPI;
+    if (!api?.getHardwareInfo) return;
+    api.getHardwareInfo().then((info) => {
+      setHardwareInfo(info);
+    }).catch(() => {});
+  }, [setHardwareInfo]);
+
+  // When Ollama is active, fetch available models (and refresh every 30s)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (ollamaStatus !== 'active') return;
+    const api = window.electronAPI;
+    if (!api?.ollamaListModels) return;
+    const fetchModels = () => {
+      api.ollamaListModels().then(({ models }) => {
+        setAvailableOllamaModels(models);
+      }).catch(() => {});
+    };
+    fetchModels();
+    const interval = setInterval(fetchModels, 30000);
+    return () => clearInterval(interval);
+  }, [ollamaStatus, setAvailableOllamaModels]);
 
   // Check Ollama status on mount — verify response is actually Ollama
   useEffect(() => {
