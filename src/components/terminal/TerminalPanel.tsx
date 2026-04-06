@@ -2,20 +2,25 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { translateError } from '../../lib/errorTranslator';
+import { TranslatedError } from '../../types';
+import ErrorCard from './ErrorCard';
 
 interface TerminalLine {
   type: 'input' | 'output' | 'error' | 'system';
   text: string;
+  translatedError?: TranslatedError | null;
 }
 
 const TerminalPanel: React.FC = () => {
-  const { projectPath, addToast } = useIDEStore();
+  const { projectPath, addToast, toggleLearningPath } = useIDEStore();
   const [history, setHistory] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentProcessId, setCurrentProcessId] = useState<string | null>(null);
+  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set());
 
   const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
 
@@ -55,7 +60,7 @@ const TerminalPanel: React.FC = () => {
     try {
       const result = await api.terminalExecute(cmd, projectPath || undefined);
       if ('error' in result) {
-        setHistory(prev => [...prev, { type: 'error', text: result.error }]);
+        setHistory(prev => [...prev, { type: 'error', text: result.error, translatedError: translateError(result.error) }]);
         setIsExecuting(false);
         return;
       }
@@ -76,7 +81,7 @@ const TerminalPanel: React.FC = () => {
       });
 
     } catch (err: any) {
-      setHistory(prev => [...prev, { type: 'error', text: err.message }]);
+      setHistory(prev => [...prev, { type: 'error', text: err.message, translatedError: translateError(err.message) }]);
       setIsExecuting(false);
     }
   };
@@ -128,13 +133,22 @@ const TerminalPanel: React.FC = () => {
           </div>
         )}
         {history.map((line, i) => (
-          <div key={i} className={`whitespace-pre-wrap mb-1 ${
-            line.type === 'input' ? 'text-primary font-bold' : 
-            line.type === 'error' ? 'text-accent-error' : 
-            line.type === 'system' ? 'text-muted italic' : ''
-          }`}>
-            {line.text}
-          </div>
+          <React.Fragment key={i}>
+            <div className={`whitespace-pre-wrap mb-1 ${
+              line.type === 'input' ? 'text-primary font-bold' :
+              line.type === 'error' ? 'text-accent-error' :
+              line.type === 'system' ? 'text-muted italic' : ''
+            }`}>
+              {line.text}
+            </div>
+            {line.type === 'error' && line.translatedError && !dismissedErrors.has(line.translatedError.id) && (
+              <ErrorCard
+                error={line.translatedError}
+                onDismiss={() => setDismissedErrors(prev => new Set(prev).add(line.translatedError!.id))}
+                onOpenLesson={(lessonId) => toggleLearningPath(true)}
+              />
+            )}
+          </React.Fragment>
         ))}
         <div className="flex items-center gap-2 mt-2">
           <span className="text-primary font-bold">{projectPath ? '>' : '$'}</span>

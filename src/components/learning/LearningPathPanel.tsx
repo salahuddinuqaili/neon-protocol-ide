@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { LESSONS } from '../../data/lessons';
+import { CHALLENGES } from '../../data/challenges';
 import { DEMO_FILES } from '../../data/demoProject';
-import { Lesson, LessonCategory } from '../../types';
+import { Lesson, LessonCategory, Challenge } from '../../types';
 import { TRACK_INFO } from '../../config/education';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import ChallengePanel from './ChallengePanel';
 
 /** Extract lines from a demo file for inline display */
 function getCodeSnippet(filePath: string, startLine: number, endLine: number): string | null {
@@ -142,8 +144,9 @@ const LessonCard: React.FC<{
   isCompleted: boolean;
   isLocked: boolean;
   missingPrereqs: string[];
+  challengeProgress: { completed: number; total: number };
   onClick: () => void;
-}> = ({ lesson, isCompleted, isLocked, missingPrereqs, onClick }) => {
+}> = ({ lesson, isCompleted, isLocked, missingPrereqs, challengeProgress, onClick }) => {
   return (
     <button
       onClick={onClick}
@@ -170,6 +173,12 @@ const LessonCard: React.FC<{
               Requires: {missingPrereqs.join(', ')}
             </p>
           )}
+          {challengeProgress.total > 0 && (
+            <p className="text-[11px] text-muted/70 mt-1 font-mono flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px]">fitness_center</span>
+              Challenges: {challengeProgress.completed}/{challengeProgress.total}
+            </p>
+          )}
         </div>
       </div>
     </button>
@@ -180,6 +189,7 @@ const LearningPathPanel: React.FC = () => {
   const { isLearningPathOpen, toggleLearningPath, learningProgress, completeLesson, addToast } = useIDEStore();
   const [activeLesson, setActiveLesson] = useState<string | null>(null);
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
+  const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const trapRef = useFocusTrap<HTMLDivElement>(() => {
     toggleLearningPath(false);
     setJustCompleted(null);
@@ -191,6 +201,7 @@ const LearningPathPanel: React.FC = () => {
     if (isLearningPathOpen) {
       setJustCompleted(null);
       setActiveLesson(null);
+      setActiveChallenge(null);
     }
   }, [isLearningPathOpen]);
 
@@ -318,6 +329,46 @@ const LearningPathPanel: React.FC = () => {
                     </button>
                   ) : null}
 
+                  {/* Challenge CTA */}
+                  {(() => {
+                    const lessonChallenges = CHALLENGES.filter(c => c.lessonId === justCompletedData.id);
+                    const completedCount = lessonChallenges.filter(c => learningProgress.completedChallenges.includes(c.id)).length;
+                    if (lessonChallenges.length === 0) return null;
+                    return (
+                      <div className="bg-surface border border-primary/20 p-4 w-full max-w-sm">
+                        <p className="text-[11px] text-primary font-bold uppercase tracking-wider mb-2">
+                          <span className="material-symbols-outlined text-[14px] align-middle mr-1">fitness_center</span>
+                          Practice What You Learned
+                        </p>
+                        <p className="text-[11px] text-muted mb-3">
+                          {completedCount}/{lessonChallenges.length} challenges completed
+                        </p>
+                        <div className="flex flex-col gap-1">
+                          {lessonChallenges.map(c => {
+                            const done = learningProgress.completedChallenges.includes(c.id);
+                            return (
+                              <button
+                                key={c.id}
+                                onClick={() => setActiveChallenge(c)}
+                                className="w-full text-left flex items-center gap-2 text-xs text-text-main py-1.5 hover:text-primary transition-colors"
+                              >
+                                <span className={`material-symbols-outlined text-[14px] ${done ? 'text-primary' : 'text-muted'}`}>
+                                  {done ? 'check_circle' : 'play_circle'}
+                                </span>
+                                {c.title}
+                                <span className="ml-auto inline-flex gap-0.5">
+                                  {[1, 2, 3].map(i => (
+                                    <span key={i} className={`text-[10px] ${i <= c.difficulty ? 'text-yellow-400' : 'text-muted/30'}`}>&#x2605;</span>
+                                  ))}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <button onClick={() => setJustCompleted(null)}
                     className="text-[11px] text-muted hover:text-text-main font-mono mt-2">
                     Back to Learning Path
@@ -387,6 +438,8 @@ const LearningPathPanel: React.FC = () => {
                       <div className="flex flex-col gap-2">
                         {track.lessons.map(lesson => {
                           const locked = isLessonLocked(lesson);
+                          const lessonChallenges = CHALLENGES.filter(c => c.lessonId === lesson.id);
+                          const challengesDone = lessonChallenges.filter(c => learningProgress.completedChallenges.includes(c.id)).length;
                           return (
                           <LessonCard
                             key={lesson.id}
@@ -394,6 +447,7 @@ const LearningPathPanel: React.FC = () => {
                             isCompleted={completedSet.has(lesson.id)}
                             isLocked={locked}
                             missingPrereqs={getMissingPrereqs(lesson)}
+                            challengeProgress={{ completed: challengesDone, total: lessonChallenges.length }}
                             onClick={() => {
                               if (locked) {
                                 addToast(`Complete "${getMissingPrereqs(lesson)[0]}" first`, 'info');
@@ -416,6 +470,12 @@ const LearningPathPanel: React.FC = () => {
           )}
         </div>
       </div>
+      {activeChallenge && (
+        <ChallengePanel
+          challenge={activeChallenge}
+          onClose={() => setActiveChallenge(null)}
+        />
+      )}
     </div>
   );
 };

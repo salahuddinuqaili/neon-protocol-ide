@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
 import ViewHint from '../onboarding/ViewHint';
-import CopilotPanel from './CopilotPanel';
+import CopilotPanel, { ExplainRequest } from './CopilotPanel';
+import { ExplainMode } from '../../lib/explainPrompts';
 
 const ProCodeEditor: React.FC = () => {
   const {
@@ -20,6 +21,13 @@ const ProCodeEditor: React.FC = () => {
   const [terminalTab, setTerminalTab] = useState<'terminal' | 'output'>('terminal');
   const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+  const [explainRequest, setExplainRequest] = useState<ExplainRequest | null>(null);
+  const explainIdRef = React.useRef(0);
+
+  const handleExplainCode = useCallback((code: string, mode: ExplainMode) => {
+    setCopilotVisible(true);
+    setExplainRequest({ code, mode, id: ++explainIdRef.current });
+  }, []);
 
   const handleEditorChange = (value: string | undefined) => {
     if (activeFile && value !== undefined) {
@@ -209,6 +217,56 @@ const ProCodeEditor: React.FC = () => {
                 editor.onDidChangeCursorPosition((e: any) => {
                   setCursorPos({ line: e.position.lineNumber, col: e.position.column });
                 });
+
+                // "Explain This" context menu actions
+                editor.addAction({
+                  id: 'explain-this-code',
+                  label: 'Explain This Code',
+                  contextMenuGroupId: 'learning',
+                  contextMenuOrder: 1,
+                  precondition: 'editorHasSelection',
+                  keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE],
+                  run: (ed) => {
+                    const sel = ed.getSelection();
+                    const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
+                    if (text) handleExplainCode(text, 'explain');
+                  },
+                });
+                editor.addAction({
+                  id: 'what-does-this-do',
+                  label: 'What Does This Line Do?',
+                  contextMenuGroupId: 'learning',
+                  contextMenuOrder: 2,
+                  run: (ed) => {
+                    const pos = ed.getPosition();
+                    const line = pos ? ed.getModel()?.getLineContent(pos.lineNumber) : '';
+                    if (line) handleExplainCode(line, 'line');
+                  },
+                });
+                editor.addAction({
+                  id: 'simplify-this',
+                  label: 'Simplify This',
+                  contextMenuGroupId: 'learning',
+                  contextMenuOrder: 3,
+                  precondition: 'editorHasSelection',
+                  run: (ed) => {
+                    const sel = ed.getSelection();
+                    const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
+                    if (text) handleExplainCode(text, 'simplify');
+                  },
+                });
+                editor.addAction({
+                  id: 'ask-ai-about-this',
+                  label: 'Ask AI About This',
+                  contextMenuGroupId: 'learning',
+                  contextMenuOrder: 4,
+                  precondition: 'editorHasSelection',
+                  run: (ed) => {
+                    const sel = ed.getSelection();
+                    const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
+                    if (text) handleExplainCode(text, 'ask');
+                  },
+                });
               }}
             />
           ) : (
@@ -251,7 +309,7 @@ const ProCodeEditor: React.FC = () => {
         </button>
 
         {/* Right Panel: Copilot Sidebar */}
-        {copilotVisible && <CopilotPanel currentFile={currentFile} />}
+        {copilotVisible && <CopilotPanel currentFile={currentFile} explainRequest={explainRequest} />}
       </div>
 
       {/* Terminal — collapsed by default */}
