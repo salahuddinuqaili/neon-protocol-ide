@@ -105,6 +105,20 @@ gh run download       # downloads all artifacts from the latest run
 
 The workflow builds `.exe` (Windows) and `.dmg`/`.zip` (macOS) installers. Artifacts are downloadable from the GitHub Actions tab. No release is created — releases only trigger on `v*` tags.
 
+### Releasing a new version
+
+electron-builder reads the version from `package.json` to name installer files. **Always bump `package.json` version before tagging.**
+
+```bash
+# 1. Bump version in package.json (e.g. 1.3.7 → 1.3.8)
+# 2. Commit the bump
+git add package.json && git commit -m "chore: bump version to X.Y.Z"
+# 3. Tag and push
+git push origin master && git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+If the tag is pushed without bumping `package.json`, the installer filenames will show the old version.
+
 ## Common Tasks
 
 ### Cross-cutting changes — commit atomically
