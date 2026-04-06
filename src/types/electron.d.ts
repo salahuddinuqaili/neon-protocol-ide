@@ -51,6 +51,17 @@ export interface ElectronAPI {
     tokensUsed: number;
   }>;
 
+  // Ollama management
+  ollamaCheckInstalled: () => Promise<{ installed: boolean }>;
+  ollamaInstall: () => Promise<{ success: boolean; message: string }>;
+  onOllamaInstallProgress: (callback: (data: { status: string; detail: string }) => void) => () => void;
+  ollamaListModels: () => Promise<{ models: string[] }>;
+  ollamaPullModel: (modelName: string) => Promise<{ success: boolean }>;
+  onOllamaPullProgress: (callback: (data: { model: string; percent: number; status: string }) => void) => () => void;
+
+  // Hardware detection
+  getHardwareInfo: () => Promise<{ ramGb: number; cpuCores: number; gpu: { detected: boolean; name: string; vramGb: number } }>;
+
   // System info
   isElectron: true;
   platform: string;

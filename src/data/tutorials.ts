@@ -78,9 +78,18 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
 
   'first-ai-connection': [
     {
+      id: 'ai-0',
+      title: 'Fastest Way to Start',
+      description: 'If Ollama is running and you see the "Quick Start" banner, click it to pull a tiny demo model and start chatting with AI instantly.',
+      targetView: 'orchestrator',
+      targetSelector: null,
+      action: 'observe',
+      completionTrigger: 'manual',
+    },
+    {
       id: 'ai-1',
       title: 'Let\'s Connect an AI',
-      description: 'To use the copilot, you need an AI provider. The easiest way to start is with Ollama, which is free and runs on your computer.',
+      description: 'To use the copilot, you need an AI provider. The easiest way is Ollama — if it\'s not installed, click "Install Ollama Automatically" on the provider card.',
       targetView: 'orchestrator',
       targetSelector: null,
       action: 'observe',
@@ -89,7 +98,7 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     {
       id: 'ai-2',
       title: 'Add a Provider',
-      description: 'Click the "Add" button to see available providers. Choose "Ollama (local, free)" if you have it installed, or "Groq (fast, free tier)" for a cloud option.',
+      description: 'Click "Add" to see available providers. Choose "Local (Ollama)" for free local AI. If Ollama isn\'t installed, we can auto-install it for you.',
       targetView: 'orchestrator',
       targetSelector: '[data-tutorial="add-provider"]',
       action: 'observe',
@@ -97,8 +106,8 @@ export const TUTORIALS: Record<string, TutorialStep[]> = {
     },
     {
       id: 'ai-3',
-      title: 'Configure Your Provider',
-      description: 'Each provider needs some setup. For Ollama, just make sure it\'s running on your computer. For cloud providers, paste your API key in the "Key" field.',
+      title: 'Choose a Model',
+      description: 'The "Recommended Models" section detects your hardware and shows models that fit your system. Click "Pull" to download one, or use the Quick Start demo model.',
       targetView: 'orchestrator',
       targetSelector: null,
       action: 'observe',

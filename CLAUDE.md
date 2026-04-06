@@ -5,6 +5,10 @@
 **Run these before every push. All must pass or the CI pipeline will fail.**
 
 ```bash
+# 0. Verify ALL modified files are staged — local checks pass against your working tree,
+#    but CI only sees committed files. Unstaged changes = green locally, red in CI.
+git status
+
 # 1. TypeScript — catches type errors
 npx tsc --noEmit
 
@@ -15,7 +19,9 @@ npx vitest run
 npx next build
 ```
 
-The CI runs `next build` + `electron-builder` on both macOS and Windows. If `next build` fails locally, the release will fail.
+**Commit before you check, not after.** The local pre-push checks (`tsc`, `vitest`, `next build`) run against your working tree, which includes uncommitted files. CI only builds what's been committed and pushed. Always `git status` first — if files are unstaged, commit them before running the checks and pushing. This prevents the "passes locally, fails in CI" trap.
+
+The CI runs `next build` + `electron-builder` on both macOS and Windows. If `next build` fails locally, the release will fail. Releases only trigger on `v*` tags. For test builds from any branch, use `gh workflow run build-installers.yml --ref <branch>` — artifacts are downloadable from the Actions tab without creating a release.
 
 ### The SSR Rule
 
@@ -44,8 +50,8 @@ The `src/test/__tests__/ssr-safety.test.ts` test scans for unguarded `electronAP
 
 ## Project Architecture
 
-- **Electron** main process (`index.js`) handles all privileged ops: filesystem, git, terminal, LLM API calls
-- **Preload bridge** (`src/electron/preload.js`) exposes ~37 IPC methods as `window.electronAPI`
+- **Electron** main process (`index.js`) wires up modular IPC handlers from `src/electron/ipc/` (fs, git, terminal, llm, ollama, system)
+- **Preload bridge** (`src/electron/preload.js`) exposes ~44 IPC methods as `window.electronAPI`
 - **Next.js** renders the UI as a static export (`out/`), served via local HTTP server in production
 - **Zustand** store is split into 6 slices in `src/store/slices/` — composed in `useIDEStore.ts`
 - **Config maps** live in `src/config/` — language mappings, git colors, icons, provider presets, education text
@@ -80,15 +86,22 @@ src/
 
 ## Common Tasks
 
+### Cross-cutting changes — commit atomically
+
+Features that span layers (IPC handler + preload + types + store + UI) must be committed together. Local checks run against the working tree and will pass with uncommitted files, but CI only sees what's pushed. Run `git status` before pushing to verify nothing is left unstaged.
+
 ### Adding a new IPC handler
-1. Add handler in `index.js`: `ipcMain.handle('namespace:action', ...)`
-2. Expose in `src/electron/preload.js`: `methodName: (...) => ipcRenderer.invoke(...)`
-3. Call in renderer: `(window as any).electronAPI.methodName(...)` — always guard with `typeof window`
+1. Create or extend a handler file in `src/electron/ipc/` (e.g. `ollama.js`, `system.js`)
+2. Register in `index.js`: `const { registerXHandlers } = require('./src/electron/ipc/x'); registerXHandlers();`
+3. Expose in `src/electron/preload.js`: `methodName: (...) => ipcRenderer.invoke(...)`
+4. Add types in `src/types/electron.d.ts`
+5. Call in renderer: `(window as any).electronAPI.methodName(...)` — always guard with `typeof window`
 
 ### Adding a new store slice
 1. Create `src/store/slices/newSlice.ts` with interface + creator
 2. Add to composition in `useIDEStore.ts`
-3. If persisted, add fields to `partialize` and bump version + migration
+3. Add types to `src/types/index.ts` (IDEState interface)
+4. If persisted, add fields to `partialize` and bump version + migration
 
 ### Adding learning content
 1. Lessons go in `src/data/lessons.ts` — must have `category` matching a `LessonCategory`
@@ -104,3 +117,4 @@ src/
 - Don't use `execSync` with string concatenation for shell commands — use `execFile` with argument arrays
 - Don't persist ephemeral state (files, git, toasts) to localStorage
 - Don't skip `next build` verification before pushing releases
+- Don't assume `window.electronAPI` methods exist — browser mode (`npm run dev`) has no preload bridge; guard with `if (!api?.methodName) return`
