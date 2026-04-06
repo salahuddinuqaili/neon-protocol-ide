@@ -84,6 +84,27 @@ src/
   test/           setup.ts, helpers.ts, __tests__/ssr-safety.test.ts
 ```
 
+## Test Builds
+
+Before pushing a new official release, trigger a test build to verify the installers work on both platforms.
+
+```bash
+# 1. Push the branch to remote
+git push -u origin <branch>
+
+# 2. Trigger the build workflow on that branch
+gh workflow run build-installers.yml --ref <branch>
+
+# 3. Watch the run (opens browser or streams status)
+gh run list --workflow=build-installers.yml --limit 1
+gh run watch          # live status in terminal
+
+# 4. Download artifacts once the run completes
+gh run download       # downloads all artifacts from the latest run
+```
+
+The workflow builds `.exe` (Windows) and `.dmg`/`.zip` (macOS) installers. Artifacts are downloadable from the GitHub Actions tab. No release is created — releases only trigger on `v*` tags.
+
 ## Common Tasks
 
 ### Cross-cutting changes — commit atomically
