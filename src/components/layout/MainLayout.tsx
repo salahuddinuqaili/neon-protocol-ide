@@ -138,13 +138,29 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (ollamaStatus !== 'active') return;
-    const api = window.electronAPI;
-    if (!api?.ollamaListModels) return;
-    const fetchModels = () => {
-      api.ollamaListModels().then(({ models }) => {
-        setAvailableOllamaModels(models);
-      }).catch(() => {});
+
+    const fetchModels = async () => {
+      try {
+        const api = window.electronAPI;
+        if (api?.ollamaListModels) {
+          const { models } = await api.ollamaListModels();
+          setAvailableOllamaModels(models);
+        } else {
+          // Browser-mode fallback — direct HTTP to local Ollama
+          const res = await fetch('http://localhost:11434/api/tags', {
+            signal: AbortSignal.timeout(5000),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const models = (data.models || []).map((m: any) => m.name || m.model);
+            setAvailableOllamaModels(models);
+          }
+        }
+      } catch {
+        // Silently ignore — models stay as-is
+      }
     };
+
     fetchModels();
     const interval = setInterval(fetchModels, 30000);
     return () => clearInterval(interval);

@@ -247,17 +247,63 @@ const OrchestrationHub: React.FC = () => {
   const handlePullModel = async (modelName: string) => {
     if (typeof window === 'undefined') return;
     const api = window.electronAPI;
-    if (!api?.ollamaPullModel) { addToast('Model pull not available in browser mode', 'error'); return; }
+
     setModelPullProgress({ model: modelName, percent: 0, status: 'starting' });
-    const cleanup = api.onOllamaPullProgress?.((data) => {
-      setModelPullProgress(data);
-    });
+
     try {
-      await api.ollamaPullModel(modelName);
+      if (api?.ollamaPullModel) {
+        // Electron path — IPC with streaming progress
+        const cleanup = api.onOllamaPullProgress?.((data) => {
+          setModelPullProgress(data);
+        });
+        try {
+          await api.ollamaPullModel(modelName);
+          const result = await api.ollamaListModels?.();
+          if (result?.models) setAvailableOllamaModels(result.models);
+        } finally {
+          cleanup?.();
+        }
+      } else {
+        // Browser-mode fallback — direct HTTP streaming
+        const res = await fetch('http://localhost:11434/api/pull', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: modelName, stream: true }),
+          signal: AbortSignal.timeout(600000),
+        });
+        if (!res.ok) throw new Error(`Pull failed: ${res.status} ${res.statusText}`);
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        if (reader) {
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try {
+                const json = JSON.parse(line);
+                const percent = json.total ? (json.completed / json.total) * 100 : 0;
+                setModelPullProgress({ model: modelName, percent, status: json.status || 'pulling' });
+              } catch { /* skip malformed lines */ }
+            }
+          }
+        }
+        // Refresh model list via browser fallback
+        const tagsRes = await fetch('http://localhost:11434/api/tags', {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (tagsRes.ok) {
+          const data = await tagsRes.json();
+          const models = (data.models || []).map((m: any) => m.name || m.model);
+          setAvailableOllamaModels(models);
+        }
+      }
+
       addToast(`${modelName} pulled successfully`, 'success');
-      // Refresh model list
-      const result = await api.ollamaListModels?.();
-      if (result?.models) setAvailableOllamaModels(result.models);
       // Auto-set model on existing empty Ollama provider
       const ollamaProvider = providers.find(p => p.type === 'ollama' && !p.model);
       if (ollamaProvider) updateProvider(ollamaProvider.id, { model: modelName });
@@ -266,7 +312,6 @@ const OrchestrationHub: React.FC = () => {
       addToast(`Pull failed: ${msg}`, 'error');
     } finally {
       setModelPullProgress(null);
-      cleanup?.();
     }
   };
 
