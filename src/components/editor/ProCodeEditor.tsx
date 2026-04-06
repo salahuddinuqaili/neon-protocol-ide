@@ -226,7 +226,7 @@ const ProCodeEditor: React.FC = () => {
                   contextMenuOrder: 1,
                   precondition: 'editorHasSelection',
                   keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE],
-                  run: (ed) => {
+                  run: (ed: typeof editor) => {
                     const sel = ed.getSelection();
                     const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
                     if (text) handleExplainCode(text, 'explain');
@@ -237,7 +237,7 @@ const ProCodeEditor: React.FC = () => {
                   label: 'What Does This Line Do?',
                   contextMenuGroupId: 'learning',
                   contextMenuOrder: 2,
-                  run: (ed) => {
+                  run: (ed: typeof editor) => {
                     const pos = ed.getPosition();
                     const line = pos ? ed.getModel()?.getLineContent(pos.lineNumber) : '';
                     if (line) handleExplainCode(line, 'line');
@@ -249,7 +249,7 @@ const ProCodeEditor: React.FC = () => {
                   contextMenuGroupId: 'learning',
                   contextMenuOrder: 3,
                   precondition: 'editorHasSelection',
-                  run: (ed) => {
+                  run: (ed: typeof editor) => {
                     const sel = ed.getSelection();
                     const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
                     if (text) handleExplainCode(text, 'simplify');
@@ -261,7 +261,7 @@ const ProCodeEditor: React.FC = () => {
                   contextMenuGroupId: 'learning',
                   contextMenuOrder: 4,
                   precondition: 'editorHasSelection',
-                  run: (ed) => {
+                  run: (ed: typeof editor) => {
                     const sel = ed.getSelection();
                     const text = sel ? ed.getModel()?.getValueInRange(sel) : '';
                     if (text) handleExplainCode(text, 'ask');
