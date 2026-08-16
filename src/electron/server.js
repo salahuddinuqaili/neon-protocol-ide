@@ -25,7 +25,12 @@ const MIME_TYPES = {
  * A local HTTP server makes everything work exactly like in dev mode.
  */
 function startStaticServer(outDir) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(path.join(outDir, 'index.html'))) {
+      reject(new Error(`UI bundle missing at ${outDir}. The app was packaged without its "out" directory.`));
+      return;
+    }
+
     const server = http.createServer((req, res) => {
       let urlPath = decodeURIComponent(req.url.split('?')[0]);
 
@@ -58,18 +63,33 @@ function startStaticServer(outDir) {
         return;
       }
 
+      // A URL that maps to a directory would throw EISDIR on read — serve the SPA shell
+      // instead so client-side routes never surface a raw server error.
+      if (fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(outDir, 'index.html');
+      }
+
       const ext = path.extname(filePath);
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
       try {
         const content = fs.readFileSync(filePath);
-        res.writeHead(200, { 'Content-Type': contentType });
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          // Hashed asset names make these immutable; the HTML shell must not be cached
+          // or an upgraded app would keep booting the previous build's markup.
+          'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+        });
         res.end(content);
       } catch {
         res.writeHead(500);
         res.end('Server error');
       }
     });
+
+    // Without this, a failed listen leaves the promise pending forever and the app hangs
+    // on a blank window with no error shown.
+    server.on('error', reject);
 
     server.listen(0, '127.0.0.1', () => {
       const port = server.address().port;

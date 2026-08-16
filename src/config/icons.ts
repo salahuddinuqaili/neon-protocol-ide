@@ -1,5 +1,13 @@
-/** Directory name pattern to Material icon mapping for the blueprint view */
-export const DIR_ICON_MAP: { pattern: RegExp; icon: string; color?: string }[] = [
+import { IconName } from './iconManifest';
+
+/**
+ * Directory name pattern to Material icon mapping for the blueprint view.
+ *
+ * Icons are typed as `IconName` so the compiler rejects any glyph missing from
+ * `iconManifest.ts` — the bundled font is subset to that list, and an unlisted icon
+ * renders as its raw ligature text.
+ */
+export const DIR_ICON_MAP: { pattern: RegExp; icon: IconName; color?: string }[] = [
   { pattern: /^api$/i, icon: 'api' },
   { pattern: /^(component|widget|ui)s?$/i, icon: 'widgets' },
   { pattern: /^(page|app|route)s?$/i, icon: 'web' },
@@ -42,11 +50,27 @@ export const LABEL_OVERRIDES: Record<string, string> = {
   utils: 'Utilities',
 };
 
-export function getIconForDir(dirName: string): { icon: string; color?: string } {
+export function getIconForDir(dirName: string): { icon: IconName; color?: string } {
   for (const entry of DIR_ICON_MAP) {
     if (entry.pattern.test(dirName)) return { icon: entry.icon, color: entry.color };
   }
   return { icon: 'folder' };
+}
+
+/** Extension to Material icon mapping for the file tree and Quick Open. */
+const FILE_ICON_MAP: { test: RegExp; icon: IconName }[] = [
+  { test: /\.json$/i, icon: 'settings_ethernet' },
+  { test: /\.md$/i, icon: 'description' },
+  { test: /\.css$/i, icon: 'css' },
+  { test: /\.html?$/i, icon: 'html' },
+  { test: /\.(js|jsx|mjs|cjs)$/i, icon: 'javascript' },
+];
+
+export function getFileIcon(name: string): IconName {
+  for (const entry of FILE_ICON_MAP) {
+    if (entry.test.test(name)) return entry.icon;
+  }
+  return 'code';
 }
 
 export function formatLabel(dirName: string): string {

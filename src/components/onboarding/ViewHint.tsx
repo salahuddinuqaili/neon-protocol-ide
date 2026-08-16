@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { IconName } from '../../config/iconManifest';
 
 interface ViewHintProps {
   id: string;
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
   position?: 'center' | 'top';

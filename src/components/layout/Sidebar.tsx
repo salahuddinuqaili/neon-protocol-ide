@@ -3,25 +3,15 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
 import { FileEntry } from '../../types';
-import ContextMenu from './ContextMenu';
+import ContextMenu, { MenuItem } from './ContextMenu';
 import InlineDialog, { DialogConfig } from './InlineDialog';
 import SourceControlPanel from '../git/SourceControlPanel';
 import { useGitPolling } from '../../hooks/useGitPolling';
 import { LANGUAGE_MAP } from '../../config/languages';
 import { GIT_STATUS_COLORS } from '../../config/git';
+import { getFileIcon } from '../../config/icons';
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
-
-function getFileIcon(name: string): string {
-  if (name.endsWith('.json')) return 'settings_ethernet';
-  if (name.endsWith('.md')) return 'description';
-  if (name.endsWith('.css')) return 'css';
-  if (name.endsWith('.html')) return 'html';
-  if (name.endsWith('.py')) return 'code';
-  if (name.endsWith('.ts') || name.endsWith('.tsx')) return 'code';
-  if (name.endsWith('.js') || name.endsWith('.jsx')) return 'javascript';
-  return 'code';
-}
 
 interface TreeNode {
   name: string;
@@ -188,7 +178,7 @@ const Sidebar: React.FC = () => {
     setContextMenu({ x: e.clientX, y: e.clientY, path, isFolder });
   }, []);
 
-  const getContextMenuItems = () => {
+  const getContextMenuItems = (): MenuItem[] => {
     if (!contextMenu) return [];
     const { path, isFolder } = contextMenu;
 

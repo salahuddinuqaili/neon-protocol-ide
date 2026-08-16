@@ -75,6 +75,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Hardware detection
   getHardwareInfo: () => ipcRenderer.invoke('system:getHardwareInfo'),
 
+  // Opens a link in the user's real browser instead of trapping them in the app window.
+  openExternal: (url) => ipcRenderer.invoke('system:openExternal', url),
+
+  // Native menu items dispatch into the renderer through this channel. The menu is the
+  // only source of keyboard shortcuts on macOS, so this is load-bearing there.
+  onMenuAction: (callback) => {
+    const listener = (_event, action) => callback(action);
+    ipcRenderer.on('menu:action', listener);
+    return () => ipcRenderer.removeListener('menu:action', listener);
+  },
+
   // System info
   isElectron: true,
   platform: process.platform,

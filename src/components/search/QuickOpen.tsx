@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useIDEStore } from '../../store/useIDEStore';
+import { getFileIcon } from '../../config/icons';
 
 interface QuickOpenProps {
   isOpen: boolean;
@@ -43,17 +44,6 @@ function highlightMatches(text: string, query: string): React.ReactNode[] {
   }
   if (buffer) result.push(buffer);
   return result;
-}
-
-function getFileIcon(name: string): string {
-  if (name.endsWith('.json')) return 'settings_ethernet';
-  if (name.endsWith('.md')) return 'description';
-  if (name.endsWith('.css')) return 'css';
-  if (name.endsWith('.html')) return 'html';
-  if (name.endsWith('.py')) return 'code';
-  if (name.endsWith('.ts') || name.endsWith('.tsx')) return 'code';
-  if (name.endsWith('.js') || name.endsWith('.jsx')) return 'javascript';
-  return 'code';
 }
 
 const QuickOpen: React.FC<QuickOpenProps> = ({ isOpen, onClose }) => {

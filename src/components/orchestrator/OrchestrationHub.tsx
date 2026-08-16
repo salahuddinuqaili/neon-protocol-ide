@@ -5,6 +5,7 @@ import { useIDEStore } from '../../store/useIDEStore';
 import { LLMProviderConfig, ProviderType } from '../../types';
 import { routeChat, chatWithProvider } from '../../lib/llm/provider';
 import ViewHint from '../onboarding/ViewHint';
+import { IconName } from '../../config/iconManifest';
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
 import ConceptTooltip from '../learning/ConceptTooltip';
 import { MODEL_PLACEHOLDERS, PROVIDER_PRESETS, STATUS_DISPLAY, ProviderPreset, DEMO_MODEL, getRecommendedModels } from '../../config/providers';
@@ -339,7 +340,7 @@ const OrchestrationHub: React.FC = () => {
         {/* Left */}
         <section className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-muted/30 bg-background">
           <div className="flex border-b border-muted/30 bg-surface/50">
-            {([['providers', 'smart_toy', 'Providers'], ['usage', 'bar_chart', 'Usage']] as [Tab, string, string][]).map(([tab, icon, label]) => (
+            {([['providers', 'smart_toy', 'Providers'], ['usage', 'bar_chart', 'Usage']] as [Tab, IconName, string][]).map(([tab, icon, label]) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-text-main'}`}>
                 <span className="material-symbols-outlined text-[16px]">{icon}</span>{label}

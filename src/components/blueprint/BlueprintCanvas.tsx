@@ -25,11 +25,12 @@ import { generateDefaultNodes, generateDemoEdges, generateFileNodes, generateImp
 import InlineDialog, { DialogConfig } from '../layout/InlineDialog';
 import ViewHint from '../onboarding/ViewHint';
 import ArchitectureGuide from './ArchitectureGuide';
+import { IconName } from '../../config/iconManifest';
 
 interface CustomNodeData {
   label: string;
   type: string;
-  icon?: string;
+  icon?: IconName;
   color?: string;
   count?: number;
   description?: string;

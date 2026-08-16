@@ -62,11 +62,34 @@ export interface ElectronAPI {
   // Hardware detection
   getHardwareInfo: () => Promise<{ ramGb: number; cpuCores: number; gpu: { detected: boolean; name: string; vramGb: number } }>;
 
+  // Opens a link in the user's real browser.
+  openExternal: (url: string) => Promise<{ ok: boolean; error?: string }>;
+
+  /** Subscribes to native menu commands. Returns an unsubscribe function. */
+  onMenuAction: (callback: (action: MenuAction) => void) => () => void;
+
   // System info
   isElectron: true;
   platform: string;
   systemRamGb: number;
 }
+
+/** Commands the native application menu can dispatch into the renderer. */
+export type MenuAction =
+  | 'open-folder'
+  | 'save-file'
+  | 'save-all'
+  | 'open-settings'
+  | 'quick-open'
+  | 'global-search'
+  | 'view-blueprint'
+  | 'view-code'
+  | 'view-orchestrator'
+  | 'view-terminal'
+  | 'toggle-sidebar'
+  | 'toggle-learning'
+  | 'open-tutorial'
+  | 'open-glossary';
 
 declare global {
   interface Window {

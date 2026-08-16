@@ -38,6 +38,14 @@ describe('SSR safety', () => {
             if (line.trim().startsWith('//') || line.trim().startsWith('*') || line.includes('import ')) continue;
             // Skip if already guarded with typeof window check
             if (line.includes('typeof window')) continue;
+
+            // Skip if an enclosing early-return guard already bailed out during SSR:
+            //   function f() {
+            //     if (typeof window === 'undefined') return false;
+            //     const p = window.electronAPI?.platform;   <- safe, unreachable on server
+            const guardWindow = lines.slice(Math.max(0, i - 12), i).join('\n');
+            if (/if\s*\(\s*typeof\s+window\s*===?\s*['"]undefined['"]\s*\)\s*return/.test(guardWindow)) continue;
+
             // Check if this line is inside a function/hook/handler (safe)
             const preceding = lines.slice(Math.max(0, i - 8), i).join('\n');
             const insideSafeContext = /useEffect\s*\(|useCallback\s*\(|useMemo\s*\(|=>\s*\{|async\s+\(|async\s+function|const\s+\w+\s*=\s*async/.test(preceding);

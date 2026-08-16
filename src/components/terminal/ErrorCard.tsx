@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { TranslatedError } from '../../types';
 import { useIDEStore } from '../../store/useIDEStore';
+import { IconName } from '../../config/iconManifest';
 
 interface ErrorCardProps {
   error: TranslatedError;
@@ -12,9 +13,9 @@ interface ErrorCardProps {
 }
 
 const SEVERITY_STYLES = {
-  error: { border: 'border-accent-error/40', icon: 'error', iconColor: 'text-accent-error', bg: 'bg-accent-error/5' },
-  warning: { border: 'border-accent-warning/40', icon: 'warning', iconColor: 'text-accent-warning', bg: 'bg-accent-warning/5' },
-  info: { border: 'border-primary/40', icon: 'info', iconColor: 'text-primary', bg: 'bg-primary/5' },
+  error: { border: 'border-accent-error/40', icon: 'error' as IconName, iconColor: 'text-accent-error', bg: 'bg-accent-error/5' },
+  warning: { border: 'border-accent-warning/40', icon: 'warning' as IconName, iconColor: 'text-accent-warning', bg: 'bg-accent-warning/5' },
+  info: { border: 'border-primary/40', icon: 'info' as IconName, iconColor: 'text-primary', bg: 'bg-primary/5' },
 };
 
 const ErrorCard: React.FC<ErrorCardProps> = ({ error, onDismiss, onAskAI, onOpenLesson }) => {

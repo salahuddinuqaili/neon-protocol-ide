@@ -14,8 +14,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        {/* Self-hosted — a desktop app must render correctly offline. Loading these from
+            fonts.googleapis.com meant every icon fell back to its raw ligature text
+            ("settings", "cloud_off") on any machine without a connection.
+            Regenerate with `npm run build-fonts`. */}
+        <link rel="stylesheet" href="/fonts/fonts.css" />
       </head>
       <body>
         {children}

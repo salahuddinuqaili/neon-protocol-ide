@@ -14,6 +14,7 @@
     "electron-build:mac": "next build && electron-builder --mac",
     "electron-build:all": "next build && electron-builder --win --mac",
     "generate-icons": "node scripts/generate-icons.js",
+    "build-fonts": "node scripts/build-fonts.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"

@@ -2,10 +2,11 @@
 
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { IconName } from '../../config/iconManifest';
 
-interface MenuItem {
+export interface MenuItem {
   label: string;
-  icon: string;
+  icon: IconName;
   action: () => void;
   danger?: boolean;
 }

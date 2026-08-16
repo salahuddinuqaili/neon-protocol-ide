@@ -1,4 +1,5 @@
 import { GlossaryCategory, LessonCategory } from '../types';
+import { IconName } from './iconManifest';
 
 export const HELP_TEXT: Record<string, { title: string; body: string }> = {
   blueprint: {
@@ -36,7 +37,7 @@ export const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
   ide: 'IDE Features',
 };
 
-export const TRACK_INFO: Record<LessonCategory, { label: string; icon: string; color: string }> = {
+export const TRACK_INFO: Record<LessonCategory, { label: string; icon: IconName; color: string }> = {
   'coding-basics': { label: 'Coding Basics', icon: 'code', color: 'text-primary' },
   'architecture': { label: 'Architecture', icon: 'account_tree', color: 'text-[#FF9F43]' },
   'llm-orchestration': { label: 'AI & LLMs', icon: 'smart_toy', color: 'text-accent-ai' },
