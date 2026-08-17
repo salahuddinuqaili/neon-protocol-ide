@@ -78,6 +78,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Opens a link in the user's real browser instead of trapping them in the app window.
   openExternal: (url) => ipcRenderer.invoke('system:openExternal', url),
 
+  // Native modal confirmation, used to guard destructive actions.
+  confirm: (options) => ipcRenderer.invoke('system:confirm', options),
+
   // Native menu items dispatch into the renderer through this channel. The menu is the
   // only source of keyboard shortcuts on macOS, so this is load-bearing there.
   onMenuAction: (callback) => {

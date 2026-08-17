@@ -7,6 +7,7 @@ import ContextMenu, { MenuItem } from './ContextMenu';
 import InlineDialog, { DialogConfig } from './InlineDialog';
 import SourceControlPanel from '../git/SourceControlPanel';
 import { useGitPolling } from '../../hooks/useGitPolling';
+import { useOpenProject } from '../../hooks/useOpenProject';
 import { LANGUAGE_MAP } from '../../config/languages';
 import { GIT_STATUS_COLORS } from '../../config/git';
 import { getFileIcon } from '../../config/icons';
@@ -141,6 +142,8 @@ const Sidebar: React.FC = () => {
   const [fileFilter, setFileFilter] = useState('');
   const [collapseKey, setCollapseKey] = useState(0);
   const { refresh: refreshGit } = useGitPolling();
+  const { openProject: handleOpenFolder } = useOpenProject();
+  const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
   // Reset to files tab when project closes
   useEffect(() => {
@@ -178,6 +181,45 @@ const Sidebar: React.FC = () => {
     setContextMenu({ x: e.clientX, y: e.clientY, path, isFolder });
   }, []);
 
+  /**
+   * Renames on disk first, and only mirrors the change into the store when that succeeds.
+   * These actions used to update the store alone, so the app reported "Deleted file.ts"
+   * while the file was still on disk and reappeared the next time the folder was opened.
+   */
+  const handleRenameFile = async (filePath: string, newName: string) => {
+    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
+
+    if (api?.renameFile) {
+      const parts = filePath.split('/');
+      parts[parts.length - 1] = newName;
+      const result = await api.renameFile(filePath, parts.join('/'));
+      if (!result.success) {
+        addToast(result.error || 'Could not rename the file.', 'error');
+        return;
+      }
+    }
+
+    renameFile(filePath, newName);
+    addToast(`Renamed to ${newName}`, 'success');
+    refreshGit();
+  };
+
+  const handleDeleteFile = async (filePath: string, fileName: string) => {
+    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
+
+    if (api?.deleteFile) {
+      const result = await api.deleteFile(filePath);
+      if (!result.success) {
+        addToast(result.error || 'Could not delete the file.', 'error');
+        return;
+      }
+    }
+
+    deleteFile(filePath);
+    addToast(isElectron ? `Moved ${fileName} to trash` : `Removed ${fileName}`, 'info');
+    refreshGit();
+  };
+
   const getContextMenuItems = (): MenuItem[] => {
     if (!contextMenu) return [];
     const { path, isFolder } = contextMenu;
@@ -210,11 +252,14 @@ const Sidebar: React.FC = () => {
         action: () => {
           setDialog({
             isOpen: true, type: 'prompt', title: 'Rename File', defaultValue: fileName,
-            onConfirm: (newName) => {
-              if (newName !== fileName) {
-                renameFile(path, newName);
-                addToast(`Renamed to ${newName}`, 'success');
+            onConfirm: async (newName) => {
+              const trimmed = newName.trim();
+              if (!trimmed || trimmed === fileName) return;
+              if (/[\\/]/.test(trimmed)) {
+                addToast('A file name cannot contain slashes.', 'error');
+                return;
               }
+              await handleRenameFile(path, trimmed);
             },
             onClose: () => setDialog(null),
           });
@@ -227,103 +272,14 @@ const Sidebar: React.FC = () => {
         action: () => {
           setDialog({
             isOpen: true, type: 'confirm', title: 'Delete File',
-            message: `Are you sure you want to delete "${fileName}"? This cannot be undone.`,
+            message: `Delete "${fileName}"? It will be moved to your ${isElectron ? 'trash' : 'workspace list'} and can be restored from there.`,
             confirmLabel: 'Delete', danger: true,
-            onConfirm: () => {
-              deleteFile(path);
-              addToast(`Deleted ${fileName}`, 'info');
-            },
+            onConfirm: () => handleDeleteFile(path, fileName),
             onClose: () => setDialog(null),
           });
         },
       },
     ];
-  };
-
-  const handleOpenFolder = async () => {
-    try {
-      if (typeof window === 'undefined') return;
-
-      const api = window.electronAPI;
-
-      // Electron path: use IPC to get real filesystem path
-      if (api?.isElectron) {
-        const dirPath = await api.openDirectory();
-        if (!dirPath) return;
-        setIsScanning(true);
-
-        try {
-          const results = await api.scanProject(dirPath);
-          const dirName = dirPath.replace(/\\/g, '/').split('/').pop() || dirPath;
-          
-          // Map extensions to languages on the client side
-          const loadedFiles = results.map((f: any) => {
-            const ext = f.name.split('.').pop() || 'text';
-            return {
-              ...f,
-              language: LANGUAGE_MAP[ext] || 'text'
-            };
-          });
-
-          setProject(dirPath.replace(/\\/g, '/'), loadedFiles);
-          addRecentProject(dirName);
-          addToast(`Loaded ${loadedFiles.length} files from ${dirName}`, 'success');
-          setView('blueprint');
-        } catch (err) {
-          console.error('Scan failed:', err);
-          addToast('Failed to open folder', 'error');
-        } finally {
-          setIsScanning(false);
-        }
-        return;
-      }
-
-      // Browser fallback
-      if (!('showDirectoryPicker' in window)) {
-        addToast('Opening folders requires Chrome or Edge. Try using one of those browsers.', 'error');
-        return;
-      }
-
-      if (!window.isSecureContext && window.location.hostname !== 'localhost') {
-        addToast('Secure connection required. Use HTTPS or localhost.', 'error');
-        return;
-      }
-
-      const dirHandle = await (window as any as { showDirectoryPicker: () => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker();
-      const loadedFiles: FileEntry[] = [];
-      setIsScanning(true);
-
-      async function scan(handle: any, path: string) {
-        for await (const entry of handle.values()) {
-          const currentPath = `${path}/${entry.name}`;
-          if (entry.name === 'node_modules' || entry.name.startsWith('.') || entry.name === 'package-lock.json') continue;
-
-          if (entry.kind === 'file') {
-            const isCodeFile = /\.(js|ts|tsx|jsx|json|md|css|html|txt|py|rb|go|rs|c|cpp|java|yaml|yml|toml|sh|bat|sql|graphql|proto|xml|svg)$/i.test(entry.name);
-            if (isCodeFile) {
-              const file = await entry.getFile();
-              if (file.size > MAX_FILE_SIZE) continue;
-              const content = await file.text();
-              const extension = entry.name.split('.').pop() || 'text';
-              loadedFiles.push({ name: entry.name, path: currentPath, content, language: LANGUAGE_MAP[extension] || 'text', handle: entry });
-            }
-          } else if (entry.kind === 'directory') {
-            await scan(entry, currentPath);
-          }
-        }
-      }
-
-      await scan(dirHandle, dirHandle.name);
-      setProject(dirHandle.name, loadedFiles);
-      addRecentProject(dirHandle.name);
-      addToast(`Loaded ${loadedFiles.length} files from ${dirHandle.name}`, 'success');
-      setView('blueprint');
-    } catch (err: any) {
-      setIsScanning(false);
-      if (err?.name !== 'AbortError') {
-        console.error('Directory picker failed:', err);
-      }
-    }
   };
 
   return (

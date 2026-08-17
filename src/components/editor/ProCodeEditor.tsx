@@ -7,12 +7,15 @@ import { FileEntry } from '../../types';
 import ViewHint from '../onboarding/ViewHint';
 import CopilotPanel, { ExplainRequest } from './CopilotPanel';
 import { ExplainMode } from '../../lib/explainPrompts';
+import { useFileActions } from '../../hooks/useFileActions';
+import { isModKey, shortcut } from '../../lib/platform';
 
 const ProCodeEditor: React.FC = () => {
   const {
     files, openTabs, activeFile, setActiveFile, updateFileContent, closeTab, markFileSaved,
     editorSettings, addToast, projectPath, providers
   } = useIDEStore();
+  const { saveFile } = useFileActions();
 
   const tabFiles = openTabs.map(p => files.find(f => f.path === p)).filter(Boolean) as FileEntry[];
   const currentFile = files.find(f => f.path === activeFile);
@@ -35,47 +38,41 @@ const ProCodeEditor: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!currentFile || !activeFile) return;
+  const handleSave = useCallback(() => saveFile(), [saveFile]);
 
-    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
-
-    if (api?.isElectron) {
-      try {
-        const success = await api.writeFile(activeFile, currentFile.content);
-        if (success) {
-          markFileSaved(activeFile);
-          addToast(`Saved ${currentFile.name}`, 'success');
-        } else {
-          addToast(`Failed to save ${currentFile.name}`, 'error');
-        }
-      } catch {
-        addToast(`Error saving ${currentFile.name}`, 'error');
-      }
+  /** Closing a tab discards its buffer, so unsaved edits need an explicit decision. */
+  const handleCloseTab = useCallback(async (file: FileEntry) => {
+    if (!file.isDirty) {
+      closeTab(file.path);
       return;
     }
 
-    if (currentFile.handle) {
-      try {
-        const writable = await currentFile.handle.createWritable();
-        await writable.write(currentFile.content);
-        await writable.close();
-        markFileSaved(currentFile.path);
-        addToast(`Saved ${currentFile.name}`, 'success');
-      } catch {
-        addToast(`Failed to save ${currentFile.name}`, 'error');
+    const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
+    if (api?.confirm) {
+      const { confirmed } = await api.confirm({
+        title: 'Unsaved changes',
+        message: `Save changes to ${file.name} before closing?`,
+        detail: 'Your edits will be lost if you close without saving.',
+        confirmLabel: 'Save and close',
+        danger: false,
+      });
+      if (confirmed) await saveFile(file.path);
+    } else if (typeof window !== 'undefined') {
+      if (window.confirm(`Save changes to ${file.name} before closing?`)) {
+        await saveFile(file.path);
       }
-    } else {
-      markFileSaved(currentFile.path);
-      addToast(`${currentFile.name} saved to memory`, 'info');
     }
-  };
+
+    closeTab(file.path);
+  }, [closeTab, saveFile]);
 
   return (
     <div
       className="flex-1 h-full flex flex-col bg-background relative overflow-hidden"
       onKeyDown={(e) => {
-        if (e.ctrlKey && e.key === 's') {
+        // Cmd on macOS, Ctrl elsewhere — this was Ctrl-only, so Save did not work at
+        // all on the macOS build.
+        if (isModKey(e) && e.key.toLowerCase() === 's') {
           e.preventDefault();
           handleSave();
         }
@@ -85,7 +82,7 @@ const ProCodeEditor: React.FC = () => {
         id="hint-code"
         icon="edit_note"
         title="This is the code editor"
-        description="Click files in the left sidebar to open them here. The AI copilot on the right can answer questions about your code. Press Ctrl+S to save."
+        description={`Click files in the left sidebar to open them here. The AI copilot on the right can answer questions about your code. Press ${shortcut('S')} to save.`}
         position="top"
       />
 
@@ -109,8 +106,10 @@ const ProCodeEditor: React.FC = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-accent-error shrink-0" title="Unsaved changes" />
             )}
             <button
-              onClick={(e) => { e.stopPropagation(); closeTab(file.path); }}
-              className="ml-1 p-0.5 text-muted hover:text-accent-error opacity-0 group-hover:opacity-100 transition-all"
+              onClick={(e) => { e.stopPropagation(); handleCloseTab(file); }}
+              className={`ml-1 p-0.5 text-muted hover:text-accent-error transition-all ${
+                file.isDirty ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              }`}
               title="Close tab"
               aria-label={`Close ${file.name}`}
             >

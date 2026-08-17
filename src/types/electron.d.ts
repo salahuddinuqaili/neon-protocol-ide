@@ -7,8 +7,9 @@ export interface ElectronAPI {
   scanProject: (dirPath: string) => Promise<{ name: string; path: string; content: string }[]>;
   readFile: (filePath: string) => Promise<string | null>;
   writeFile: (filePath: string, content: string) => Promise<boolean>;
-  deleteFile: (filePath: string) => Promise<boolean>;
-  renameFile: (oldPath: string, newPath: string) => Promise<boolean>;
+  /** Moves the file to the OS trash so the action stays recoverable. */
+  deleteFile: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+  renameFile: (oldPath: string, newPath: string) => Promise<{ success: boolean; error?: string }>;
 
   // Git operations — core
   getGitBranch: (dirPath: string) => Promise<string | null>;
@@ -64,6 +65,15 @@ export interface ElectronAPI {
 
   // Opens a link in the user's real browser.
   openExternal: (url: string) => Promise<{ ok: boolean; error?: string }>;
+
+  /** Native modal confirmation. Used to guard destructive actions. */
+  confirm: (options: {
+    title?: string;
+    message: string;
+    detail?: string;
+    confirmLabel?: string;
+    danger?: boolean;
+  }) => Promise<{ confirmed: boolean }>;
 
   /** Subscribes to native menu commands. Returns an unsubscribe function. */
   onMenuAction: (callback: (action: MenuAction) => void) => () => void;

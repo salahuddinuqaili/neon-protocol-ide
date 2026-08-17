@@ -15,7 +15,10 @@ import LearningPathPanel from '../learning/LearningPathPanel';
 import ErrorBoundary from '../ErrorBoundary';
 import BranchSwitcher from '../git/BranchSwitcher';
 import { useGitPolling } from '../../hooks/useGitPolling';
+import { useOpenProject } from '../../hooks/useOpenProject';
+import { useFileActions } from '../../hooks/useFileActions';
 import { useIDEStore } from '../../store/useIDEStore';
+import { isModKey, shortcut } from '../../lib/platform';
 import { IDEView } from '../../types';
 
 const BlueprintCanvas = lazy(() => import('../blueprint/BlueprintCanvas'));
@@ -33,8 +36,10 @@ const ViewLoader: React.FC = () => (
 );
 
 const MainLayout: React.FC = () => {
-  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers, learningProgress, isTutorialActive, toggleLearningPath, dismissedHints, dismissHint, setOllamaInstallStatus, setHardwareInfo, setAvailableOllamaModels } = useIDEStore();
+  const { currentView, gitBranch, gitState, ollamaStatus, setOllamaStatus, setView, hasCompletedOnboarding, isSidebarOpen, toggleSidebar, learningMode, setLearningMode, providers, learningProgress, isTutorialActive, toggleLearningPath, toggleGlossary, startTutorial, dismissedHints, dismissHint, setOllamaInstallStatus, setHardwareInfo, setAvailableOllamaModels } = useIDEStore();
   const { refresh: refreshGit } = useGitPolling();
+  const { openProject } = useOpenProject();
+  const { saveFile, saveAll } = useFileActions();
   const [quickOpenVisible, setQuickOpenVisible] = useState(false);
   const [globalSearchVisible, setGlobalSearchVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -50,45 +55,85 @@ const MainLayout: React.FC = () => {
     visitedViews.current.add(currentView);
   }, [currentView]);
 
-  // Global keyboard shortcuts
+  // Native menu commands. In the desktop app the menu owns every shortcut: its
+  // accelerators are the only ones macOS honours, and routing both paths here keeps a
+  // keypress from being handled twice (which would toggle a panel open then shut).
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const api = window.electronAPI;
+    if (!api?.onMenuAction) return;
+
+    return api.onMenuAction((action) => {
+      switch (action) {
+        case 'open-folder': openProject(); break;
+        case 'save-file': saveFile(); break;
+        case 'save-all': saveAll(); break;
+        case 'open-settings': setSettingsVisible(v => !v); break;
+        case 'quick-open': setQuickOpenVisible(v => !v); break;
+        case 'global-search': setGlobalSearchVisible(v => !v); break;
+        case 'view-blueprint': setView('blueprint'); break;
+        case 'view-code': setView('code'); break;
+        case 'view-orchestrator': setView('orchestrator'); break;
+        case 'view-terminal': setView('terminal'); break;
+        case 'toggle-sidebar': toggleSidebar(); break;
+        case 'toggle-learning': toggleLearningPath(); break;
+        case 'open-tutorial': startTutorial('welcome-tour'); break;
+        case 'open-glossary': toggleGlossary(true); break;
+      }
+    });
+  }, [openProject, saveFile, saveAll, setView, toggleSidebar, toggleLearningPath, startTutorial, toggleGlossary]);
+
+  // Browser-mode keyboard shortcuts. Skipped under Electron, where the menu above
+  // already provides these accelerators.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.electronAPI?.onMenuAction) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isModKey(e)) return;
+
       // Don't intercept shortcuts when typing in inputs/textareas
       const tag = (e.target as HTMLElement)?.tagName;
       const isEditorFocused = (e.target as HTMLElement)?.closest('.monaco-editor') !== null;
       const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
+      const key = e.key.toLowerCase();
 
       // These shortcuts always work (modal openers)
-      if (e.ctrlKey && e.key === 'p' && !e.shiftKey) {
+      if (key === 'p' && !e.shiftKey) {
         e.preventDefault();
         setQuickOpenVisible(v => !v);
         return;
       }
-      if (e.ctrlKey && e.key === ',') {
+      if (key === ',') {
         e.preventDefault();
         setSettingsVisible(v => !v);
+        return;
+      }
+      if (key === 'o') {
+        e.preventDefault();
+        openProject();
         return;
       }
 
       // These only fire when not in Monaco or an input
       if (isEditorFocused || isInput) return;
 
-      if (e.ctrlKey && e.shiftKey && e.key === 'F') {
+      if (e.shiftKey && key === 'f') {
         e.preventDefault();
         setGlobalSearchVisible(v => !v);
       }
-      if (e.ctrlKey && e.key === 'b') {
+      if (key === 'b') {
         e.preventDefault();
         toggleSidebar();
       }
-      if (e.ctrlKey && e.key === '1') { e.preventDefault(); setView('blueprint'); }
-      if (e.ctrlKey && e.key === '2') { e.preventDefault(); setView('code'); }
-      if (e.ctrlKey && e.key === '3') { e.preventDefault(); setView('orchestrator'); }
-      if (e.ctrlKey && e.key === '4') { e.preventDefault(); setView('terminal'); }
+      if (key === '1') { e.preventDefault(); setView('blueprint'); }
+      if (key === '2') { e.preventDefault(); setView('code'); }
+      if (key === '3') { e.preventDefault(); setView('orchestrator'); }
+      if (key === '4') { e.preventDefault(); setView('terminal'); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setView, toggleSidebar]);
+  }, [setView, toggleSidebar, openProject]);
 
   // Warn before closing with unsaved changes
   useEffect(() => {
@@ -273,7 +318,8 @@ const MainLayout: React.FC = () => {
           <button
             onClick={toggleSidebar}
             className="flex items-center gap-1 hover:opacity-70 transition-opacity"
-            title={`${isSidebarOpen ? 'Hide' : 'Show'} sidebar (Ctrl+B)`}
+            title={`${isSidebarOpen ? 'Hide' : 'Show'} sidebar (${shortcut('B')})`}
+            aria-label={`${isSidebarOpen ? 'Hide' : 'Show'} sidebar`}
           >
             <span className="material-symbols-outlined text-[12px]">{isSidebarOpen ? 'left_panel_close' : 'left_panel_open'}</span>
           </button>

@@ -1,4 +1,4 @@
-const { ipcMain, dialog } = require('electron');
+const { ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -69,22 +69,31 @@ function registerFsHandlers() {
   });
 
   ipcMain.handle('fs:deleteFile', async (_event, filePath) => {
+    if (!validateFilePath(filePath)) return { success: false, error: 'That file is outside the open project.' };
     try {
-      if (!validateFilePath(filePath)) return false;
-      fs.unlinkSync(filePath);
-      return true;
-    } catch {
-      return false;
+      // Moved to the OS trash rather than unlinked. The audience for this app is people
+      // who are new to code; an unrecoverable delete from a right-click menu is not a
+      // reasonable default, and the system trash makes it undoable.
+      await shell.trashItem(path.resolve(filePath));
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
     }
   });
 
   ipcMain.handle('fs:renameFile', async (_event, oldPath, newPath) => {
+    if (!validateFilePath(oldPath) || !validateFilePath(newPath)) {
+      return { success: false, error: 'That file is outside the open project.' };
+    }
     try {
-      if (!validateFilePath(oldPath) || !validateFilePath(newPath)) return false;
+      // Refuse to clobber an existing file — rename would otherwise silently overwrite it.
+      if (fs.existsSync(newPath)) {
+        return { success: false, error: `"${path.basename(newPath)}" already exists.` };
+      }
       fs.renameSync(oldPath, newPath);
-      return true;
-    } catch {
-      return false;
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
     }
   });
 

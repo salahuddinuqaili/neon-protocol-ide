@@ -1,8 +1,32 @@
-const { ipcMain } = require('electron');
+const { ipcMain, dialog, BrowserWindow } = require('electron');
 const { execFileSync } = require('child_process');
 const os = require('os');
 
 function registerSystemHandlers() {
+  /**
+   * Native modal confirmation for destructive actions.
+   *
+   * A window-level dialog is what a desktop user expects here, and unlike an in-page
+   * dialog it cannot be missed or rendered behind another panel.
+   */
+  ipcMain.handle('system:confirm', async (event, options) => {
+    const { title, message, detail, confirmLabel, danger } = options || {};
+    const win = BrowserWindow.fromWebContents(event.sender);
+
+    const result = await dialog.showMessageBox(win, {
+      type: danger ? 'warning' : 'question',
+      buttons: [confirmLabel || 'OK', 'Cancel'],
+      defaultId: danger ? 1 : 0, // a destructive default should be Cancel
+      cancelId: 1,
+      title: title || 'Confirm',
+      message: message || 'Are you sure?',
+      detail: detail || undefined,
+      noLink: true,
+    });
+
+    return { confirmed: result.response === 0 };
+  });
+
   ipcMain.handle('system:getHardwareInfo', async () => {
     const ramGb = Math.round(os.totalmem() / (1024 * 1024 * 1024));
     const cpuCores = os.cpus().length;
