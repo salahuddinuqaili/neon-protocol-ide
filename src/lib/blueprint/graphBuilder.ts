@@ -53,12 +53,33 @@ export function describeGroup(files: FileEntry[]): string {
   return names.join(', ') + suffix;
 }
 
-export function generateFileNodes(files: FileEntry[]): Node[] {
-  const prefix = files[0].path.split('/')[0];
+/**
+ * Path of a file relative to the project root.
+ *
+ * `fs:scanProject` returns ABSOLUTE paths, but this module used to derive the root as
+ * `files[0].path.split('/')[0]` — which on Windows is just the drive letter ("C:"). Every
+ * file then grouped under the same bogus directory, the grouping collapsed to a single
+ * entry, and the map fell back to four generic category boxes with no edges, regardless of
+ * what the project actually contained. Passing the known root fixes the grouping outright.
+ */
+export function relativeTo(filePath: string, projectRoot?: string | null): string {
+  const p = filePath.replace(/\\/g, '/');
 
+  if (projectRoot) {
+    const root = projectRoot.replace(/\\/g, '/').replace(/\/+$/, '');
+    // Windows paths compare case-insensitively; fold for the test, slice the original.
+    if (p.toLowerCase().startsWith(`${root.toLowerCase()}/`)) return p.slice(root.length + 1);
+  }
+
+  // Demo and browser-mode files are already stored as "<projectName>/src/...".
+  const slash = p.indexOf('/');
+  return slash === -1 ? p : p.slice(slash + 1);
+}
+
+export function generateFileNodes(files: FileEntry[], projectRoot?: string | null): Node[] {
   const groups = new Map<string, FileEntry[]>();
   for (const file of files) {
-    const rel = file.path.slice(prefix.length + 1);
+    const rel = relativeTo(file.path, projectRoot);
     const parts = rel.split('/');
     parts.pop();
     const depth = Math.min(2, parts.length);
@@ -72,7 +93,7 @@ export function generateFileNodes(files: FileEntry[]): Node[] {
     if (gFiles.length > SPLIT_THRESHOLD && key !== '__root__') {
       const subGroups = new Map<string, FileEntry[]>();
       for (const file of gFiles) {
-        const rel = file.path.slice(prefix.length + 1);
+        const rel = relativeTo(file.path, projectRoot);
         const parts = rel.split('/');
         parts.pop();
         const depth = Math.min(key.split('/').length + 1, parts.length);
@@ -177,28 +198,27 @@ function computeFilesHash(files: FileEntry[]): string {
   return `${files.length}:${totalLen}`;
 }
 
-export function generateImportEdges(nodes: Node[], files: FileEntry[]): Edge[] {
+export function generateImportEdges(nodes: Node[], files: FileEntry[], projectRoot?: string | null): Edge[] {
   if (nodes.length < 2) return [];
 
   const nodeIds = nodes.map(n => n.id).sort().join(',');
   const filesHash = computeFilesHash(files);
-  const cacheKey = `${nodeIds}::${filesHash}`;
+  const cacheKey = `${nodeIds}::${filesHash}::${projectRoot ?? ''}`;
 
   if (edgeCache && edgeCache.key === cacheKey) {
     return edgeCache.edges;
   }
 
-  const edges = computeImportEdges(nodes, files);
+  const edges = computeImportEdges(nodes, files, projectRoot);
   edgeCache = { key: cacheKey, edges };
   return edges;
 }
 
-function computeImportEdges(nodes: Node[], files: FileEntry[]): Edge[] {
-  const prefix = files[0].path.split('/')[0];
+function computeImportEdges(nodes: Node[], files: FileEntry[], projectRoot?: string | null): Edge[] {
   const fileToNode = new Map<string, string>();
   for (const node of nodes) {
     for (const file of files) {
-      const rel = file.path.slice(prefix.length + 1);
+      const rel = relativeTo(file.path, projectRoot);
       const parts = rel.split('/');
       parts.pop();
       const dirPath = parts.join('/');

@@ -82,19 +82,34 @@ const BlueprintCanvasInner: React.FC = () => {
   const isDemo = projectPath === 'demo-project' || files.length === 0;
   const isBeginnerMode = learningMode === 'beginner';
 
+  // The map's shape depends on which files exist, not on their contents. Keying the memo
+  // on the file list itself rebuilt the entire graph on every keystroke in the editor,
+  // which also threw away any layout the user had arranged.
+  const structureKey = useMemo(() => files.map(f => f.path).join('\n'), [files]);
+
   const seedNodes = useMemo(
-    () => (isDemo ? generateDefaultNodes() : generateFileNodes(files)),
-    [files, isDemo],
+    () => (isDemo ? generateDefaultNodes() : generateFileNodes(files, projectPath)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [structureKey, isDemo, projectPath],
   );
   const seedEdges = useMemo(
-    () => (isDemo ? generateDemoEdges(seedNodes, isBeginnerMode) : generateImportEdges(seedNodes, files)),
-    [seedNodes, files, isDemo, isBeginnerMode],
+    () => (isDemo
+      ? generateDemoEdges(seedNodes, isBeginnerMode)
+      : generateImportEdges(seedNodes, files, projectPath)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [seedNodes, structureKey, isDemo, isBeginnerMode, projectPath],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(seedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(seedEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogConfig | null>(null);
+
+  // A manual edit belongs to the project it was made in. Without this reset, opening a
+  // different folder kept showing the previous project's map forever.
+  React.useEffect(() => {
+    setHasUserEdited(false);
+  }, [projectPath]);
 
   // Only sync from files when the user hasn't manually edited the canvas
   React.useEffect(() => {

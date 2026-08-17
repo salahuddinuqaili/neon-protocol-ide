@@ -40,6 +40,10 @@ const ProCodeEditor: React.FC = () => {
 
   const handleSave = useCallback(() => saveFile(), [saveFile]);
 
+  // Refreshed every render so Monaco's one-time command registration never goes stale.
+  const saveRef = React.useRef(handleSave);
+  saveRef.current = handleSave;
+
   /** Closing a tab discards its buffer, so unsaved edits need an explicit decision. */
   const handleCloseTab = useCallback(async (file: FileEntry) => {
     if (!file.isDirty) {
@@ -210,8 +214,13 @@ const ProCodeEditor: React.FC = () => {
                 });
               }}
               onMount={(editor, monaco) => {
+                // @monaco-editor/react captures onMount once, so anything registered here
+                // keeps its first-render closure forever. Calling through a ref that is
+                // refreshed each render — and a save that reads the store at call time —
+                // is what stops Ctrl+S from writing the file that happened to be open when
+                // the editor first mounted, using that file's original content.
                 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-                  handleSave();
+                  saveRef.current();
                 });
                 editor.onDidChangeCursorPosition((e: any) => {
                   setCursorPos({ line: e.position.lineNumber, col: e.position.column });

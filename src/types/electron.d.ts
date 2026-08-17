@@ -81,7 +81,6 @@ export interface ElectronAPI {
   // System info
   isElectron: true;
   platform: string;
-  systemRamGb: number;
 }
 
 /** Commands the native application menu can dispatch into the renderer. */

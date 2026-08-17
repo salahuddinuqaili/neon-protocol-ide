@@ -1,5 +1,14 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// IMPORTANT: renderers are sandboxed by default since Electron 20, and a sandboxed preload
+// may only require 'electron', 'events', 'timers', and 'url'. Requiring anything else
+// (this file used to call require('os') for total RAM) throws while the object literal
+// below is being built — before exposeInMainWorld runs — so NOTHING is exposed and
+// window.electronAPI is undefined. Every call site guards with `api?.method`, so the whole
+// desktop app silently degrades to browser mode with no error shown. Node built-ins belong
+// in the main process; ask for them over IPC instead.
+// `src/test/__tests__/preload-sandbox.test.ts` enforces this.
+
 // Expose a safe, controlled API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
   // File system operations
@@ -92,5 +101,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // System info
   isElectron: true,
   platform: process.platform,
-  systemRamGb: Math.round(require('os').totalmem() / (1024 * 1024 * 1024)),
 });

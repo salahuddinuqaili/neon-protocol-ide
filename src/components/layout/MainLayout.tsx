@@ -140,21 +140,13 @@ const MainLayout: React.FC = () => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       const { files } = useIDEStore.getState();
       if (files.some(f => f.isDirty)) {
+        // The main process turns this veto into a real prompt via 'will-prevent-unload'.
         e.preventDefault();
+        e.returnValue = ''; // still required by some Chromium versions
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
-  // Auto-detect RAM from Electron if available
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const api = window.electronAPI;
-    if (api?.systemRamGb && api.systemRamGb > 0) {
-      const { updateEditorSettings } = useIDEStore.getState();
-      updateEditorSettings({ systemRamGb: api.systemRamGb });
-    }
   }, []);
 
   // Check if Ollama binary is installed
@@ -169,13 +161,18 @@ const MainLayout: React.FC = () => {
     });
   }, [setOllamaInstallStatus]);
 
-  // Detect hardware for model recommendations
+  // Detect hardware for model recommendations, and seed the RAM setting from it.
+  // RAM used to come from a `systemRamGb` field on the preload bridge, which needed Node's
+  // `os` module — unavailable to a sandboxed preload. The main process reports it here.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const api = window.electronAPI;
     if (!api?.getHardwareInfo) return;
     api.getHardwareInfo().then((info) => {
       setHardwareInfo(info);
+      if (info?.ramGb && info.ramGb > 0) {
+        useIDEStore.getState().updateEditorSettings({ systemRamGb: info.ramGb });
+      }
     }).catch(() => {});
   }, [setHardwareInfo]);
 

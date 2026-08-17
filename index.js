@@ -2,7 +2,7 @@ const { app, BrowserWindow, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 
-const { startStaticServer } = require('./src/electron/server');
+const { registerAppScheme, serveApp, APP_INDEX } = require('./src/electron/appProtocol');
 const { buildMenu } = require('./src/electron/menu');
 const { loadWindowState, trackWindowState } = require('./src/electron/windowState');
 const { registerFsHandlers } = require('./src/electron/ipc/fs');
@@ -33,6 +33,9 @@ function start() {
   // Groups the taskbar icon correctly and makes notifications attributable on Windows.
   if (process.platform === 'win32') app.setAppUserModelId('com.neonprotocol.ide');
 
+  // Must happen before the app is ready.
+  if (!isDev) registerAppScheme();
+
   registerFsHandlers();
   registerGitHandlers();
   registerTerminalHandlers();
@@ -59,6 +62,20 @@ function start() {
   });
 
   app.whenReady().then(async () => {
+    // Registered once for the whole app — protocol.handle throws on a second call.
+    if (!isDev) {
+      try {
+        serveApp(path.join(process.resourcesPath, 'out'));
+      } catch (err) {
+        dialog.showErrorBox(
+          'Neon Protocol IDE failed to start',
+          `${err.message}\n\nReinstalling the app usually resolves this.`
+        );
+        app.quit();
+        return;
+      }
+    }
+
     buildMenu(() => mainWindow);
     await createWindow();
 
@@ -116,6 +133,36 @@ async function createWindow() {
     }
   });
 
+  // The renderer vetoes unload while files are unsaved. Electron does NOT show Chromium's
+  // native "leave site?" dialog for that — it emits this event instead, and with no
+  // listener the veto is simply honoured. The window then refuses to close with no prompt
+  // and no explanation, leaving Task Manager as the only way out. Ask properly.
+  win.webContents.on('will-prevent-unload', (event) => {
+    const choice = dialog.showMessageBoxSync(win, {
+      type: 'warning',
+      buttons: ['Discard changes and close', 'Cancel'],
+      defaultId: 1,
+      cancelId: 1,
+      title: 'Unsaved changes',
+      message: 'You have unsaved changes.',
+      detail: 'Closing now will discard them.',
+      noLink: true,
+    });
+    if (choice === 0) event.preventDefault(); // proceed with the close
+  });
+
+  // If the preload throws, contextBridge never runs and window.electronAPI is undefined.
+  // Every renderer call site guards with `api?.method`, so the app would quietly behave as
+  // if it were a browser — no terminal, no git, no file saving — with nothing explaining
+  // why. Surface it loudly instead of shipping a hollow app.
+  win.webContents.on('preload-error', (_event, preloadPath, error) => {
+    dialog.showErrorBox(
+      'Neon Protocol IDE failed to start',
+      `The desktop bridge could not be loaded, so file, git, terminal, and AI features ` +
+        `would not work.\n\n${error.message}\n\n${preloadPath}`
+    );
+  });
+
   // A failed load previously left a permanently blank window with no explanation.
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     if (errorCode === -3) return; // user-initiated abort
@@ -134,12 +181,7 @@ async function createWindow() {
   });
 
   try {
-    if (isDev) {
-      await win.loadURL('http://localhost:3001');
-    } else {
-      const port = await startStaticServer(path.join(process.resourcesPath, 'out'));
-      await win.loadURL(`http://127.0.0.1:${port}`);
-    }
+    await win.loadURL(isDev ? 'http://localhost:3001' : APP_INDEX);
   } catch (err) {
     dialog.showErrorBox(
       'Neon Protocol IDE failed to start',
